@@ -11,7 +11,7 @@ using VisualRadiometryToolkitIO
 
 DocMeta.setdocmeta!(
     VisualRadiometryToolkitIO, :DocTestSetup,
-    :(using VisualRadiometryToolkitIO);
+    :(using VisualRadiometryToolkitIO; import VisualGeometryToolkitIO as VgtkIO);
     recursive = true,
 )
 

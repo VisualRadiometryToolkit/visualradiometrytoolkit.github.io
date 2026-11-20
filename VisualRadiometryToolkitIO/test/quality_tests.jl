@@ -12,9 +12,15 @@
     # allow-list, with this repository's rows.
     using Test, Aqua, ExplicitImports, JET
     import VisualGeometryToolkitCore as VgtkCore
+    using VisualRadiometryToolkitCore: AbstractVignetting, TensorProductVignetting, RadialVignetting, LogVignetting, EnvironmentLight,
+        BinnedRadialProfile
     VgtkCore.test_quality_gates(
         VisualRadiometryToolkitIO;
         jet_bound = 0,
+        # This package is the file side of VisualRadiometryToolkitCore: the `lower`/`lift` of that package's types on
+        # VisualGeometryToolkitIO's style, and their methods of its `load` and `save` (declared extension points), are
+        # this package's to define. Aqua's piracy check owns a type by its module, so the types are named as its own.
+        treat_as_own = [AbstractVignetting, TensorProductVignetting, RadialVignetting, LogVignetting, EnvironmentLight, BinnedRadialProfile],
         stack_extra = # this repository's rows of the allow-list, kept with VisualRadiometryToolkitCore (the workspace is the unit tested)
         joinpath(dirname(pkgdir(VisualRadiometryToolkitIO)), "VisualRadiometryToolkitCore", "configs", "stack_dependencies.toml"),
     )
@@ -49,11 +55,4 @@ end
     violations = agent_doc_violations(pkgdir(VisualRadiometryToolkitIO); extra = get(ENV, "AGENT_DOC_PATTERNS", nothing))
     isempty(violations) || @error "agent docs carry private content" violations
     @test isempty(violations)
-end
-
-@testitem "the skeleton: an empty module" begin
-    # Nothing is defined yet: the kinds arrive with the types they hold.
-    using Test
-    @test isempty(setdiff(names(VisualRadiometryToolkitIO), (:VisualRadiometryToolkitIO,)))
-    @test pkgversion(VisualRadiometryToolkitIO) == v"0.0.1"
 end

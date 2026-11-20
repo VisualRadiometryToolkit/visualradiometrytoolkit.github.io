@@ -6,8 +6,9 @@ code in this package. The workspace's rules are in the repository root's
 
 VisualRadiometryToolkitIO: the file formats of the Visual Radiometry Toolkit,
 the radiometric types of VisualRadiometryToolkitCore as self-describing files.
-Under construction: version 0.0.1 is a placeholder, the module is empty and the
-package is not registered.
+It owns the `vgio/vignetting`, `vgio/environment_light` and `vgio/radial_profile`
+kinds (VisualGeometryToolkitIO's up to its 0.10). Under construction: version
+0.0.1 is a placeholder and the package is not registered.
 
 ## The rules of this package
 
@@ -18,6 +19,16 @@ package is not registered.
 - **A kind that moves here keeps its name and its bytes.** A file written
   before the move loads after it; the move changes which package reads and
   writes the kind, never the file.
+- **A kind is a `VisualGeometryToolkitIO.KindSpec`**: its table is built from
+  that package's public spec combinators, its files cross `write_kind` and
+  `read_kind`, its `load` and `save` are methods of VisualGeometryToolkitIO's
+  two verbs, its earlier versions are `migrate_schema` steps, and its
+  `validate_record(::Val{Symbol("vgio/<kind>")}, …)` method answers
+  VisualGeometryToolkitIO's `validate` and manifests. No private name of
+  VisualGeometryToolkitIO is reached.
+- **The published JSON Schemas** (`docs/src/schemas`) are the generator's
+  output (`json_schemas()`); a test compares them. After a table changes,
+  regenerate each with `write(path, JSON.json(schema; pretty = 4))`.
 - **Dependencies arrive with the code that uses them** (an unused dependency
   fails the quality gates). The package may depend on
   VisualRadiometryToolkitCore, VisualGeometryToolkitCore and
