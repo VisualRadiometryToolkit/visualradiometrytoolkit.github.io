@@ -4,10 +4,20 @@ version = "0.0.1"
 authors = ["Ties Harder", "Felix Seegräber", "James Pritts <jbpritts@gmail.com>"]
 
 [deps]
+CoordinateTransformations = "150eb455-5306-5404-9cee-2592286d6298"
+FlexUnits = "76e01b6b-c995-4ce6-8559-91e72a3d4e95"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 VisualGeometryToolkitCore = "96820d6b-1dad-4e77-ad4a-8276f2ec1ce7"
 
 [compat]
+CoordinateTransformations = "0.6.4"
+FlexUnits = "0.6.16"
+ForwardDiff = "1.4.7"
+GeometryBasics = "0.5.13"
+LinearAlgebra = "1"
 StaticArrays = "1.9.24"
 VisualGeometryToolkitCore = "0.11.1"
 julia = "1.13"

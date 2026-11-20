@@ -13,12 +13,19 @@ projects = [
 # packages are NOT sourced: they come from the General registry, as a user
 # gets them.
 [deps]
+VisualGeometryToolkitCore = "96820d6b-1dad-4e77-ad4a-8276f2ec1ce7"
+VisualGeometryToolkitIO = "0a7ae7e7-e931-45f8-9bba-03d07899cebc"
 VisualRadiometryToolkitCore = "544ea8c7-2427-4873-ab3e-33acc9dfb29a"
 VisualRadiometryToolkitIO = "c447a127-8502-41e7-ac3e-ce2a12d00bd3"
 
 [sources]
 VisualRadiometryToolkitCore = {path = "VisualRadiometryToolkitCore"}
 VisualRadiometryToolkitIO = {path = "VisualRadiometryToolkitIO"}
+# TEMPORARY (the migration of the radiometric types, 2026-11-20): the Visual Geometry Toolkit packages resolve to the
+# branch that retires those types, until VisualGeometryToolkitCore 0.12.0 and VisualGeometryToolkitIO 0.11.0 are in
+# General. Removed before either package here is registered: a registered tree resolves from the registries alone.
+VisualGeometryToolkitCore = {url = "https://github.com/VisualGeometryToolkit/VisualGeometryToolkit.jl", rev = "vrtk/retire-radiometric", subdir = "VisualGeometryToolkitCore"}
+VisualGeometryToolkitIO = {url = "https://github.com/VisualGeometryToolkit/VisualGeometryToolkit.jl", rev = "vrtk/retire-radiometric", subdir = "VisualGeometryToolkitIO"}
 
 [compat]
 julia = "1.13"
