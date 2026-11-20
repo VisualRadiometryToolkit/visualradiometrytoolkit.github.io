@@ -2,7 +2,7 @@
 # The radiometric camera and its back-projection.
 #
 #   π⁻¹(𝐩)          central (chief-ray) back-projection of the geometric camera
-#   d̂(𝐩)            = π⁻¹(𝐩)/‖π⁻¹(𝐩)‖   UNIT chief direction (`chief_dir`): a spline camera's bicubic blend of unit node directions is
+#   d̂(𝐩)            = π⁻¹(𝐩)/‖π⁻¹(𝐩)‖   UNIT chief direction (`chief_direction`): a spline camera's bicubic blend of unit node directions is
 #                                        not unit (≤ 2e-4 off inside the image circle), the parametric models are. The focus point
 #                                        uses the unit direction, so 1/t̂(𝐩) IS the distance from 𝔭 to 𝔣(𝐩).
 #   𝔣(𝐩)            = 𝔭 + 𝔱(𝐩) d̂(𝐩)    focus point on the Petzval surface 𝔉
@@ -12,10 +12,16 @@
 # Camera frame: CV convention (+x right, +y down, +z forward); the aperture 𝒜 is
 # the disc of radius r in the plane z = 0 centred at 𝔭 = 0.
 #
-# ONE implementation of each map, on the parts it reads — the geometric camera and the focus surface (`𝔣(geometric, focus, 𝐩)`,
-# `t̂(geometric, focus, 𝐩)`, `π̂⁻¹(geometric, focus, 𝐩, 𝐚)`), the unit chief direction (`π̂⁻¹(d̂, 𝐚, t̂)`), a pose and a camera-frame
+# ONE implementation of each map, on the parts it reads — the geometric camera and the focus surface (`focus_point(geometric, focus, 𝐩)`,
+# `inverse_focus_distance(geometric, focus, 𝐩)`, `aperture_direction(geometric, focus, 𝐩, 𝐚)`), the unit chief direction
+# (`aperture_direction(d̂, 𝐚, t̂)`), a pose and a camera-frame
 # ray (`world_ray(pose, 𝐚, d)`). A `RadiometricCameraModel` forwards to them, and so does any other record that holds the same
 # parts (a renderer's flattened per-photograph record): a one-line method, never a second body.
+#
+# The public names are descriptive; the paper's symbols are public ALIASES of the same functions (`𝔭`, `𝔣`, `t̂`, `𝔱`, and `π̂⁻¹`,
+# which is VisualGeometryToolkitCore's `backproject`: the radiometric back-projection is its method with the aperture point as a
+# third argument). The part-wise back-projection is `aperture_direction`: a method of `backproject` on a bare direction or on a
+# geometric camera of VisualGeometryToolkitCore would be a method on that package's function over its own types.
 # ---------------------------------------------------------------------------
 
 """
@@ -60,14 +66,14 @@ _focus_surface(geometric, focus::Focus) = focus
 _focus_surface(geometric, distance::Real) = Focus(geometric, distance)
 
 """
-    Focus(geometric, focus_distance; n = 3, T = Float64)
+    Focus(geometric, distance; n = 3, T = Float64)
 
-The constant focus surface `𝔱 ≡ focus_distance` (metres) on the `n × n` grid of the image of the geometric camera `geometric` (its
-`extent`): `Focus(n, focus_distance, W, H)`.
+The constant focus surface `𝔱 ≡ distance` (metres) on the `n × n` grid of the image of the geometric camera `geometric` (its
+`extent`): `Focus(n, distance, W, H)`.
 """
-function Focus(geometric::BoundedCamera, focus_distance::Real; n::Integer = 3, T = Float64)
+function Focus(geometric::BoundedCamera, distance::Real; n::Integer = 3, T = Float64)
     W, H = extent(geometric)
-    return Focus(n, focus_distance, W, H; T)
+    return Focus(n, distance, W, H; T)
 end
 
 """
@@ -117,8 +123,18 @@ geometric(c::RadiometricCameraModel) = c.geometric
 project(c::RadiometricCameraModel, X) = project(c.geometric, X)
 backproject(c::RadiometricCameraModel, 𝐩) = backproject(c.geometric, 𝐩)
 
-"""Centre of projection 𝔭 (origin of the camera frame)."""
-const 𝔭 = SVector(0.0, 0.0, 0.0)
+"""
+    center_of_projection
+
+The centre of projection, the origin of the camera frame: the paper's `𝔭` (a public alias, the same constant).
+"""
+const center_of_projection = SVector(0.0, 0.0, 0.0)
+"""
+    𝔭
+
+The paper's notation of [`center_of_projection`](@ref): the same constant.
+"""
+const 𝔭 = center_of_projection
 
 """
     chief_ray(geometric, 𝐩) -> SVector{3}
@@ -131,7 +147,7 @@ radiometric camera. Generic in the element type (Float32, `ForwardDiff.Dual`) an
 - A `SplineLens` camera: its backward spline's VALUE at K⁻¹𝐩 (the lattice evaluation, NOT normalized) — linear in the lattice's
   direction nodes, which a calibration's Jacobian fan-out onto them relies on; a node's norm is a weight, not a gauge.
 
-Only the image formation reads it ([`chief_dir`](@ref) normalizes it); every other back-projection is `backproject`. A camera type
+Only the image formation reads it ([`chief_direction`](@ref) normalizes it); every other back-projection is `backproject`. A camera type
 of another package answers it with a method (it is one of this package's `CONTRACT_GENERICS`).
 """
 @inline chief_ray(geometric, 𝐩::StaticVector{2}) = SVector{3}(backproject(geometric, 𝐩))
@@ -140,56 +156,72 @@ of another package answers it with a method (it is one of this package's `CONTRA
 @inline chief_ray(g::BoundedCamera{<:CameraModel{<:AbstractIntrinsics, <:SplineLens}}, 𝐩::StaticVector{2}) = chief_ray(model(g), 𝐩)
 
 """
-    chief_dir(geometric, 𝐩) -> SVector{3}
-    chief_dir(camera::RadiometricCameraModel, 𝐩) -> SVector{3}
+    chief_direction(geometric, 𝐩) -> SVector{3}
+    chief_direction(camera::RadiometricCameraModel, 𝐩) -> SVector{3}
 
 Unit chief direction d̂(𝐩) = π⁻¹(𝐩)/‖π⁻¹(𝐩)‖ of a sensor position ([`chief_ray`](@ref), normalized): the direction along which the
 focus point 𝔣(𝐩) lies at the distance 1/t̂(𝐩) from the centre of projection. `π⁻¹` of a spline camera is a bicubic blend of unit
 node directions and is not unit (≤ 2e-4 off inside the image circle on real lattices); the parametric models return unit vectors.
 Dual-generic: when `π⁻¹` carries partials the normalisation projects them onto the tangent plane of d̂.
 """
-@inline chief_dir(geometric, 𝐩::StaticVector{2}) = normalize(chief_ray(geometric, 𝐩))
-@inline chief_dir(c::RadiometricCameraModel, 𝐩::StaticVector{2}) = chief_dir(c.geometric, 𝐩)
+@inline chief_direction(geometric, 𝐩::StaticVector{2}) = normalize(chief_ray(geometric, 𝐩))
+@inline chief_direction(c::RadiometricCameraModel, 𝐩::StaticVector{2}) = chief_direction(c.geometric, 𝐩)
 
 """
-    t̂(geometric, focus::Focus, 𝐩)
-    t̂(camera::RadiometricCameraModel, 𝐩)
+    inverse_focus_distance(geometric, focus::Focus, 𝐩)
+    inverse_focus_distance(camera::RadiometricCameraModel, 𝐩)
 
-The camera's inverse focus distance at the sensor position 𝐩. EXPERIMENT (focus-ab): the sensor TPS at 𝐩 (kind 0), or a
-direction chart's surface at the chief direction of 𝐩 through the geometric camera (kinds 1, 2; focus_charts.jl).
+The camera's inverse focus distance at the sensor position 𝐩 (the paper's `t̂(𝐩)`; public alias `t̂`). EXPERIMENT (focus-ab): the
+sensor TPS at 𝐩 (kind 0), or a direction chart's surface at the chief direction of 𝐩 through the geometric camera (kinds 1, 2;
+focus_charts.jl).
 """
-@inline t̂(geometric, f::Focus, 𝐩::StaticVector{2}) = f.kind == 0 ? t̂(f, 𝐩) : t̂_dir(f, chief_dir(geometric, 𝐩))
-@inline t̂(c::RadiometricCameraModel, 𝐩::StaticVector{2}) = t̂(c.geometric, c.focus, 𝐩)
-
-"""
-    𝔣(geometric, focus::Focus, 𝐩) -> SVector{3}
-    𝔣(camera::RadiometricCameraModel, 𝐩) -> SVector{3}
-
-Focus point 𝔣(𝐩) = 𝔱(𝐩) d̂(𝐩) on the Petzval surface, d̂ the UNIT chief direction (camera frame, the centre of projection
-𝔭 = 0): ‖𝔣(𝐩)‖ = 𝔱(𝐩) = 1/t̂(𝐩) exactly, for every lens class.
-"""
-@inline 𝔣(geometric, f::Focus, 𝐩::StaticVector{2}) = inv(t̂(geometric, f, 𝐩)) * chief_dir(geometric, 𝐩)
-@inline 𝔣(c::RadiometricCameraModel, 𝐩::StaticVector{2}) = 𝔣(c.geometric, c.focus, 𝐩)
+@inline inverse_focus_distance(geometric, f::Focus, 𝐩::StaticVector{2}) =
+    f.kind == 0 ? inverse_focus_distance(f, 𝐩) : inverse_focus_distance(f, chief_direction(geometric, 𝐩))
+@inline inverse_focus_distance(c::RadiometricCameraModel, 𝐩::StaticVector{2}) = inverse_focus_distance(c.geometric, c.focus, 𝐩)
 
 """
-    π̂⁻¹(d̂, 𝐚, t̂) -> SVector{3}
-    π̂⁻¹(geometric, focus::Focus, 𝐩, 𝐚) -> SVector{3}
-    π̂⁻¹(geometric, 𝐩, 𝐚, t̂) -> SVector{3}
-    π̂⁻¹(camera::RadiometricCameraModel, 𝐩, 𝐚[, t̂]) -> SVector{3}
+    focus_point(geometric, focus::Focus, 𝐩) -> SVector{3}
+    focus_point(camera::RadiometricCameraModel, 𝐩) -> SVector{3}
 
-Radiometric extension: unit direction from the aperture point 𝐚 towards 𝔣(𝐩) (camera frame),
-computed as `normalize(d̂(𝐩) − t̂(𝐩) 𝐚)` with the unit chief direction d̂ = `chief_dir(𝐩)` (regular for focus at infinity).
-`π̂⁻¹(𝐩, 𝔭) = π⁻¹(𝐩)`. The first form is the implementation, on a unit chief direction `d̂` and an inverse focus distance `t̂`
-the caller evaluated (once per sensor sample); the forms with a trailing `t̂` take it hoisted the same way.
+Focus point 𝔣(𝐩) = 𝔱(𝐩) d̂(𝐩) on the Petzval surface (the paper's `𝔣`, a public alias), d̂ the UNIT chief direction (camera frame,
+the centre of projection 𝔭 = 0): ‖𝔣(𝐩)‖ = 𝔱(𝐩) = 1/t̂(𝐩) exactly, for every lens class.
 """
-@inline function π̂⁻¹(d̂::StaticVector{3}, 𝐚::StaticVector{3}, t̂val)
+@inline focus_point(geometric, f::Focus, 𝐩::StaticVector{2}) = inv(inverse_focus_distance(geometric, f, 𝐩)) * chief_direction(geometric, 𝐩)
+@inline focus_point(c::RadiometricCameraModel, 𝐩::StaticVector{2}) = focus_point(c.geometric, c.focus, 𝐩)
+const 𝔣 = focus_point   # the paper's notation: the same function
+
+"""
+    aperture_direction(d̂, 𝐚, t̂) -> SVector{3}
+    aperture_direction(geometric, focus::Focus, 𝐩, 𝐚) -> SVector{3}
+    aperture_direction(geometric, 𝐩, 𝐚, t̂) -> SVector{3}
+
+The radiometric back-projection on a camera's PARTS: the unit direction from the aperture point 𝐚 towards the focus point 𝔣(𝐩)
+(camera frame), `normalize(d̂(𝐩) − t̂(𝐩) 𝐚)` with the unit chief direction d̂ = `chief_direction(geometric, 𝐩)` (regular for focus at
+infinity). The first form is the implementation, on a unit chief direction `d̂` and an inverse focus distance `t̂` the caller
+evaluated (once per sensor sample); the form with a trailing `t̂` takes it hoisted the same way. A camera, and any record holding a
+camera's parts, answers VisualGeometryToolkitCore's `backproject(camera, 𝐩, 𝐚)` by forwarding here (below).
+"""
+@inline function aperture_direction(d̂::StaticVector{3}, 𝐚::StaticVector{3}, t̂val)
     d = d̂ - t̂val * 𝐚
     return d / sqrt(d[1]^2 + d[2]^2 + d[3]^2)
 end
-@inline π̂⁻¹(geometric, f::Focus, 𝐩::StaticVector{2}, 𝐚::StaticVector{3}) = π̂⁻¹(chief_dir(geometric, 𝐩), 𝐚, t̂(geometric, f, 𝐩))
-@inline π̂⁻¹(geometric, 𝐩::StaticVector{2}, 𝐚::StaticVector{3}, t̂val) = π̂⁻¹(chief_dir(geometric, 𝐩), 𝐚, t̂val)
-@inline π̂⁻¹(c::RadiometricCameraModel, 𝐩::StaticVector{2}, 𝐚::StaticVector{3}) = π̂⁻¹(c.geometric, c.focus, 𝐩, 𝐚)
-@inline π̂⁻¹(c::RadiometricCameraModel, 𝐩::StaticVector{2}, 𝐚::StaticVector{3}, t̂val) = π̂⁻¹(c.geometric, 𝐩, 𝐚, t̂val)
+@inline aperture_direction(geometric, f::Focus, 𝐩::StaticVector{2}, 𝐚::StaticVector{3}) =
+    aperture_direction(chief_direction(geometric, 𝐩), 𝐚, inverse_focus_distance(geometric, f, 𝐩))
+@inline aperture_direction(geometric, 𝐩::StaticVector{2}, 𝐚::StaticVector{3}, t̂val) = aperture_direction(chief_direction(geometric, 𝐩), 𝐚, t̂val)
+
+"""
+    backproject(camera::RadiometricCameraModel, 𝐩, 𝐚[, t̂]) -> SVector{3}
+
+The radiometric back-projection, the paper's `π̂⁻¹(𝐩, 𝐚)` (public alias `π̂⁻¹`): the unit direction of the ray of the sensor position
+𝐩 from the aperture point 𝐚 (camera frame), towards the focus point 𝔣(𝐩) — a method of VisualGeometryToolkitCore's `backproject`
+with the aperture point as its third argument ([`aperture_direction`](@ref) on the camera's parts). `backproject(camera, 𝐩, 𝔭)` is
+the chief direction; `backproject(camera, 𝐩)` is the geometric camera's back-projection. With a trailing `t̂`, the inverse focus
+distance the caller evaluated (hoisted, once per sensor sample).
+"""
+@inline backproject(c::RadiometricCameraModel, 𝐩::StaticVector{2}, 𝐚::StaticVector{3}) = aperture_direction(c.geometric, c.focus, 𝐩, 𝐚)
+@inline backproject(c::RadiometricCameraModel, 𝐩::StaticVector{2}, 𝐚::StaticVector{3}, t̂val) = aperture_direction(c.geometric, 𝐩, 𝐚, t̂val)
+# the paper's notation: VisualGeometryToolkitCore's `backproject` itself (its three-argument methods are the radiometric ones)
+const π̂⁻¹ = backproject
 
 """
     world_ray(pose, 𝐚, d) -> (origin, direction)
@@ -197,10 +229,15 @@ end
 
 Ray of the sensor position 𝐩 through the aperture point 𝐚 of `camera` at `pose` (camera → world, VisualGeometryToolkitCore's
 `EuclideanMap`), in world coordinates. The first form is the implementation: the ray from the aperture point 𝐚 along the
-camera-frame direction `d` (a [`π̂⁻¹`](@ref)), moved by `pose` (a plain, unlabeled map, as a kernel holds it); the camera's form
-takes any pose and reads it unlabeled.
+camera-frame direction `d` (an [`aperture_direction`](@ref)), moved by `pose` (a plain, unlabeled map, as a kernel holds it); the
+camera's form takes any pose and reads it unlabeled.
 """
 @inline world_ray(pose::EuclideanMap, 𝐚::StaticVector{3}, d::StaticVector{3}) = (pose(𝐚), pose.R * d)
 @inline function world_ray(c::RadiometricCameraModel, pose::EuclideanMap, 𝐩::StaticVector{2}, 𝐚::StaticVector{3})
-    return world_ray(unlabel(pose), 𝐚, π̂⁻¹(c, 𝐩, 𝐚))
+    return world_ray(unlabel(pose), 𝐚, backproject(c, 𝐩, 𝐚))
 end
+
+# `lens` is VisualGeometryToolkitCore's lens model of a geometric camera: a radiometric camera is refused by name with what to call
+lens(::RadiometricCameraModel) = throw(ArgumentError(
+    "`lens` is VisualGeometryToolkitCore's lens model of a geometric camera; a radiometric camera's geometric camera is " *
+    "`geometric(camera)`, its lens model `lens(geometric(camera))`"))

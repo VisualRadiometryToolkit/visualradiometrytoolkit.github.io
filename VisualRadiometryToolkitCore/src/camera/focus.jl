@@ -44,7 +44,7 @@ function FocusSpline(nodes::AbstractVector{<:StaticVector{2}}, kind::Integer = 0
     N = length(nodes)
     ns = SVector{N}(SVector{2, Float64}.(nodes))
     if kind == 2
-        sys = VgtkCore.SphericalSplineSystem([ae_dir(n) for n in ns])
+        sys = VgtkCore.SphericalSplineSystem([_chart_direction(n) for n in ns])
         return FocusSpline{N, typeof(sys)}(sys, ns, vcat(sys.coeff, zeros(2, N)), 2)
     end
     sys = VgtkCore.ThinPlateSplineSystem(collect(ns))
@@ -63,12 +63,12 @@ _focus_coefficients(sys::VgtkCore.SphericalSplineSystem, t) =
     ((w, a₁) = VgtkCore.spherical_spline_coefficients(sys, t); (w, SVector(a₁, zero(a₁), zero(a₁))))
 
 """
-    Focus(n, focus_distance, W, H; T = Float64)
+    Focus(n, distance, W, H; T = Float64)
 
-Constant focus surface `𝔱 ≡ focus_distance` on the `n × n` grid of the sensor `[0, W] × [0, H]` (`t̂_i ≡ 1/focus_distance`).
+Constant focus surface `𝔱 ≡ distance` on the `n × n` grid of the sensor `[0, W] × [0, H]` (`t̂_i ≡ 1/distance`).
 """
-Focus(n::Integer, focus_distance::Real, W::Real, H::Real; T = Float64) =
-    Focus(FocusSpline(grid_nodes(n, Rect(0, 0, W, H))), fill(T(1 / focus_distance), n * n))
+Focus(n::Integer, distance::Real, W::Real, H::Real; T = Float64) =
+    Focus(FocusSpline(grid_nodes(n, Rect(0, 0, W, H))), fill(T(1 / distance), n * n))
 
 """
     n_nodes(f::Focus) -> Int
@@ -78,11 +78,22 @@ The number of nodes of the focus surface's thin plate spline (the length of Θ_f
 n_nodes(::Focus{T, N}) where {T, N} = N
 Base.values(f::Focus) = f.t̂_i                                 # its nodal values t̂ᵢ (Base's `values`, extended: no Base name is shadowed)
 
-"""`t̂(𝐩)` — inverse focus distance at sensor position 𝐩."""
-@inline t̂(f::Focus, 𝐩::StaticVector{2}) = VgtkCore.tps_evaluate(f.nodes, f.w, f.a, 𝐩)
+"""
+    inverse_focus_distance(f::Focus, 𝐩::StaticVector{2})
+    inverse_focus_distance(f::Focus, direction::StaticVector{3})
 
-"""`𝔱(𝐩) = 1/t̂(𝐩)` — focus distance along the chief ray of 𝐩."""
-@inline 𝔱(f::Focus, 𝐩::StaticVector{2}) = 1 / t̂(f, 𝐩)
+The inverse focus distance of the focus surface `f`, the paper's `t̂ = 1/𝔱` (public alias `t̂`): at the sensor position 𝐩 (COLMAP
+pixels; the sensor chart's thin plate spline), or — for a surface on the chief directions (a direction chart or the sphere,
+focus_charts.jl) — at the unit chief direction `direction`.
+"""
+@inline inverse_focus_distance(f::Focus, 𝐩::StaticVector{2}) = VgtkCore.tps_evaluate(f.nodes, f.w, f.a, 𝐩)
+
+"""
+    focus_distance(f::Focus, 𝐩::StaticVector{2})
+
+The focus distance along the chief ray of the sensor position 𝐩, the paper's `𝔱(𝐩) = 1/t̂(𝐩)` (public alias `𝔱`).
+"""
+@inline focus_distance(f::Focus, 𝐩::StaticVector{2}) = 1 / inverse_focus_distance(f, 𝐩)
 
 # VisualGeometryToolkitCore's parameter protocol of a focus surface: its nodal values t̂ᵢ (unbounded; an estimator's box keeps them ≥ 0),
 # rebuilt through its host-side spline system; and its element-type conversion (element types only, no TPS solve)
@@ -94,3 +105,7 @@ function convert_eltype(::Type{T}, f::Focus{S, N}) where {T, S, N}
     nodes = map(n -> SVector{2, T}(n), f.nodes)
     return Focus{T, N}(nodes, map(T, f.t̂_i), map(T, f.w), map(T, f.a), f.kind)
 end
+
+# The paper's notation, as public aliases of the same functions (one definition each)
+const t̂ = inverse_focus_distance
+const 𝔱 = focus_distance

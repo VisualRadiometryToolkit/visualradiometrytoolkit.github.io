@@ -66,7 +66,7 @@ by name, by the calibration that estimates it.
 ## One implementation, on the parts it reads
 
 The camera-frame maps of a radiometric camera (the unit chief direction, the
-focus point `𝔣`, the back-projection from the aperture `π̂⁻¹`, a ray in the
+focus point, the back-projection from the aperture, a ray in the
 world) are implemented once, on the parts they read: the geometric camera and
 the focus surface. [`RadiometricCameraModel`](@ref) forwards to them, and so
 does any other record that holds the same parts (a renderer's per-photograph

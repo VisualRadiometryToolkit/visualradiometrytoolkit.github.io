@@ -31,18 +31,18 @@ const FOCUS_DIRECTION_CHART = 1
 """The focus kind of the sphere (`Focus`'s `kind`): Wahba's spherical spline of the chief direction."""
 const FOCUS_SPHERE = 2
 
-const _AE = VgtkCore.Lens(VgtkCore.Equidistant())
-"""Azimuthal-equidistant chart point ξ = θ (cos φ, sin φ) of a unit direction `d` (θ = angle to +z): Core's equidistant `project`
-(dual-generic, regular on the axis)."""
-@inline ae_chart(d::StaticVector{3}) = SVector{2}(VgtkCore.project(_AE, d))
-"""Unit direction of the azimuthal-equidistant chart point ξ (the inverse of `ae_chart`): Core's equidistant `backproject`."""
-@inline ae_dir(ξ::StaticVector{2}) = SVector{3}(VgtkCore.backproject(_AE, ξ))
+# The azimuthal-equidistant chart ξ = θ (cos φ, sin φ) of a unit direction (θ its angle to +z) IS VisualGeometryToolkitCore's
+# equidistant lens: `project(Lens(Equidistant()), d)` the chart point (dual-generic, regular on the axis), `backproject` of the same
+# lens its inverse. The focus code calls the lens; there is no chart function of this package.
+const _EQUIDISTANT = VgtkCore.Lens(VgtkCore.Equidistant())
+@inline _chart_direction(ξ::StaticVector{2}) = SVector{3}(backproject(_EQUIDISTANT, ξ))
 
-"""The value of a direction-chart or sphere focus at the unit chief direction `d` (kinds 1, 2): Core's `spherical_spline_evaluate`
-of the nodes' directions (a sphere's nodes are stored as chart points, mapped here) or `tps_evaluate` in the chart."""
-@inline function t̂_dir(f, d::StaticVector{3})
-    f.kind == FOCUS_SPHERE && return VgtkCore.spherical_spline_evaluate(map(ae_dir, f.nodes), f.w, f.a[1], d)
-    return VgtkCore.tps_evaluate(f.nodes, f.w, f.a, ae_chart(d))
+# the value of a direction-chart or sphere focus at the unit chief direction `d` (kinds 1, 2; documented with the sensor chart's
+# method, focus.jl): Core's `spherical_spline_evaluate` of the nodes' directions (a sphere's nodes are stored as chart points, mapped
+# here) or `tps_evaluate` in the chart
+@inline function inverse_focus_distance(f::Focus, d::StaticVector{3})
+    f.kind == FOCUS_SPHERE && return VgtkCore.spherical_spline_evaluate(map(_chart_direction, f.nodes), f.w, f.a[1], d)
+    return VgtkCore.tps_evaluate(f.nodes, f.w, f.a, SVector{2}(project(_EQUIDISTANT, d)))
 end
 
 """
@@ -53,8 +53,8 @@ direction of 𝐩 through the CURRENT `lens` (host side, Float64; its chart poin
 """
 function focus_weights(tps::FocusSpline, lens, 𝐩::StaticVector{2})
     tps.kind == FOCUS_SENSOR && return VgtkCore.nodal_weights(tps.sys, 𝐩)
-    d = SVector{3, Float64}(chief_dir(lens, 𝐩))
-    return VgtkCore.nodal_weights(tps.sys, tps.kind == FOCUS_SPHERE ? d : ae_chart(d))
+    d = SVector{3, Float64}(chief_direction(lens, 𝐩))
+    return VgtkCore.nodal_weights(tps.sys, tps.kind == FOCUS_SPHERE ? d : SVector{2}(project(_EQUIDISTANT, d)))
 end
 
 """
@@ -82,4 +82,3 @@ function polar_cap_nodes(N::Integer, θ_max::Real)
     end
     return nodes
 end
-

@@ -10,24 +10,59 @@ A [`RadiometricCameraModel`](@ref) is one object: a geometric camera of
 VisualGeometryToolkitCore (`geometric`), a focus surface, an aperture radius
 and a vignetting. Composed from a geometric camera it has
 [`NoVignetting`](@ref) unless one is stated. Its camera-frame maps are the
-unit chief direction, the focus point `𝔣(𝐩)` on the Petzval surface and the
-radiometric back-projection `π̂⁻¹(𝐩, 𝐚)`, the direction of the ray from the
-aperture point `𝐚` to the focus point; `world_ray` is that ray at a pose. Each
-has one implementation, on the parts it reads, so a record that holds the same
-parts forwards to it.
+unit chief direction (`chief_direction`), the focus point `focus_point` on
+the Petzval surface (the paper's `𝔣(𝐩)`) and the radiometric back-projection
+(the paper's `π̂⁻¹(𝐩, 𝐚)`), the direction of the ray from the aperture point `𝐚`
+to the focus point; `world_ray` is that ray at a pose. Each has one
+implementation, on the parts it reads, so a record that holds the same parts
+forwards to it.
+
+The radiometric back-projection of a camera is a method of
+VisualGeometryToolkitCore's `backproject`, with the aperture point as a third
+argument: `backproject(camera, 𝐩)` is the geometric camera's chief ray,
+`backproject(camera, 𝐩, 𝐚)` the ray from the aperture point `𝐚`. On a camera's
+parts it is `aperture_direction`.
+
+```@docs
+VisualRadiometryToolkitCore.π̂⁻¹(::RadiometricCameraModel, ::VisualRadiometryToolkitCore.StaticVector{2}, ::VisualRadiometryToolkitCore.StaticVector{3})
+```
+
+### The paper's notation
+
+The public names are descriptive. The symbols of the paper are public aliases,
+each bound to the same function or constant as its descriptive name (one
+definition; `VisualRadiometryToolkitCore.𝔣 === VisualRadiometryToolkitCore.focus_point`):
+
+| Paper | Alias | Name |
+|:------|:------|:-----|
+| centre of projection `𝔭` | `𝔭` | `center_of_projection` |
+| focus point `𝔣(𝐩)` | `𝔣` | `focus_point` |
+| radiometric back-projection `π̂⁻¹(𝐩, 𝐚)` | `π̂⁻¹` | `backproject(camera, 𝐩, 𝐚)` (VisualGeometryToolkitCore's) |
+| inverse focus distance `t̂(𝐩)` | `t̂` | `inverse_focus_distance` |
+| focus distance `𝔱(𝐩)` | `𝔱` | `focus_distance` |
+| sensor position of a pixel, its inverse | `𝐩_of_pixel`, `pixel_of_𝐩` | `sensor_position`, `pixel_position` |
+| pixel footprint `ℐ_𝐮` | `ℐ_𝐮` | `pixel_footprint` |
+| sensor sample `𝐩_k` | `𝐩_sample` | `sensor_sample` |
+| aperture sample `𝐚_l`, its weight, a border sample | `𝐚_sample`, `𝐚_weight`, `𝐚_border` | `aperture_sample`, `aperture_weight`, `aperture_border_sample` |
+| `Θ_m ∖ {μ}` | `Θ_m_nonlinear` | `nonlinear_parameters` |
+| diffuse weight `μ` | `with_μ` | `with_diffuse_weight` |
+| roughness `α(𝐛)`, refractive index `η(𝐛)` | `𝛂`, `𝛈` | `roughness`, `refractive_index` |
+| Smith `Λ` | `Λ_ggx` | `ggx_lambda` |
 
 ```@autodocs
 Modules = [VisualRadiometryToolkitCore]
 Private = false
 Pages = ["camera/radiometric_camera.jl", "VisualRadiometryToolkitCore.jl"]
-Filter = t -> t !== VisualRadiometryToolkitCore
+Filter = t -> t !== VisualRadiometryToolkitCore && t !== VisualRadiometryToolkitCore.π̂⁻¹
 ```
 
 ## Focus
 
-The focus surface: the inverse focus distance `t̂ = 1/𝔱` along each chief ray,
+The focus surface: the inverse focus distance (`inverse_focus_distance`, the
+paper's `t̂ = 1/𝔱`) along each chief ray,
 a thin plate spline of VisualGeometryToolkitCore over nodes on the sensor (or,
-as an experiment, over the chief directions: a chart or the sphere). A `Focus`
+as an experiment, over the chief directions: the azimuthal-equidistant chart,
+which is VisualGeometryToolkitCore's equidistant lens, or the sphere). A `Focus`
 is isbits, for a kernel; its solver, a `FocusSpline`, stays on the host.
 
 ```@autodocs
@@ -39,7 +74,7 @@ Pages = ["camera/focus.jl", "camera/focus_charts.jl"]
 ## Sensor and quadrature
 
 Sensor positions are COLMAP pixels of the image, `𝐩 ∈ [0, W] × [0, H]`; Julia's
-1-based pixel `(u, v)` has its centre at `𝐩_of_pixel(u, v)`. The integrals of
+1-based pixel `(u, v)` has its centre at `sensor_position(u, v)`. The integrals of
 the image formation are evaluated by fixed rules: a tensor Gauss–Legendre rule
 on a pixel's footprint and a polar rule on the aperture disc, in statically
 sized containers a kernel takes unchanged.

@@ -14,7 +14,7 @@ follows its conventions; nothing there depends on this.
   chief ray as a thin plate spline.
 - The radiometric camera, one object: [`RadiometricCameraModel`](@ref), a geometric
   camera with its focus surface, aperture radius and vignetting, and its
-  back-projection from the aperture disc (`π̂⁻¹`, `world_ray`).
+  back-projection from the aperture disc (`backproject(camera, 𝐩, 𝐚)`, the paper's `π̂⁻¹`; `world_ray`).
 - The sensor's pixels and the quadrature rules of the image-formation integrals:
   [`SensorQuadrature`](@ref) on a pixel, [`ApertureQuadrature`](@ref) on the aperture.
 - The scene's light: an [`EnvironmentLight`](@ref) of a
@@ -37,12 +37,13 @@ using VisualGeometryToolkitCore: EuclideanMap, PixelFrame, unlabel   # a pose (c
 using VisualGeometryToolkitCore: BoundedCamera, CameraModel, AbstractIntrinsics, SplineLens, extent, model, normalized_point   # the geometric camera a radiometric camera lifts
 using VisualGeometryToolkitCore: grid_nodes, square_rule, unit_disc_rule   # a focus surface's sensor grid; the quadrature rules
 using GeometryBasics: Rect
-import VisualGeometryToolkitCore as VgtkCore   # the spline systems of a focus surface and the equidistant chart, reached qualified (camera/focus.jl, focus_charts.jl)
+import VisualGeometryToolkitCore as VgtkCore   # the spline systems of a focus surface and the equidistant lens, reached qualified (camera/focus.jl, focus_charts.jl)
 # VisualGeometryToolkitCore's contract generics these types answer: a field's centre and element type, the support
 # protocol of a surface's control points, the parameter protocol, a light's units
 import VisualGeometryToolkitCore: center, convert_eltype, support_trait, nodes, support,
     parameter_vector, parameter_names, with_parameters, has_units, with_unit,
-    project, backproject   # a radiometric camera's geometric maps, forwarded to its geometric camera
+    project, backproject,   # a radiometric camera's geometric maps, forwarded to its geometric camera; `backproject(camera, 𝐩, 𝐚)`, the radiometric back-projection
+    lens                    # refused by name on a radiometric camera (its geometric camera's lens model is `lens(geometric(camera))`)
 
 export AbstractVignetting, NoVignetting, TensorProductVignetting, RadialVignetting, LogVignetting   # a camera's vignetting (camera/vignetting.jl)
 public log_spline        # a LogVignetting's spline of log V
@@ -55,14 +56,20 @@ public radiance, exit_direction, radiance_map, coefficients, with_coefficients, 
 
 export RadiometricCameraModel   # the radiometric camera: a geometric camera with its focus surface, aperture radius and vignetting (camera/radiometric_camera.jl)
 public geometric, focus, aperture_radius, with_geometric, with_focus, with_aperture_radius, with_vignetting   # its parts and their replacers
-public chief_ray, chief_dir, 𝔭, 𝔣, π̂⁻¹, world_ray   # its camera-frame maps: the chief ray, the focus point, the back-projection from the aperture, a ray in the world
-public Focus, FocusSpline, n_nodes, t̂, 𝔱   # the focus surface: the inverse focus distance as a thin plate spline, and its host-side solver (camera/focus.jl)
-public FOCUS_SENSOR, FOCUS_DIRECTION_CHART, FOCUS_SPHERE, ae_chart, ae_dir, t̂_dir, focus_weights, polar_cap_nodes   # the focus kinds: the sensor chart, a direction chart, the sphere (camera/focus_charts.jl)
-public 𝐩_of_pixel, pixel_of_𝐩, ℐ_𝐮, luma, luma_image   # the sensor domain: Julia's pixel indices and sensor positions, a pixel's footprint, luma (sensor/notation.jl)
-public SensorQuadrature, ApertureQuadrature, sensor_samples, aperture_samples, aperture_border, 𝐩_sample, 𝐚_sample, 𝐚_weight, 𝐚_border,
-       n_disc, n_border   # the rules on a pixel and on the aperture disc and its border (sensor/quadrature.jl)
-public Material, Θ_m_nonlinear, with_nonlinear, with_μ, texture_weight, 𝛂, 𝛈, D_ggx, Λ_ggx, G1_ggx, G2_ggx, F_dielectric,
-       sample_vndf_caps, D_v, PDF_reflect, reflect, f_CT_parts, f_CT   # a surface's reflectance: the Cook–Torrance BSDF and its GGX pieces (scene/materials.jl)
+public chief_ray, chief_direction, center_of_projection, focus_point, aperture_direction, world_ray   # its camera-frame maps: the chief ray, the focus point, the back-projection from the aperture on the camera's parts (a camera's is `backproject(camera, 𝐩, 𝐚)`), a ray in the world
+public 𝔭, 𝔣, π̂⁻¹   # the paper's notation: aliases of center_of_projection, focus_point and VisualGeometryToolkitCore's backproject
+public Focus, FocusSpline, n_nodes, inverse_focus_distance, focus_distance   # the focus surface: the inverse focus distance as a thin plate spline, and its host-side solver (camera/focus.jl)
+public t̂, 𝔱   # the paper's notation: aliases of inverse_focus_distance and focus_distance
+public FOCUS_SENSOR, FOCUS_DIRECTION_CHART, FOCUS_SPHERE, focus_weights, polar_cap_nodes   # the focus kinds: the sensor chart, a direction chart, the sphere (camera/focus_charts.jl)
+public sensor_position, pixel_position, pixel_footprint, luma, luma_image   # the sensor domain: Julia's pixel indices and sensor positions, a pixel's footprint, luma (sensor/notation.jl)
+public 𝐩_of_pixel, pixel_of_𝐩, ℐ_𝐮   # the paper's notation: aliases of sensor_position, pixel_position and pixel_footprint
+public SensorQuadrature, ApertureQuadrature, sensor_samples, aperture_samples, aperture_border, sensor_sample, aperture_sample,
+       aperture_weight, aperture_border_sample, n_disc, n_border   # the rules on a pixel and on the aperture disc and its border (sensor/quadrature.jl)
+public 𝐩_sample, 𝐚_sample, 𝐚_weight, 𝐚_border   # the paper's notation: aliases of sensor_sample, aperture_sample, aperture_weight and aperture_border_sample
+public Material, nonlinear_parameters, with_nonlinear, with_diffuse_weight, texture_weight, roughness, refractive_index,
+       ggx_distribution, ggx_lambda, ggx_masking, ggx_masking_shadowing, fresnel_dielectric, sample_visible_normal,
+       visible_normal_density, reflection_pdf, reflect, cook_torrance_terms, cook_torrance   # a surface's reflectance: the Cook–Torrance BSDF and its GGX pieces (scene/materials.jl)
+public Θ_m_nonlinear, with_μ, 𝛂, 𝛈, Λ_ggx   # the paper's notation: aliases of nonlinear_parameters, with_diffuse_weight, roughness, refractive_index and ggx_lambda
 public CONTRACT_GENERICS   # the functions another package may add methods to
 
 # The sensor ------------------------------------------------------------------
@@ -89,11 +96,12 @@ methods to across a package boundary (VisualGeometryToolkitCore's
 - [`chief_ray`](@ref): a geometric camera type of another package answers it to
   carry a radiometric camera;
 - the camera-frame maps a record holding a radiometric camera's parts forwards
-  to their one implementation: [`chief_dir`](@ref), [`t̂`](@ref), [`𝔣`](@ref),
-  [`π̂⁻¹`](@ref), [`world_ray`](@ref);
+  to their one implementation: [`chief_direction`](@ref), [`inverse_focus_distance`](@ref),
+  [`focus_point`](@ref), [`world_ray`](@ref) (the radiometric back-projection such a record answers is
+  VisualGeometryToolkitCore's contract generic `backproject`, with the aperture point as a third argument);
 - the part accessors such a record answers: [`geometric`](@ref), [`focus`](@ref),
   [`aperture_radius`](@ref).
 """
-const CONTRACT_GENERICS = (chief_ray, chief_dir, t̂, 𝔣, π̂⁻¹, world_ray, geometric, focus, aperture_radius)
+const CONTRACT_GENERICS = (chief_ray, chief_direction, inverse_focus_distance, focus_point, world_ray, geometric, focus, aperture_radius)
 
 end # module

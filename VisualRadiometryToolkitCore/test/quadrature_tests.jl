@@ -4,10 +4,16 @@
 @testitem "quadrature: the rules on a pixel and on the aperture; the sensor's pixels" begin
     using Test
     using VisualRadiometryToolkitCore: aperture_border, aperture_samples, sensor_samples, ApertureQuadrature, SensorQuadrature,
-                                       pixel_of_𝐩, ℐ_𝐮, 𝐩_of_pixel, 𝐩_sample, 𝐚_sample, 𝐚_weight, 𝐚_border, n_disc, n_border, luma, luma_image
+                                       pixel_position, pixel_footprint, sensor_position, sensor_sample, aperture_sample, aperture_weight,
+                                       aperture_border_sample, n_disc, n_border, luma, luma_image
+    import VisualRadiometryToolkitCore as VrtkCore
     using StaticArrays: SVector
     using LinearAlgebra: dot
     import VisualGeometryToolkitCore as VgtkCore
+    # the paper's notation: public aliases, the same functions
+    @test VrtkCore.𝐩_of_pixel === sensor_position && VrtkCore.pixel_of_𝐩 === pixel_position && VrtkCore.ℐ_𝐮 === pixel_footprint &&
+          VrtkCore.𝐩_sample === sensor_sample && VrtkCore.𝐚_sample === aperture_sample && VrtkCore.𝐚_weight === aperture_weight &&
+          VrtkCore.𝐚_border === aperture_border_sample
 
     sq = SensorQuadrature(3)
     @test sum(sq.weights) ≈ 1
@@ -20,21 +26,21 @@
     # aperture samples at radius r integrate the area πr²
     r = 0.03
     @test sum(w for (a, w) in aperture_samples(aq, r)) ≈ π * r^2
-    @test first(aperture_samples(aq, r)) == (𝐚_sample(aq, 1, r), 𝐚_weight(aq, 1, r)) && 𝐚_sample(aq, 1, r)[3] == 0
+    @test first(aperture_samples(aq, r)) == (aperture_sample(aq, 1, r), aperture_weight(aq, 1, r)) && aperture_sample(aq, 1, r)[3] == 0
     @test sum(ds for (a, v, n, ds) in aperture_border(aq, r)) ≈ 2π * r
     @test all(abs(dot(v, n) - 1) < 1e-14 for (a, v, n, ds) in aperture_border(aq, r))
-    @test first(aperture_border(aq, r)) == 𝐚_border(aq, 1, r)
-    @test 𝐩_of_pixel(3, 7) == SVector(2.5, 6.5) && pixel_of_𝐩(𝐩_of_pixel(3, 7)) ≈ SVector(3.0, 7.0)     # COLMAP pixels: pixel (u, v)'s centre
-    @test 𝐩_of_pixel(SVector(3, 7)) == SVector(2.5, 6.5)
-    lo, hi = ℐ_𝐮(1, 1); @test lo ≈ SVector(0.0, 0.0) && hi ≈ SVector(1.0, 1.0)
+    @test first(aperture_border(aq, r)) == aperture_border_sample(aq, 1, r)
+    @test sensor_position(3, 7) == SVector(2.5, 6.5) && pixel_position(sensor_position(3, 7)) ≈ SVector(3.0, 7.0)     # COLMAP pixels: pixel (u, v)'s centre
+    @test sensor_position(SVector(3, 7)) == SVector(2.5, 6.5)
+    lo, hi = pixel_footprint(1, 1); @test lo ≈ SVector(0.0, 0.0) && hi ≈ SVector(1.0, 1.0)
     # the sensor rule is the pixel box: the tensor Gauss–Legendre rule, its weights summing to one
     @test fieldnames(SensorQuadrature) == (:offsets, :weights) && sum(SensorQuadrature{Float64}(3).weights) ≈ 1
     @test all(o -> all(abs.(o) .< 0.5), SensorQuadrature{Float64}(3).offsets) && length(SensorQuadrature(4)) == 16
-    @test all(((𝐩, w),) -> all(lo .< 𝐩 .< hi), sensor_samples(sq, 1, 1)) && first(sensor_samples(sq, 2, 5))[1] == 𝐩_sample(sq, 1, 2, 5)
+    @test all(((𝐩, w),) -> all(lo .< 𝐩 .< hi), sensor_samples(sq, 1, 1)) && first(sensor_samples(sq, 2, 5))[1] == sensor_sample(sq, 1, 2, 5)
     # the rules in a device kernel's float, verbatim; isbits
     s32 = VgtkCore.convert_eltype(Float32, sq); a32 = VgtkCore.convert_eltype(Float32, aq)
     @test s32 isa SensorQuadrature{Float32, 9} && s32.weights == Float32.(sq.weights) && a32 isa ApertureQuadrature{Float32, 48, 12} && a32.w̃ == Float32.(aq.w̃)
-    @test isbits(sq) && isbits(aq) && 𝐩_sample(s32, 1, 2, 5) isa SVector{2, Float32}
+    @test isbits(sq) && isbits(aq) && sensor_sample(s32, 1, 2, 5) isa SVector{2, Float32}
     # Rec. 709 luma: of a triple, of an image's planes
     @test luma(SVector(1.0, 1.0, 1.0)) ≈ 1 && luma(SVector(0.0f0, 1.0f0, 0.0f0)) === 0.7152f0
     img = cat(fill(0.2, 2, 3), fill(0.4, 2, 3), fill(0.6, 2, 3); dims = 3)

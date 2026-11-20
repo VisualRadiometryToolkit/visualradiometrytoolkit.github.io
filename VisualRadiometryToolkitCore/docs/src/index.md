@@ -49,7 +49,7 @@ camera = RadiometricCameraModel(geometric; focus = 1.5, aperture_radius = 0.004)
 camera.vignetting                                                                            # NoVignetting(): none was stated
 𝐩 = SVector(700.0, 300.0)                                                                    # a sensor position (COLMAP pixels)
 𝐚 = SVector(0.002, 0.0, 0.0)                                                                 # a point of the aperture disc (camera frame, m)
-VisualRadiometryToolkitCore.π̂⁻¹(camera, 𝐩, 𝐚)                                                # the ray's unit direction from 𝐚 to the focus point of 𝐩
+backproject(camera, 𝐩, 𝐚)                                                                    # the ray's unit direction from 𝐚 to the focus point of 𝐩 (the paper's π̂⁻¹)
 ```
 
 ```jldoctest

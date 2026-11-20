@@ -34,8 +34,8 @@ end
 SensorQuadrature(n::Integer = 2) = SensorQuadrature{Float64}(n)
 Base.length(::SensorQuadrature{T, NS}) where {T, NS} = NS
 
-"""Sensor position (COLMAP pixels) of sub-sample `k` of pixel `(u, v)`."""
-@inline 𝐩_sample(q::SensorQuadrature, k::Integer, u::Integer, v::Integer) = 𝐩_of_pixel(u + q.offsets[k][1], v + q.offsets[k][2])
+"""Sensor position (COLMAP pixels) of sub-sample `k` of pixel `(u, v)`, the paper's `𝐩_k` (public alias `𝐩_sample`)."""
+@inline sensor_sample(q::SensorQuadrature, k::Integer, u::Integer, v::Integer) = sensor_position(u + q.offsets[k][1], v + q.offsets[k][2])
 
 """
     ApertureQuadrature{T, NA, NB}
@@ -75,19 +75,19 @@ The number of samples of the aperture's border ∂𝒜 (`n_φ`).
 """
 n_border(::ApertureQuadrature{T, NA, NB}) where {T, NA, NB} = NB
 
-"""Aperture point `𝐚_l = r â_l` (aperture plane z = 0 of the camera frame) of disc node `l`."""
-@inline 𝐚_sample(q::ApertureQuadrature, l::Integer, r) = SVector(r * q.â[l][1], r * q.â[l][2], zero(r))
-"""Disc weight `r² w̃_l` of node `l`."""
-@inline 𝐚_weight(q::ApertureQuadrature, l::Integer, r) = r^2 * q.w̃[l]
+"""Aperture point `𝐚_l = r â_l` (aperture plane z = 0 of the camera frame) of disc node `l` (public alias `𝐚_sample`)."""
+@inline aperture_sample(q::ApertureQuadrature, l::Integer, r) = SVector(r * q.â[l][1], r * q.â[l][2], zero(r))
+"""Disc weight `r² w̃_l` of node `l` (public alias `𝐚_weight`)."""
+@inline aperture_weight(q::ApertureQuadrature, l::Integer, r) = r^2 * q.w̃[l]
 
 """
-    𝐚_border(q, j, r) -> (𝐚(φ_j), 𝐯(φ_j), 𝐧(φ_j), ds_j)
+    aperture_border_sample(q, j, r) -> (𝐚(φ_j), 𝐯(φ_j), 𝐧(φ_j), ds_j)
 
 Polar parameterisation of ∂𝒜: `𝐚(φ) = r (cos φ, sin φ, 0)`, velocity
 `𝐯 = ∂𝐚/∂r = (cos φ, sin φ, 0)`, outward normal `𝐧 = 𝐚/‖𝐚‖` and line element
-`ds = r dφ` (the weight already contains dφ).
+`ds = r dφ` (the weight already contains dφ). Public alias: `𝐚_border`.
 """
-@inline function 𝐚_border(q::ApertureQuadrature, j::Integer, r)
+@inline function aperture_border_sample(q::ApertureQuadrature, j::Integer, r)
     s, c = sincos(q.φ_border[j])
     return SVector(r * c, r * s, zero(r)), SVector(c, s, zero(r)), SVector(c, s, zero(r)), r * q.w_border[j]
 end
@@ -97,25 +97,31 @@ end
     sensor_samples(q::SensorQuadrature, u, v)
 
 An iterator of `(𝐩_k, w_k)` over the sensor rule's nodes on the pixel 𝓘_𝐮 of Julia's 1-based pixel `(u, v)`: the sensor positions
-in COLMAP pixels ([`𝐩_sample`](@ref)) and their weights. A host-side convenience; the renderers index the rule directly.
+in COLMAP pixels ([`sensor_sample`](@ref)) and their weights. A host-side convenience; the renderers index the rule directly.
 """
-sensor_samples(q::SensorQuadrature, u::Integer, v::Integer) = ((𝐩_sample(q, k, u, v), q.weights[k]) for k in 1:length(q))
+sensor_samples(q::SensorQuadrature, u::Integer, v::Integer) = ((sensor_sample(q, k, u, v), q.weights[k]) for k in 1:length(q))
 """
     aperture_samples(q::ApertureQuadrature, r)
 
-An iterator of `(𝐚_l, r² w̃_l)` over the disc rule's nodes on the aperture 𝒜 of radius `r` ([`𝐚_sample`](@ref),
-[`𝐚_weight`](@ref)); `r` in the camera frame's units (metres).
+An iterator of `(𝐚_l, r² w̃_l)` over the disc rule's nodes on the aperture 𝒜 of radius `r` ([`aperture_sample`](@ref),
+[`aperture_weight`](@ref)); `r` in the camera frame's units (metres).
 """
-aperture_samples(q::ApertureQuadrature, r) = ((𝐚_sample(q, l, r), 𝐚_weight(q, l, r)) for l in 1:n_disc(q))
+aperture_samples(q::ApertureQuadrature, r) = ((aperture_sample(q, l, r), aperture_weight(q, l, r)) for l in 1:n_disc(q))
 """
     aperture_border(q::ApertureQuadrature, r)
 
-An iterator of [`𝐚_border`](@ref)`(q, j, r)` over the samples of the aperture's border ∂𝒜 of radius `r`.
+An iterator of [`aperture_border_sample`](@ref)`(q, j, r)` over the samples of the aperture's border ∂𝒜 of radius `r`.
 """
-aperture_border(q::ApertureQuadrature, r) = (𝐚_border(q, j, r) for j in 1:n_border(q))
+aperture_border(q::ApertureQuadrature, r) = (aperture_border_sample(q, j, r) for j in 1:n_border(q))
 
 # the rules in another element type (VisualGeometryToolkitCore's `convert_eltype`: Float32 for a device kernel), converted verbatim
 convert_eltype(::Type{T}, q::SensorQuadrature{S, NS}) where {T, S, NS} =
     SensorQuadrature{T, NS}(SVector{NS}(SVector{2, T}.(q.offsets)), SVector{NS, T}(q.weights))
 convert_eltype(::Type{T}, q::ApertureQuadrature{S, NA, NB}) where {T, S, NA, NB} =
     ApertureQuadrature{T, NA, NB}(SVector{NA}(SVector{2, T}.(q.â)), SVector{NA, T}(q.w̃), SVector{NB, T}(q.φ_border), SVector{NB, T}(q.w_border))
+
+# The paper's notation, as public aliases of the same functions (one definition each)
+const 𝐩_sample = sensor_sample
+const 𝐚_sample = aperture_sample
+const 𝐚_weight = aperture_weight
+const 𝐚_border = aperture_border_sample
