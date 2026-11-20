@@ -1,7 +1,7 @@
 @testitem "radial profile: a binned profile on the one chart registry (equisolid among it)" begin
     using Test, StaticArrays
     using VisualRadiometryToolkitCore
-    import VisualGeometryToolkitCore
+    using VisualGeometryToolkitCore
     using VisualRadiometryToolkitCore: BinnedRadialProfile, RADIAL_CHARTS, radial_chart, radial_coordinate, field_radius
 
     @test RADIAL_CHARTS == (:linear, :projective, :equisolid)

@@ -580,7 +580,9 @@ const VIGNETTING_TAGS = TagRegistry(:vignetting, "Vignetting",
 # centre and radius are the field's geometry, fixed. So a field is a
 # `ParameterManifold` (an NLLSsolver variable through VisualGeometryToolkitCore's adapter), and a
 # linear restriction of it (`restrict(ch, Z)`) is a fit's control-point basis.
-parameter_vector(v::AbstractVignetting) = (P = control_points(v); SVector{length(P), eltype(P)}(Tuple(P)))
+# A static array's entries as one static vector, column-major: a model's coefficients as its parameter vector.
+@inline _coefficient_vector(A) = SVector{length(A), eltype(A)}(Tuple(A))
+parameter_vector(v::AbstractVignetting) = _coefficient_vector(control_points(v))
 parameter_names(v::AbstractVignetting) = ntuple(i -> Symbol(:c, i), Val(n_control_points(v)))
 function with_parameters(v::AbstractVignetting, θ::AbstractVector)
     n = n_control_points(v)

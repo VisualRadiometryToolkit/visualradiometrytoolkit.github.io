@@ -7,6 +7,7 @@
     using LinearAlgebra: dot
     using VisualRadiometryToolkitCore: TensorProductVignetting, RadialVignetting, coefficient_jacobian, control_points, with_control_points, n_control_points, knot_vectors, spline_degree, field_radius, radial_coordinate, pole_regular_basis, LogVignetting
     using VisualGeometryToolkitCore: center, clamped_knots, convert_eltype, pointwise!, Rect, BoundaryRule, boundary_rule_jacobian, free_nodes, Circle, Point2
+    import VisualGeometryToolkitCore
     import BSplineKit
     import ForwardDiff
 
