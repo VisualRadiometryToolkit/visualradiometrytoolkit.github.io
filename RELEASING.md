@@ -75,6 +75,6 @@ RadiometricCamera move here in a release cascade, stated in
 [docs/design/inventory.md](docs/design/inventory.md): this package's release
 that holds a type comes first (CauRegistry); the release of the package that
 held it retires it by name with its replacement; the dependants' releases
-follow. A type is never released in two packages as two owners: while a copy
-exists on both sides between releases, it is listed in `DUPLICATION.toml` with
-the release that removes it.
+follow. Zero duplication is the rule: code is moved, never copied, and
+`DUPLICATION.toml` holds no exception for moved code. A type is never released
+in two packages as two owners.
