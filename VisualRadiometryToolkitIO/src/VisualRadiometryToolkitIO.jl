@@ -48,11 +48,6 @@ const _VALUE_PIXEL_FRAME = PixelFrame{:colmap}
 _to_file(s::VgioStyle) = VgtkIO.pixel_frame_offset(_VALUE_PIXEL_FRAME, VgtkIO.pixel_frame(s))
 _from_file(s::VgioStyle) = VgtkIO.pixel_frame_offset(VgtkIO.pixel_frame(s), _VALUE_PIXEL_FRAME)
 
-# A matrix stored as its rows (a tensor surface's control points, a light's coefficients per channel, a profile's values
-# per channel), read back as a Matrix{Float64}…
-_rows_matrix(rows) = reduce(vcat, (permutedims(Float64[Float64(x::Real) for x in r]) for r in rows))
-# …and written: its rows, each a Vector{Float64}.
-_matrix_rows(A::AbstractMatrix) = [Float64[A[i, j] for j in axes(A, 2)] for i in axes(A, 1)]
 
 # Where the published JSON Schemas of these kinds live (docs/src/schemas, at the path of each schema string).
 const _SCHEMA_SITE = "https://visualradiometrytoolkit.github.io/schemas/"

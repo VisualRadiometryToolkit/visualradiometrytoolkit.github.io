@@ -81,11 +81,11 @@ function JSON.lower(s::VgioStyle, light::EnvironmentLight{<:SphericalHarmonicMap
         center = [VgtkIO.write_length(c, s.length_unit) for c in VgtkCore.center(light)],
         radius = VgtkIO.write_length(VgtkCore.radius(light), s.length_unit),
         map = (type = "spherical_harmonics", basis = _SH_BASIS, max_degree = max_degree(light),
-               coefficients = _matrix_rows(a)),
+               coefficients = VgtkIO.matrix_rows(a)),
     )
 end
 function JSON.lift(s::VgioStyle{<:Units}, ::Type{EnvironmentLight}, d::Record)
-    a = _rows_matrix(d.map.coefficients::Vector{Any})
+    a = VgtkIO.rows_matrix(d.map.coefficients::Vector{Any})
     c = d.center::Vector{Any}
     center = SVector{3, BaseQuantity}(ntuple(i -> VgtkIO.read_length(c[i]::Real, s.length_unit), Val(3)))
     return EnvironmentLight(SphericalHarmonicMap(a, Int(d.map.max_degree)), center, VgtkIO.read_length(d.radius::Real, s.length_unit))

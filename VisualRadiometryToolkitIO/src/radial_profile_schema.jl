@@ -75,13 +75,13 @@ function JSON.lower(s::VgioStyle, p::BinnedRadialProfile)
     c = VgtkCore.center(p) + _to_file(s)
     chart = merge((type = String(radial_chart(p)), center = Float64[c[1], c[2]], radius = field_radius(p)),
                   p.focal_length === nothing ? (;) : (focal_length = p.focal_length,))
-    return (type = "binned_radial_profile", chart = chart, edges = p.edges, values = _matrix_rows(p.values), counts = p.counts)
+    return (type = "binned_radial_profile", chart = chart, edges = p.edges, values = VgtkIO.matrix_rows(p.values), counts = p.counts)
 end
 function JSON.lift(s::VgioStyle, ::Type{BinnedRadialProfile}, b::Record)
     ch = b.chart
     c = SVector(Float64(ch.center[1]::Real), Float64(ch.center[2]::Real)) + _from_file(s)
     return BinnedRadialProfile(Symbol(ch.type::String), c, Float64(ch.radius::Real), Float64[Float64(e::Real) for e in b.edges],
-                               _rows_matrix(b.values::Vector{Any}), Int[Int(n::Integer) for n in b.counts];
+                               VgtkIO.rows_matrix(b.values::Vector{Any}), Int[Int(n::Integer) for n in b.counts];
                                focal_length = haskey(ch, :focal_length) ? Float64(ch.focal_length::Real) : nothing)
 end
 

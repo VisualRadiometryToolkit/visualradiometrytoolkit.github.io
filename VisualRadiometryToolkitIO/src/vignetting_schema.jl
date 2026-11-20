@@ -83,7 +83,7 @@ function JSON.lower(s::VgioStyle, v::TensorProductVignetting)
     return (
         type = tag_of(VIGNETTING_TAGS, v), degree = collect(spline_degree(v)),
         knots_x = Float64.(collect(knot_vectors(v)[1])) .+ c[1], knots_y = Float64.(collect(knot_vectors(v)[2])) .+ c[2],
-        control_points = _matrix_rows(control_points(v)),
+        control_points = VgtkIO.matrix_rows(control_points(v)),
     )
 end
 # A radial profile states its chart always (a declaration has no default).
@@ -99,7 +99,7 @@ JSON.lift(s::VgioStyle, ::Type{AbstractVignetting}, b::Record) = _lift_vignettin
 _lift_vignetting(s::VgioStyle, ::Type{<:LogVignetting}, b::Record) = LogVignetting(JSON.lift(s, AbstractVignetting, b.spline::Record))
 function _lift_vignetting(s::VgioStyle, ::Type{<:TensorProductVignetting}, b::Record)
     c = _from_file(s)
-    P = _rows_matrix(b.control_points::Vector{Any})
+    P = VgtkIO.rows_matrix(b.control_points::Vector{Any})
     return TensorProductVignetting(Float64[Float64(x::Real) + c[1] for x in b.knots_x], Float64[Float64(x::Real) + c[2] for x in b.knots_y], P;
         degree = (Int(b.degree[1]), Int(b.degree[2])))
 end
