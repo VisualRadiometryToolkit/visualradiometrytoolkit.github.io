@@ -63,7 +63,7 @@ end
         chart = VgtkCore.equidistant_chart(SVector(0.0, 0.0, 1.0))
         for ξ in nodes
             d = ae_dir(ξ)
-            @test d == inv(chart)(ξ) && ae_chart(d) == chart(d) && all(isfinite, d)
+            @test d == inv(chart.f2)(VgtkCore.backproject(chart.f1, ξ)) && ae_chart(d) == chart(d) && all(isfinite, d)   # chart = lens ∘ rotation (CoordinateTransformations' f1 ∘ f2)
             ξ32 = SVector{2, Float32}(ξ); d32 = ae_dir(ξ32)
             @test d32 isa SVector{3, Float32} && ae_chart(d32) isa SVector{2, Float32}
             @test d32 ≈ d rtol = 1.0f-6
