@@ -95,11 +95,8 @@ chart's focal length), the `B + 1` bin edges in the chart's coordinate (radians
 for equisolid), the `channels × B` values (one row per channel) and the `B`
 pixel counts.
 """
-function VgtkIO.save(path::AbstractString, p::BinnedRadialProfile; provenance::NamedTuple = (;))
-    s = VgioStyle()
-    VgtkIO.write_kind(path, RADIAL_PROFILE_KIND, (profile = JSON.lower(s, p),); style = s, provenance)
-    return nothing
-end
+VgtkIO.save(path::AbstractString, p::BinnedRadialProfile; provenance::NamedTuple = (;)) =
+    _save_keyed(path, RADIAL_PROFILE_KIND, :profile, p, provenance)
 
 """
     VisualGeometryToolkitIO.load(BinnedRadialProfile, path) -> BinnedRadialProfile
@@ -108,10 +105,4 @@ Read a `vgio/radial_profile/v1.0` file (`save`'s): the profile exactly as
 written, its centre in COLMAP pixels (a file in another pixel frame moved into
 them).
 """
-function VgtkIO.load(::Type{BinnedRadialProfile}, path::AbstractString)
-    d = VgtkIO.read_kind(path, RADIAL_PROFILE_KIND)
-    return JSON.lift(VgioStyle(d), BinnedRadialProfile, d.profile::Record)
-end
-
-VgtkIO.validate_record(::Val{Symbol("vgio/radial_profile")}, path::AbstractString, schema::AbstractString) =
-    (VgtkIO.read_kind(path, RADIAL_PROFILE_KIND); nothing)
+VgtkIO.load(::Type{BinnedRadialProfile}, path::AbstractString) = _load_keyed(BinnedRadialProfile, path, RADIAL_PROFILE_KIND, :profile)

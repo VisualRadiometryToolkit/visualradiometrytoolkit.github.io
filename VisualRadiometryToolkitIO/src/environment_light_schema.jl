@@ -102,16 +102,11 @@ function VgtkIO.load(::Type{EnvironmentLight}, path::AbstractString)
     return JSON.lift(VgioStyle(d), EnvironmentLight, d::Record)
 end
 
-VgtkIO.validate_record(::Val{Symbol("vgio/environment_light")}, path::AbstractString, schema::AbstractString) =
-    (VgtkIO.read_kind(path, ENVIRONMENT_LIGHT_KIND); nothing)
-
 # --- vgio/environment_light/v1 → v2.0 ---------------------------------------------
 # The envelope (its coefficients' radiance "relative", as v1 left them in the caller's units); `l_max` → `max_degree`,
 # the type's name.
-function VgtkIO.migrate_schema(::Val{Symbol("vgio/environment_light/v1")}, old::AbstractDict)
-    t = VgtkIO.migrate_envelope(old, _ENVIRONMENT_LIGHT_SCHEMA)
-    t["map"] = Dict{String, Any}((k == "l_max" ? "max_degree" : String(k)) => v for (k, v) in t["map"])
-    return t
-end
+_light_map_v2(map::AbstractDict) = Dict{String, Any}((k == "l_max" ? "max_degree" : String(k)) => v for (k, v) in map)
+VgtkIO.migrate_schema(::Val{Symbol("vgio/environment_light/v1")}, old::AbstractDict) =
+    _migrated(old, _ENVIRONMENT_LIGHT_SCHEMA, "map", _light_map_v2)
 VgtkIO.migrate_schema(::Val{Symbol("vgio/environment_light/v1")}, src::AbstractString, dst::AbstractString) =
     VgtkIO.migrate_file(EnvironmentLight, ENVIRONMENT_LIGHT_KIND, src, dst; what = "the environment light")

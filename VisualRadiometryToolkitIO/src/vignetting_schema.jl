@@ -131,11 +131,8 @@ back, bit for bit, for a radial profile on its chart's own knots (the record
 holds no knots: a profile built from explicit knots reads back on its chart's rule).
 A field with no body (`NoVignetting`) is an `ArgumentError`.
 """
-function VgtkIO.save(path::AbstractString, v::AbstractVignetting; provenance::NamedTuple = (;))
-    s = VgioStyle()
-    VgtkIO.write_kind(path, VIGNETTING_KIND, (vignetting = JSON.lower(s, v),); style = s, provenance)
-    return nothing
-end
+VgtkIO.save(path::AbstractString, v::AbstractVignetting; provenance::NamedTuple = (;)) =
+    _save_keyed(path, VIGNETTING_KIND, :vignetting, v, provenance)
 
 """
     VisualGeometryToolkitIO.load(AbstractVignetting, path) -> AbstractVignetting
@@ -148,15 +145,7 @@ its chart's rule at its count and degree (`projective_knots` on the projective
 chart); a projective record of `n ≤ 2p` control points is refused
 (`ArgumentError`), the knots needing at least `2p + 1`.
 """
-function VgtkIO.load(::Type{AbstractVignetting}, path::AbstractString)
-    d = VgtkIO.read_kind(path, VIGNETTING_KIND)
-    return JSON.lift(VgioStyle(d), AbstractVignetting, d.vignetting::Record)
-end
-
-# A listed file of the kind, for `VisualGeometryToolkitIO.validate` and a manifest (the owner of a `vgio` kind that
-# moved is keyed by the kind).
-VgtkIO.validate_record(::Val{Symbol("vgio/vignetting")}, path::AbstractString, schema::AbstractString) =
-    (VgtkIO.read_kind(path, VIGNETTING_KIND); nothing)
+VgtkIO.load(::Type{AbstractVignetting}, path::AbstractString) = _load_keyed(AbstractVignetting, path, VIGNETTING_KIND, :vignetting)
 
 # --- vgio/vignetting/v1 → v2.0 ---------------------------------------------------
 
@@ -176,11 +165,8 @@ migrate_vignetting_body(b::AbstractDict) =
     (b["type"] == "radial" && !haskey(b, "chart")) ? merge(b, Dict{String, Any}("chart" => "linear")) : b
 
 # The envelope (v1's `pixel_frame`, always colmap), then the body.
-function VgtkIO.migrate_schema(::Val{Symbol("vgio/vignetting/v1")}, old::AbstractDict)
-    t = VgtkIO.migrate_envelope(old, _VIGNETTING_SCHEMA)
-    t["vignetting"] = migrate_vignetting_body(t["vignetting"])
-    return t
-end
+VgtkIO.migrate_schema(::Val{Symbol("vgio/vignetting/v1")}, old::AbstractDict) =
+    _migrated(old, _VIGNETTING_SCHEMA, "vignetting", migrate_vignetting_body)
 # The file form (`vgio_migrate`): through `load` and `save` (a vignetting file holds no length).
 VgtkIO.migrate_schema(::Val{Symbol("vgio/vignetting/v1")}, src::AbstractString, dst::AbstractString) =
     VgtkIO.migrate_file(AbstractVignetting, VIGNETTING_KIND, src, dst; what = "the vignetting field", length_unit = false)
