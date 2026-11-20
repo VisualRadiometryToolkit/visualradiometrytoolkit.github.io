@@ -10,9 +10,12 @@ with the parts that decide how much light a pixel collects (vignetting,
 aperture, focus, sensor response). Each part is an abstract type whose default
 is absent and compiles away.
 
-**Under construction.** The package is a skeleton at the placeholder version
-0.0.1 and is not in a registry. It holds the first part born here,
-`NoVignetting`; the plan is in the
+It holds the radiometric camera as one object (`RadiometricCameraModel`: a
+geometric camera with its focus surface, aperture radius and vignetting), its
+back-projection from the aperture disc, the vignetting fields, the sensor's
+quadrature rules, the scene's light (`EnvironmentLight`) and a surface's
+reflectance (`Material`). The package is at the placeholder version 0.0.1 and
+is not in a registry; the design is in the
 [Design page](https://visualradiometrytoolkit.github.io/VisualRadiometryToolkitCore/dev/guide/design/)
 and in [`docs/design/inventory.md`](../docs/design/inventory.md).
 

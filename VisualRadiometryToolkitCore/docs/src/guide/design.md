@@ -1,9 +1,10 @@
 # Design
 
-This page states the design the package is being built to. What exists today
-is marked; the rest is planned, and its code lives for now in
-VisualGeometryToolkitCore and in
-[RadiometricCamera](https://realcamerasareradiometric.github.io). The item by
+This page states the design the package is built to. What exists today is
+marked. The generic radiometric types of
+[RadiometricCamera](https://realcamerasareradiometric.github.io) (the code of
+the paper "Real Cameras are Radiometric") and of VisualGeometryToolkitCore are
+here; the paper's calibration method stays in RadiometricCamera. The item by
 item inventory and the order of the moves are in the repository,
 [`docs/design/inventory.md`](https://github.com/VisualRadiometryToolkit/visualradiometrytoolkit.github.io/blob/main/docs/design/inventory.md).
 
@@ -33,9 +34,9 @@ has an absent default, named `No…`:
 
 | part | what it models | absent default | status |
 |---|---|---|---|
-| vignetting | attenuation across the sensor | [`NoVignetting`](@ref): `V ≡ 1` | **here**; the fields move from VisualGeometryToolkitCore |
-| aperture | the opening that admits light | a point aperture (a pinhole) | planned, from RadiometricCamera |
-| focus | where the camera is in focus | everything in focus | planned, from RadiometricCamera |
+| vignetting | attenuation across the sensor | [`NoVignetting`](@ref): `V ≡ 1` | **here**, with the B-spline fields |
+| aperture | the opening that admits light | a point aperture (a pinhole) | **here** as the camera's aperture radius and its quadrature ([`VisualRadiometryToolkitCore.ApertureQuadrature`](@ref)); the absent default is planned |
+| focus | where the camera is in focus | everything in focus | **here** as the focus surface ([`VisualRadiometryToolkitCore.Focus`](@ref)); the absent default is planned |
 | blur | the point spread on the sensor | no blur | planned, from VisualGeometryToolkitCore |
 | response | collected light to digital value | the identity | planned |
 
@@ -57,20 +58,41 @@ first instance:
    alone has every part absent, and is that geometric camera: it renders what
    a pinhole renderer renders.
 
+[`RadiometricCameraModel`](@ref) composed from a geometric camera has
+[`NoVignetting`](@ref) unless a vignetting is stated; a field to estimate (a
+[`TensorProductVignetting`](@ref), a [`RadialVignetting`](@ref)) is asked for
+by name, by the calibration that estimates it.
+
+## One implementation, on the parts it reads
+
+The camera-frame maps of a radiometric camera (the unit chief direction, the
+focus point `𝔣`, the back-projection from the aperture `π̂⁻¹`, a ray in the
+world) are implemented once, on the parts they read: the geometric camera and
+the focus surface. [`RadiometricCameraModel`](@ref) forwards to them, and so
+does any other record that holds the same parts (a renderer's per-photograph
+record in a kernel's element type): a one-line method, never a second body. A
+geometric camera enters through one function,
+[`VisualRadiometryToolkitCore.chief_ray`](@ref), which every
+VisualGeometryToolkitCore camera answers; it and the forwarded maps are this
+package's `CONTRACT_GENERICS`, the functions another package may add methods to.
+
 A model is therefore extended by adding a part or a subtype of a part. A camera
 that does not use the extension pays nothing for it, and code written before
 the extension keeps its meaning.
 
 ## The layout
 
-`src/VisualRadiometryToolkitCore.jl` lists the files; a planned file is a
-commented `include` with one line saying what it will hold:
+`src/VisualRadiometryToolkitCore.jl` lists the files:
 
-- `camera/`: the parts and the radiometric camera that holds them;
-- `scene/`: lights and materials;
-- `radiance/`: the integrals a pixel's value is (over the aperture and the
-  pixel's footprint) and the kernels that evaluate them, one implementation
-  for the CPU and every GPU backend.
+- `sensor/`: sensor positions and pixels, and the quadrature rules of the
+  integrals a pixel's value is (over the pixel's footprint and the aperture);
+- `camera/`: the parts (vignetting, focus) and the radiometric camera that
+  holds them, with its back-projection from the aperture;
+- `scene/`: lights and materials.
+
+The kernels that evaluate a pixel's flux against a scene are their owner's
+(RadiometricCamera's, for its printed calibration target); they call these
+types on the CPU and on every GPU backend.
 
 Estimation (calibrating a radiometric camera from images) is not core: it is
 planned as a later package of this workspace, as VisualGeometryToolkitEstimation

@@ -4,6 +4,52 @@
 VisualRadiometryToolkitCore
 ```
 
+## The radiometric camera
+
+A [`RadiometricCameraModel`](@ref) is one object: a geometric camera of
+VisualGeometryToolkitCore (`geometric`), a focus surface, an aperture radius
+and a vignetting. Composed from a geometric camera it has
+[`NoVignetting`](@ref) unless one is stated. Its camera-frame maps are the
+unit chief direction, the focus point `𝔣(𝐩)` on the Petzval surface and the
+radiometric back-projection `π̂⁻¹(𝐩, 𝐚)`, the direction of the ray from the
+aperture point `𝐚` to the focus point; `world_ray` is that ray at a pose. Each
+has one implementation, on the parts it reads, so a record that holds the same
+parts forwards to it.
+
+```@autodocs
+Modules = [VisualRadiometryToolkitCore]
+Private = false
+Pages = ["camera/radiometric_camera.jl", "VisualRadiometryToolkitCore.jl"]
+Filter = t -> t !== VisualRadiometryToolkitCore
+```
+
+## Focus
+
+The focus surface: the inverse focus distance `t̂ = 1/𝔱` along each chief ray,
+a thin plate spline of VisualGeometryToolkitCore over nodes on the sensor (or,
+as an experiment, over the chief directions: a chart or the sphere). A `Focus`
+is isbits, for a kernel; its solver, a `FocusSpline`, stays on the host.
+
+```@autodocs
+Modules = [VisualRadiometryToolkitCore]
+Private = false
+Pages = ["camera/focus.jl", "camera/focus_charts.jl"]
+```
+
+## Sensor and quadrature
+
+Sensor positions are COLMAP pixels of the image, `𝐩 ∈ [0, W] × [0, H]`; Julia's
+1-based pixel `(u, v)` has its centre at `𝐩_of_pixel(u, v)`. The integrals of
+the image formation are evaluated by fixed rules: a tensor Gauss–Legendre rule
+on a pixel's footprint and a polar rule on the aperture disc, in statically
+sized containers a kernel takes unchanged.
+
+```@autodocs
+Modules = [VisualRadiometryToolkitCore]
+Private = false
+Pages = ["sensor/notation.jl", "sensor/quadrature.jl"]
+```
+
 ## Vignetting
 
 A camera's relative illumination V on the sensor. [`NoVignetting`](@ref) is the
@@ -57,4 +103,18 @@ VisualRadiometryToolkitCore.radiance(light, x, ω)            # per channel, arr
 Modules = [VisualRadiometryToolkitCore]
 Private = false
 Pages = ["scene/lights.jl"]
+```
+
+## Materials
+
+A surface's reflectance: a spatially varying Cook–Torrance BSDF, a diffuse
+term and a GGX microfacet specular term with a dielectric Fresnel factor, whose
+roughness and index of refraction blend between two endpoints by a texture
+value. The pieces are scalar functions, generic in the number type (dual
+numbers, `Float32` in a kernel).
+
+```@autodocs
+Modules = [VisualRadiometryToolkitCore]
+Private = false
+Pages = ["scene/materials.jl"]
 ```
