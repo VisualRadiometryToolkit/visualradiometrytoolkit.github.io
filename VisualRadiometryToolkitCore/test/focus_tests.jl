@@ -28,13 +28,14 @@
     # the parameter protocol: the nodal values, rebuilt through the host-side system; the element type converted verbatim
     @test VgtkCore.parameter_vector(fa) === fa.t̂_i && VgtkCore.parameter_names(fa)[25] === :t̂25
     f2 = VgtkCore.with_parameters(fa, vals2)
-    @test f2.t̂_i == vals2 && f2.nodes == fa.nodes && t̂(f2, tps.nodes[7]) ≈ vals2[7] atol = 1e-9
+    @test f2.t̂_i == vals2 && f2.nodes == fa.nodes
+    @test t̂(f2, tps.nodes[7]) ≈ vals2[7] atol = 1e-9
     f32 = VgtkCore.convert_eltype(Float32, fa)
     @test f32 isa Focus{Float32, 25} && f32.kind == fa.kind && f32.w == Float32.(fa.w) && t̂(f32, SVector(244.0f0, 30.0f0)) isa Float32
 end
 
 # EXPERIMENT (focus-ab): the direction-chart and spherical focus surfaces (src/camera/focus_charts.jl).
-@testitem "focus charts (focus-ab experiment)" begin
+@testitem "focus charts (focus-ab experiment)" setup = [PixelCameras] begin
     using Test
     using VisualRadiometryToolkitCore: Focus, FocusSpline, t̂, t̂_dir, ae_dir, ae_chart, focus_weights, polar_cap_nodes, chief_dir,
                                        FOCUS_SENSOR, FOCUS_DIRECTION_CHART, FOCUS_SPHERE
@@ -43,9 +44,6 @@ end
     import ForwardDiff
     import VisualGeometryToolkitCore as VgtkCore
 
-    cam(lens, f, c, W, H; f_y = f) =
-        VgtkCore.BoundedCamera(VgtkCore.CameraModel(VgtkCore.LogicalIntrinsics(VgtkCore.CameraCalibrationMat(SMatrix{3, 3}(f, 0, 0, 0, f_y, 0, c[1], c[2], 1))), lens),
-                               VgtkCore.Size2(Int(W), Int(H)))
     mean(x) = sum(x) / length(x)
     @test (FOCUS_SENSOR, FOCUS_DIRECTION_CHART, FOCUS_SPHERE) == (0, 1, 2)
     # (Li₂, Wahba's kernel and the azimuthal-equidistant chart are VisualGeometryToolkitCore's: dilog, spherical_spline_kernel, the

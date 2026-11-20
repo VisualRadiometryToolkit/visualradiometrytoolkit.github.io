@@ -2,7 +2,7 @@
 # vignetting, and its camera-frame maps. Moved with the code from the model parts of RadiometricCamera's
 # test/unit/camera_model_tests.jl and the back-projection part of its geometry_tests.jl.
 
-@testitem "radiometric camera: one object, its parts, its back-projection" begin
+@testitem "radiometric camera: one object, its parts, its back-projection" setup = [PixelCameras] begin
     using Test
     using VisualRadiometryToolkitCore: Focus, geometric, focus, aperture_radius, with_geometric, with_focus, with_aperture_radius,
                                        with_vignetting, chief_ray, chief_dir, 𝔭, 𝔣, π̂⁻¹, world_ray, t̂, 𝔱, n_nodes
@@ -11,9 +11,6 @@
     import ForwardDiff
     import VisualGeometryToolkitCore as VgtkCore
 
-    cam(lens, f, c, W, H; f_y = f) =
-        VgtkCore.BoundedCamera(VgtkCore.CameraModel(VgtkCore.LogicalIntrinsics(VgtkCore.CameraCalibrationMat(SMatrix{3, 3}(f, 0, 0, 0, f_y, 0, c[1], c[2], 1))), lens),
-                               VgtkCore.Size2(Int(W), Int(H)))
     W = H = 24
     lens = cam(VgtkCore.Lens(VgtkCore.DoubleSphere(0.25, 0.4)), 30.912, (12.24, 11.52), W, H)
     foc = Focus(3, 1.5, W, H)
@@ -60,14 +57,13 @@
     @test chief_ray in VisualRadiometryToolkitCore.CONTRACT_GENERICS
 end
 
-@testitem "radiometric camera: NoVignetting is the default" begin
+@testitem "radiometric camera: NoVignetting is the default" setup = [PixelCameras] begin
     using Test
     using VisualRadiometryToolkitCore: Focus, with_vignetting, n_control_points, coefficient_jacobian
     using StaticArrays: SVector, SMatrix
     import VisualGeometryToolkitCore as VgtkCore
 
-    lens = VgtkCore.BoundedCamera(VgtkCore.CameraModel(VgtkCore.LogicalIntrinsics(VgtkCore.CameraCalibrationMat(SMatrix{3, 3}(30.0, 0, 0, 0, 30.0, 0, 12.0, 12.0, 1))),
-                                                       VgtkCore.Lens(VgtkCore.DoubleSphere(0.25, 0.4))), VgtkCore.Size2(24, 24))
+    lens = cam(VgtkCore.Lens(VgtkCore.DoubleSphere(0.25, 0.4)), 30.0, (12.0, 12.0), 24, 24)
     c = RadiometricCameraModel(lens; focus = 1.5, aperture_radius = 0.0386)
     # the composed camera has no vignetting unless one is stated: V ≡ 1, no parameters, nothing for a kernel to multiply by
     @test c.vignetting === NoVignetting() && c isa RadiometricCameraModel{<:Any, <:Any, Float64, NoVignetting}

@@ -89,5 +89,7 @@ Base.values(f::Focus) = f.t̂_i                                 # its nodal valu
 parameter_vector(f::Focus) = f.t̂_i
 parameter_names(::Focus{T, N}) where {T, N} = ntuple(i -> Symbol(:t̂, i), N)
 with_parameters(f::Focus, θ) = Focus(FocusSpline(f), θ)
-convert_eltype(::Type{T}, f::Focus{S, N}) where {T, S, N} =
-    Focus{T, N}(SVector{N}(SVector{2, T}.(f.nodes)), SVector{N, T}(f.t̂_i), SVector{N, T}(f.w), SVector{3, T}(f.a), f.kind)
+function convert_eltype(::Type{T}, f::Focus{S, N}) where {T, S, N}
+    nodes = map(n -> SVector{2, T}(n), f.nodes)
+    return Focus{T, N}(nodes, map(T, f.t̂_i), map(T, f.w), map(T, f.a), f.kind)
+end
