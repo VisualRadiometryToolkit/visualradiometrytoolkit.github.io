@@ -113,7 +113,7 @@ end
     h0 = zero(SVector{HEIGHT_NC, Float64})
     @test !is_warped(h0) && is_warped(setindex(h0, 1.0e-3, 13))
     D = ForwardDiff.Dual{Nothing, Float64, 1}
-    @test !is_warped(D.(h0)) && is_warped(setindex(D.(h0), D(0.0, 1.0), 13))   # seeded heights count: their partials are needed
+    @test !is_warped(D.(h0)) && is_warped(setindex(D.(h0), ForwardDiff.Dual{Nothing}(0.0, 1.0), 13))   # seeded heights count: their partials are needed
     # a flat state: the plane hit, through the target's rays too
     o = SVector(0.0, 0.0, 0.0); x = world_point(b, SVector(0.4, 0.6)); d = x / norm(x)
     @test intersect_board(b, o, d, h0) == intersect_board(b, o, d) == intersect_board(BoardRays(b), o, d)

@@ -47,6 +47,13 @@ end
 Adapt.adapt_structure(to, b::TexturedTarget) =
     TexturedTarget(nothing, b.quad, b.size, b.facing, adapt(to, b.texture), adapt(to, b.sdf), b.page_mm, adapt(to, b.warping), b.state)
 
+# the posed target's pose as a plain map: a textured target is posed exactly, so a pose that carries an uncertainty (an estimate's)
+# is refused by name
+_plain_pose(target::VgtkCore.PosedTarget) = _plain_pose(VgtkCore.pose(target))
+_plain_pose(pose::EuclideanMap) = pose
+_plain_pose(pose) = throw(ArgumentError("TexturedTarget: the target's pose is a $(nameof(typeof(pose))), not a plain EuclideanMap — a textured " *
+                                        "target is posed exactly: give the pose's value"))
+
 """
     TexturedTarget(target::PosedTarget, texture; facing = nothing, sdf = nothing, page_mm = nothing)
 
@@ -62,7 +69,7 @@ function TexturedTarget(target::VgtkCore.PosedTarget, texture::AbstractArray{<:R
     cv === nothing && throw(ArgumentError("TexturedTarget: the target carries no canvas (the printed page)"))
     r = VgtkCore.Rect(cv.texture === nothing ? cv : cv.texture)            # the page in the design chart (metres, y up)
     W, H = Float64(r.widths[1]), Float64(r.widths[2])
-    pose = VgtkCore.pose(target)
+    pose = _plain_pose(target)
     R = SMatrix{3, 3, Float64}(VgtkCore.rotation(pose))
     o = SVector{3, Float64}(pose(SVector(Float64(r.origin[1]), Float64(r.origin[2]) + H, 0.0)))    # the image's top-left corner
     frame = hcat(R[:, 1], -R[:, 2], -R[:, 3])                                                       # e_u = +x, e_v = −y, n = e_u × e_v

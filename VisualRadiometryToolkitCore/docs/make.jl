@@ -1,5 +1,5 @@
 # The documentation site: a hand-written manual (docs/src/index.md and
-# docs/src/guide/) and an @autodocs API reference (docs/src/api.md). Build locally:
+# docs/src/guide/) and an @autodocs API reference (docs/src/api.md, docs/src/api_scene.md). Build locally:
 #
 #   julia --project=docs --startup-file=no docs/make.jl     # → docs/build/index.html
 #
@@ -40,6 +40,7 @@ makedocs(;
         "Home" => "index.md",
         "Design" => "guide/design.md",
         "API Reference" => "api.md",
+        "API Reference: the scene" => "api_scene.md",
     ],
 )
 

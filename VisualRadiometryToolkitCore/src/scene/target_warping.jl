@@ -77,7 +77,7 @@ rectangle): the parts every render rebuilds with its nodal heights (`board_relie
 function flat_surface(target::VgtkCore.PosedTarget)
     r = _page_rect(VgtkCore.model(target))
     W, H = Float64(r.widths[1]), Float64(r.widths[2])
-    return VgtkCore.MappedSurface(VgtkCore.pose(target), VgtkCore.HeightField(warping_nodes(H / W)), page_placement(r),
+    return VgtkCore.MappedSurface(_plain_pose(target), VgtkCore.HeightField(warping_nodes(H / W)), page_placement(r),
                                   VgtkCore.Rect2{Float64}(Float64(r.origin[1]), Float64(r.origin[2]), W, H))
 end
 """
