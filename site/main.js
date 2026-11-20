@@ -1,68 +1,11 @@
-// Renders the ecosystem graph with a mermaid theme that follows the
-// colour scheme, and re-renders it when the scheme changes.
-(function () {
-  var el = document.getElementById("ecosystem-graph");
-  if (!el || !window.mermaid) return;
-  var source = el.textContent;
-  var dark = window.matchMedia("(prefers-color-scheme: dark)");
-
-  function render() {
-    var isDark = dark.matches;
-    mermaid.initialize({
-      startOnLoad: false,
-      securityLevel: "loose",   // needed for the `click ... href` links
-      theme: "base",
-      themeVariables: isDark ? {
-        darkMode: true,
-        background: "#282f2f",
-        primaryColor: "#282f2f",
-        primaryBorderColor: "#4b5657",
-        primaryTextColor: "#e6e9ea",
-        lineColor: "#7f8c8d",
-        fontFamily: "Lato, Helvetica Neue, Arial, sans-serif"
-      } : {
-        background: "#f5f7fa",
-        primaryColor: "#f5f7fa",
-        primaryBorderColor: "#b8c3cf",
-        primaryTextColor: "#222222",
-        lineColor: "#8a96a3",
-        fontFamily: "Lato, Helvetica Neue, Arial, sans-serif"
-      },
-      flowchart: { curve: "basis", nodeSpacing: 28, rankSpacing: 48, padding: 10 }
-    });
-    el.removeAttribute("data-processed");
-    el.textContent = source;
-    return mermaid.run({ nodes: [el] });
-  }
-
-  render();
-  if (dark.addEventListener) dark.addEventListener("change", render);
-})();
-
-// Copies a publication's BibTeX entry and briefly shows a check mark.
-document.addEventListener("click", function (ev) {
-  var btn = ev.target.closest(".copy-btn");
-  if (!btn || !navigator.clipboard) return;
-  var pre = btn.parentNode.querySelector("pre");
-  navigator.clipboard.writeText(pre.textContent).then(function () {
-    btn.dataset.state = "copied";
-    btn.setAttribute("aria-label", "BibTeX copied");
-    clearTimeout(btn._reset);
-    btn._reset = setTimeout(function () {
-      delete btn.dataset.state;
-      btn.setAttribute("aria-label", "Copy BibTeX");
-    }, 1600);
-  });
-});
-
 // Draws the title banner's eye and spirals (style.css lays the banner out), then fits its 1701x925 design stage to
-// the banner's width.
+// the banner's width. The ecosystem graph, the BibTeX buttons and the helpers used here (stackSite) are the stack's
+// shared script, shared/site.js (the Visual Geometry Toolkit site's, loaded first and never copied here).
 document.querySelectorAll(".iris-banner").forEach(function (banner, idx) {
   var svg = banner.querySelector(".iris-art");
   var NS = "http://www.w3.org/2000/svg";
   var cx = 560, cy = 470, P = "b" + idx + "-";   // the pupil: the centre of the spirals; ids per banner
-  var seed = 11;
-  function rnd() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+  var rnd = stackSite.random(11);
   function el(name, attrs, parent) {
     var e = document.createElementNS(NS, name);
     for (var k in attrs) e.setAttribute(k, attrs[k]);
@@ -126,7 +69,5 @@ document.querySelectorAll(".iris-banner").forEach(function (banner, idx) {
     el("polygon", { points: pts.join(" "), fill: "#ff8a5c", opacity: q[3] });
   });
 
-  function fit() { banner.style.setProperty("--k", banner.clientWidth / 1701); }
-  if (window.ResizeObserver) new ResizeObserver(fit).observe(banner);
-  fit();
+  stackSite.fitStage(banner, 1701);
 });

@@ -34,7 +34,14 @@ Thumbs.db
 *.pdf
 texput.log
 
-# Python side environments (site/tools: pixi)
+# The landing-page tooling shared with the Visual Geometry Toolkit's site: fetched from its repository at the
+# commit pinned in site/SHARED_REF (site/fetch_shared.sh), never tracked here
+site/.shared/
+site/shared/
+site/icons/vgt_logo.svg
+site/icons/radiometric.svg
+
+# Python side environments
 .pixi/
 .CondaPkg/
 __pycache__/

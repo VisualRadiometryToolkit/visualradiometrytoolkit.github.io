@@ -1,9 +1,14 @@
-"""Build the site's icons into ../icons (run from tools/: `pixi run icons`).
+"""Build the site's icons into ../icons.
 
-The Visual Geometry Toolkit landing page's icon tooling, adapted: every package
-icon is a 96x96 SVG on the same rounded tile; light and dark colours are
+    site/fetch_shared.sh
+    pixi run --manifest-path site/.shared/tools/pixi.toml python site/tools/make_icons.py
+
+The tile every package icon is drawn on (a 96x96 SVG; light and dark colours
 switched inside the file with prefers-color-scheme, so an icon works as an
-<img>, as a mermaid image node, and as the favicon.
+<img>, as a mermaid image node, and as the favicon) and the Python environment
+are the Visual Geometry Toolkit site's, used from its repository at the commit
+pinned in site/SHARED_REF (site/fetch_shared.sh) and never copied: this file
+holds only this site's icons, as data for that generator, and its logo.
 
 Written here:
   vrc.svg            VisualRadiometryToolkitCore (a lens aperture of seven blades and a ray through it)
@@ -11,35 +16,20 @@ Written here:
   vrt_logo.svg       the toolkit's logo: the aperture of the title banner's eye (seven blades, the banner's colours)
   favicon-32.png, favicon-64.png   the logo, drawn with Pillow from the same geometry (no SVG rasterizer needed)
 
-Copied by hand from the Visual Geometry Toolkit's site (not written here; do not edit):
+Fetched from the Visual Geometry Toolkit's site by site/fetch_shared.sh (untracked here; never edited):
   vgt_logo.svg       the Visual Geometry Toolkit's logo (the foundation node and card)
   radiometric.svg    Real Cameras are Radiometric / RadiometricCamera
 """
-import math, pathlib
+import math, pathlib, sys
 from PIL import Image, ImageDraw
 
-OUT = pathlib.Path(__file__).resolve().parent.parent / "icons"
-OUT.mkdir(parents=True, exist_ok=True)
+SITE = pathlib.Path(__file__).resolve().parent.parent
+SHARED = SITE / ".shared" / "tools"
+SHARED.is_dir() or sys.exit("site/.shared is missing: run site/fetch_shared.sh first")
+sys.path.insert(0, str(SHARED))
+from stack_icons import arrow, svg, write_icons   # the stack's tile (the Visual Geometry Toolkit site's)
 
-STYLE = """<style>
-.t{fill:#eef3f9;stroke:#d3deea}
-.s{fill:none;stroke:#2b5d7d;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
-.a{fill:none;stroke:#d4622a;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
-.d{stroke-dasharray:1 7}
-.fs{fill:#2b5d7d}.fa{fill:#d4622a}
-.dk{display:none}
-@media (prefers-color-scheme: dark){
-.t{fill:#1c2830;stroke:#304350}
-.s{stroke:#9ccbe8}.a{stroke:#f28c52}
-.fs{fill:#9ccbe8}.fa{fill:#f28c52}
-.lt{display:none}.dk{display:inline}
-}
-</style>"""
-
-def svg(body, title):
-    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" role="img">'
-            f'<title>{title}</title>{STYLE}'
-            f'<rect class="t" x="2" y="2" width="92" height="92" rx="20" stroke-width="2"/>{body}</svg>\n')
+OUT = SITE / "icons"
 
 # The aperture of the title banner (site/main.js): N = 7 blades, the pupil a heptagon of circumradius `rp`, each blade
 # from one side of the pupil out to the rim `R`, turned by `rot`.
@@ -63,19 +53,12 @@ body += '<circle class="fa" cx="48" cy="48" r="4"/>'
 icons["vrc"] = ("VisualRadiometryToolkitCore.jl", body)
 
 # VisualRadiometryToolkitIO: a data file holding a radial profile (a falloff curve), with data in and out
-def arrow(x1, y1, x2, y2, cls="s", head=7):
-    ang = math.atan2(y2 - y1, x2 - x1)
-    a1, a2 = ang + math.radians(150), ang - math.radians(150)
-    return (f'<path class="{cls}" d="M{x1},{y1} L{x2},{y2} '
-            f'M{x2 + head*math.cos(a1):.1f},{y2 + head*math.sin(a1):.1f} L{x2},{y2} '
-            f'L{x2 + head*math.cos(a2):.1f},{y2 + head*math.sin(a2):.1f}"/>')
 icons["vrio"] = ("VisualRadiometryToolkitIO.jl",
     '<path class="s" d="M34,18 H56 L66,28 V78 H34 Z M56,18 V28 H66"/>'
     + '<path class="a" d="M41,44 C50,44 53,50 59,66"/>'
     + arrow(8, 36, 26, 36) + arrow(72, 64, 90, 64))
 
-for key, (title, body) in icons.items():
-    (OUT / f"{key}.svg").write_text(svg(body, title))
+write_icons(icons, OUT)
 
 # The logo: the banner's aperture on its dark red ground.
 BG, RIM, BLADES, EDGE, PUPIL, GLINT = "#2a0709", "#9a1d16", ("#5a0d12", "#3a0808"), "#ff6a46", "#050101", "#fff6ef"
