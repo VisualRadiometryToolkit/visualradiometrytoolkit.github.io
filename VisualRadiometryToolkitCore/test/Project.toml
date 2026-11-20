@@ -18,6 +18,8 @@ VisualGeometryToolkitCore = "96820d6b-1dad-4e77-ad4a-8276f2ec1ce7"
 VisualRadiometryToolkitCore = "544ea8c7-2427-4873-ab3e-33acc9dfb29a"
 
 [sources]
+# TEMPORARY (the migration of the radiometric types): VisualGeometryToolkitCore from the branch that retires them, until 0.12.0 is in General.
+VisualGeometryToolkitCore = {url = "https://github.com/VisualGeometryToolkit/VisualGeometryToolkit.jl", rev = "vrtk/retire-radiometric", subdir = "VisualGeometryToolkitCore"}
 VisualRadiometryToolkitCore = {path = ".."}
 
 [compat]
