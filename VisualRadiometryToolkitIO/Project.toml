@@ -22,8 +22,8 @@ VisualRadiometryToolkitCore = {path = "../VisualRadiometryToolkitCore"}
 FlexUnits = "0.6.16"
 JSON = "1.13.4"
 StaticArrays = "1.9.24"
-VisualGeometryToolkitCore = "0.11.1"
-VisualGeometryToolkitIO = "0.10.6, 0.11"
+VisualGeometryToolkitCore = "0.12"
+VisualGeometryToolkitIO = "0.11"
 VisualRadiometryToolkitCore = "0.0.1"
 julia = "1.13"
 
