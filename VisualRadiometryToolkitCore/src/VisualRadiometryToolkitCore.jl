@@ -38,7 +38,6 @@ using VisualGeometryToolkitCore: BoundedCamera, CameraModel, AbstractIntrinsics,
 using VisualGeometryToolkitCore: grid_nodes, square_rule, unit_disc_rule   # a focus surface's sensor grid; the quadrature rules
 using GeometryBasics: Rect
 import VisualGeometryToolkitCore as VgtkCore   # the spline systems of a focus surface and the equidistant chart, reached qualified (camera/focus.jl, focus_charts.jl)
-import VisualGeometryToolkitCore as VgtkCore   # names reached qualified (a model's local_coordinates on its ParameterManifold)
 # VisualGeometryToolkitCore's contract generics these types answer: a field's centre and element type, the support
 # protocol of a surface's control points, the parameter protocol, a light's units
 import VisualGeometryToolkitCore: center, convert_eltype, support_trait, nodes, support,
