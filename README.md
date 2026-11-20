@@ -28,7 +28,6 @@ served at <https://visualradiometrytoolkit.github.io>.
 | Directory | What |
 |---|---|
 | [site](site) | The landing page, its icon tooling and the documentation portal |
-| [ci](ci) | Workspace tooling: the registration lint, the agent-docs policy, the affected-package planner |
 | [docs/design](docs/design) | Design notes: the [inventory](docs/design/inventory.md) of what moves here and in which order |
 
 ## Working in the repository
@@ -36,8 +35,8 @@ served at <https://visualradiometrytoolkit.github.io>.
 ```bash
 git clone https://github.com/VisualRadiometryToolkit/visualradiometrytoolkit.github.io
 cd visualradiometrytoolkit.github.io
-git config core.hooksPath .githooks
 julia --project=. -e 'using Pkg; Pkg.instantiate()'
+julia --project=. -e 'using VisualGeometryToolkitCore; VisualGeometryToolkitCore.install_githooks()'
 julia --project=VisualRadiometryToolkitCore -e 'using Pkg; Pkg.test()'
 ```
 
@@ -45,9 +44,23 @@ Julia 1.13. [CLAUDE.md](CLAUDE.md) lists the commands and the rules (among
 them the privacy boundary: the repository is public, and nothing unpublished
 enters it); [RELEASING.md](RELEASING.md) states how packages are released.
 
-To preview the landing page: `python -m http.server` in `site/`, then open
-<http://localhost:8000>. `site/icons/` is generated (`cd site/tools && pixi run
-icons && pixi run social-card`).
+The workspace tooling is the Visual Geometry Toolkit's, called and never
+copied: the CI checks are VisualGeometryToolkitCore's
+`stack_ci` with this repository's parameters in [WORKSPACE.toml](WORKSPACE.toml),
+the workflows call its reusable workflows, the git hooks are its
+`install_githooks`, and the landing page takes its stylesheet base, script and
+icon generators from the Visual Geometry Toolkit site's repository at the
+commit pinned in [site/SHARED_REF](site/SHARED_REF).
+
+To preview the landing page: `site/fetch_shared.sh` (once, and after the pin
+moves), then `python -m http.server` in `site/` and open
+<http://localhost:8000>. `site/icons/` is generated:
+
+```bash
+site/fetch_shared.sh
+pixi run --manifest-path site/.shared/tools/pixi.toml python site/tools/make_icons.py
+pixi run --manifest-path site/.shared/tools/pixi.toml python site/tools/make_social_card.py
+```
 
 ## Citing
 

@@ -4,7 +4,6 @@
 [workspace]
 projects = [
     "VisualRadiometryToolkitCore", "VisualRadiometryToolkitIO",
-    "ci",
 ]
 
 # Workspace wiring: every package of this repository resolves to its directory

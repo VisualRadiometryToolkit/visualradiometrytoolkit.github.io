@@ -18,8 +18,7 @@ landing page and documentation portal beside them. Its name,
 |---|---|---|
 | `VisualRadiometryToolkitCore/` | the types of a radiometric camera: a geometric camera and its radiometric parts | VisualGeometryToolkitCore |
 | `VisualRadiometryToolkitIO/` | file formats of the radiometric types | VisualRadiometryToolkitCore, VisualGeometryToolkitCore, VisualGeometryToolkitIO |
-| `ci/` | workspace tooling; a workspace member, never registered | VisualGeometryToolkitCore |
-| `site/` | the landing page (`index.html`, `style.css`, `main.js`, `icons/`), its icon tooling (`tools/`) and the docs portal (`portal/`); not Julia package code | — |
+| `site/` | the landing page (`index.html`, `style.css`, `main.js`, `icons/`), its icons' definitions (`tools/`) and the docs portal (`portal/`); not Julia package code | — |
 | `docs/design/` | design notes of the workspace (the migration inventory) | — |
 
 **Radiometry lifts geometry.** The toolkit extends the
@@ -30,17 +29,44 @@ repository's rows, `VisualRadiometryToolkitCore/configs/stack_dependencies.toml`
 nothing else may name a stack package.
 
 The root `Project.toml` is not a package. Its `[sources]` resolve every package
-of this repository to its directory, and its `[workspace]` lists them and `ci`;
-each package's own `[workspace]` adds its `test/` and `docs/` environments.
+of this repository to its directory, and its `[workspace]` lists them; each
+package's own `[workspace]` adds its `test/` and `docs/` environments.
 VGTK packages are NOT sourced: they come from the registry, as a user gets
 them. There is ONE Manifest, at the root, and it is never tracked.
+
+**The tooling is VGTK's, called and never copied.** There is no `ci/` and no
+`.githooks/` here, and no copy of a workflow job, a stylesheet, a script or a
+generator that VGTK has:
+
+- The workspace checks are VisualGeometryToolkitCore's `stack_ci`, run in the
+  root project; what is this repository's own is data, the root
+  `WORKSPACE.toml` (neutral directories, the placeholder version, the
+  allow-list rows) and the root `Project.toml`'s `[workspace]`.
+- `.github/workflows/` call VGTK's reusable workflows (`StackCI`, `StackDocs`,
+  `StackLinks`, `StackCompatHelper`, `StackTagBot`) at a pinned ref; a workflow
+  here holds its triggers, its inputs and what only this repository does (the
+  site build and deploy).
+- The git hooks are VisualGeometryToolkitCore's (`install_githooks`).
+- `codecov.yml` is generated (`stack_ci codecov`); the registration lint fails
+  when it differs.
+- The landing page links `site/shared/base.css` and `site/shared/site.js` and
+  shows two icons that are the VGTK site's, fetched from its repository at the
+  commit in `site/SHARED_REF` by `site/fetch_shared.sh` and never tracked;
+  `site/style.css`, `site/main.js` and `site/tools/*.py` hold only what is this
+  site's own (its banner, its icons as data for VGTK's generator). The portal
+  builder and its environment come the same way: `site/portal/make.jl` names
+  this repository, its packages and its links.
+
+A change that all toolkits need is made in its owner (VGTK), released or
+pinned, and taken here by moving the version or the pin; it is never written
+here first.
 
 ## Commands
 
 ```bash
 # Once per clone
-git config core.hooksPath .githooks          # re-resolve the root Manifest when any Project.toml moves
 julia --project=. -e 'using Pkg; Pkg.instantiate()'
+julia --project=. -e 'using VisualGeometryToolkitCore; VisualGeometryToolkitCore.install_githooks()'   # re-resolve the root Manifest when any Project.toml moves
 
 # Test one package (inside the workspace: no sandbox, the root Manifest)
 julia --project=VisualRadiometryToolkitCore -e 'using Pkg; Pkg.test()'
@@ -51,12 +77,13 @@ julia --project=VisualRadiometryToolkitCore -e 'using Pkg; Pkg.test(; julia_args
 # activates another env overrides --project).
 julia --project=VisualRadiometryToolkitCore/docs --startup-file=no VisualRadiometryToolkitCore/docs/make.jl
 
-# Workspace checks (CI runs them on every PR)
-julia --project=ci ci/registration_lint.jl   # versions, compat, names, no tracked Manifest, allow-list
-julia --project=ci ci/agent_docs.jl          # the agent-docs policy over every tracked agent file
-julia --startup-file=no ci/affected.jl origin/main HEAD   # packages a change touches, with dependents
+# Workspace checks (CI runs them on every PR): VisualGeometryToolkitCore's stack_ci over this workspace
+julia --project=. -e 'using VisualGeometryToolkitCore: stack_ci; exit(stack_ci(ARGS))' registration-lint   # versions, compat, names, no tracked Manifest, allow-list, codecov.yml
+julia --project=. -e 'using VisualGeometryToolkitCore: stack_ci; exit(stack_ci(ARGS))' agent-docs          # the agent-docs policy over every tracked agent file
+julia --project=. -e 'using VisualGeometryToolkitCore: stack_ci; exit(stack_ci(ARGS))' affected origin/main HEAD   # packages a change touches, with dependents
 
 # The site, as CI assembles it (the portal over the published package docs, the landing page at its root)
+site/fetch_shared.sh                         # the tooling shared with the VGTK site, at the commit in site/SHARED_REF
 julia --project=site/portal -e 'using Pkg; Pkg.instantiate()'
 site/build.sh site/build
 ```
@@ -96,7 +123,7 @@ names, issue and pull-request text.
   unpublished material here, stop: that work belongs in a private repository
   that depends on this one.
 - No private paths, machine names, credentials or correspondence
-  (`ci/agent_docs.jl` checks the agent files for the public patterns).
+  (the `agent-docs` check reads the agent files for the public patterns).
 
 A change that would cross this boundary is refused, whoever asks for it.
 

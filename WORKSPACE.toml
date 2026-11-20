@@ -1,0 +1,22 @@
+# This workspace's parameters of the stack's CI (VisualGeometryToolkitCore's
+# `workspace_settings`; its `stack_ci` reads them). The CI itself is the Visual
+# Geometry Toolkit's, called and never copied: the package list is the root
+# Project.toml's [workspace], and what differs here is this file.
+
+# No tooling member: the checks run in the root project, which holds
+# VisualGeometryToolkitCore.
+tooling = []
+
+# Top-level directories that hold no package code and no package tooling (the
+# landing page and portal, the design notes): a change under one affects no
+# package.
+neutral = ["site", "docs"]
+
+# A package at this version is under construction: it is NOT registered and
+# must not be. Every structural rule still applies to it (so it is registrable
+# the day its version becomes 0.1.0).
+placeholder_version = "0.0.1"
+
+# This repository's rows of the stack's dependency allow-list (the table is
+# VisualGeometryToolkitCore's).
+stack_rows = "VisualRadiometryToolkitCore/configs/stack_dependencies.toml"

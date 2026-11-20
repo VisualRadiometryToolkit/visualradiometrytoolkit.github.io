@@ -1,7 +1,8 @@
 # Releasing
 
 **Nothing is released yet.** VisualRadiometryToolkitCore is at the placeholder
-version 0.0.1 and is in no registry; `ci/registration_lint.jl` warns on the
+version 0.0.1 and is in no registry; the registration lint (CLAUDE.md,
+"Commands") warns on the
 placeholder and fails if a registry already holds the package. This file states
 how the first release and every later one are made.
 
@@ -52,7 +53,7 @@ Once, by the owner:
    - Strict run: `Pkg.test(; julia_args = ["--depwarn=error"])` for each package.
    - The fresh-clone gate: clone, resolve the workspace from scratch, `Pkg.test()`.
 3. Bump `version` in `<Package>/Project.toml` (the first release: 0.0.1 → 0.1.0;
-   `ci/registration_lint.jl` then applies the first-registration rules); widen
+   the registration lint then applies the first-registration rules); widen
    dependents' compat in the same commit if the bump is breaking. Raise every
    compat floor to the gated environment's resolution.
 4. A package not yet in General: register it in CauRegistry from a clean

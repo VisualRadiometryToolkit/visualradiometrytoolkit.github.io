@@ -1,7 +1,9 @@
 # Dead-link check (lychee) over the tracked READMEs, CITATION.cff, the landing
-# page, the design notes and every package's docs/src Markdown, with the
-# exclusions and accepted codes in .lychee.toml. Runs on PRs, pushes to main,
-# weekly (links rot without a commit), and by hand.
+# page, the design notes and every package's docs/src Markdown. The job is the
+# Visual Geometry Toolkit's reusable workflow, called and never copied: the
+# stack's settings and exclusions are there, this repository's exclusions
+# below. Runs on PRs, pushes to main, weekly (links rot without a commit), and
+# by hand.
 name: Links
 on:
   push:
@@ -17,17 +19,21 @@ permissions:
   contents: read
 jobs:
   lychee:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-      - uses: lycheeverse/lychee-action@v2
-        with:
-          lycheeVersion: v0.24.2   # .lychee.toml uses this release's keys
-          fail: true
-          args: >-
-            --config .lychee.toml --no-progress
-            README.md CITATION.cff '*/README.md' site/index.html
-            'docs/design/*.md' '*/docs/src/**/*.md'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # GitHub's API rate limit
+    uses: VisualGeometryToolkit/VisualGeometryToolkit.jl/.github/workflows/StackLinks.yml@workflows/v1
+    with:
+      paths: >-
+        README.md CITATION.cff '*/README.md' site/index.html
+        'docs/design/*.md' '*/docs/src/**/*.md'
+      # 1. Per-package release docs exist only once a package is tagged, after its
+      #    registration (TagBot then deploys /<Package>/stable/). Expected 404s until
+      #    then: remove this exclusion once every package has a tagged release.
+      # 2. The CI status badge (GitHub renders it; anonymous fetches can be slow or 404
+      #    before the first run on a branch).
+      # 3. What the landing page shares with the Visual Geometry Toolkit's site (its
+      #    stylesheet base, its script, two icons): fetched at build time by
+      #    site/fetch_shared.sh and never tracked here, so a checkout has no such files.
+      exclude: |
+        /site/shared/(base\.css|site\.js)$
+        /site/icons/(vgt_logo|radiometric)\.svg$
+        ^https://visualradiometrytoolkit\.github\.io/VisualRadiometryToolkit[A-Za-z]+/stable
+        ^https://github\.com/VisualRadiometryToolkit/[^/]+/actions/workflows/[^/]+/badge\.svg
