@@ -1,0 +1,10 @@
+[deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+VisualRadiometryToolkitIO = "c447a127-8502-41e7-ac3e-ce2a12d00bd3"
+
+[sources]
+VisualRadiometryToolkitIO = {path = ".."}
+
+[compat]
+Documenter = "1.20"
+julia = "1.13"

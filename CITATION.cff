@@ -1,0 +1,42 @@
+cff-version: 1.2.0
+message: >-
+  If you use these packages, please cite them as below, and the papers that
+  describe the methods you use (listed at https://visualradiometrytoolkit.github.io/#publications).
+type: software
+title: "VisualRadiometryToolkit: Julia Packages for Radiometric Camera Models"
+authors:
+  - family-names: Harder
+    given-names: Ties
+  - family-names: Seegräber
+    given-names: Felix
+  - family-names: Pritts
+    given-names: James
+repository-code: "https://github.com/VisualRadiometryToolkit/visualradiometrytoolkit.github.io"
+url: "https://visualradiometrytoolkit.github.io/"
+license: MIT
+keywords:
+  - julia
+  - computer vision
+  - radiometry
+  - camera calibration
+  - vignetting
+  - inverse rendering
+preferred-citation:
+  type: article
+  title: "Real Cameras are Radiometric"
+  authors:
+    - family-names: Harder
+      given-names: Ties
+    - family-names: Seegräber
+      given-names: Felix
+    - family-names: Nakath
+      given-names: David
+    - family-names: Sauer
+      given-names: Hendrik
+    - family-names: Köser
+      given-names: Kevin
+    - family-names: Pritts
+      given-names: James
+  journal: "arXiv preprint arXiv:2611.25265"
+  year: 2026
+  url: "https://arxiv.org/abs/2611.25265"

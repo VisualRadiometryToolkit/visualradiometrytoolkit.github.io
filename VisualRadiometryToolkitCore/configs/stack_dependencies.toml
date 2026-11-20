@@ -1,0 +1,13 @@
+# The Visual Radiometry Toolkit's rows of the stack's dependency allow-list:
+# one row per project of THIS repository, the stack packages it may name in its
+# Project.toml ([deps], [weakdeps], [extras] and the test target alike). The
+# table itself is the Visual Geometry Toolkit's
+# (VisualGeometryToolkitCore/configs/stack_dependencies.toml); these rows are
+# handed to `VisualGeometryToolkitCore.stack_dependency_violations` through its
+# `extra` keyword, the form that function defines for a project kept elsewhere.
+#
+# The law: radiometry lifts geometry. A package here may depend on the Visual
+# Geometry Toolkit; no Visual Geometry Toolkit package may depend on one here.
+
+VisualRadiometryToolkitCore = ["VisualGeometryToolkitCore"]
+VisualRadiometryToolkitIO = ["VisualGeometryToolkitCore", "VisualGeometryToolkitIO", "VisualRadiometryToolkitCore"]

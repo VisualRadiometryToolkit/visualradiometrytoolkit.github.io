@@ -1,0 +1,15 @@
+# This repository's entries for VisualGeometryToolkitCore's `check_duplication`
+# (the stack's one-implementation-per-concept gate; VisualRadiometryToolkitCore's
+# suite runs it). The rule is the Visual Geometry Toolkit's: every duplicate is
+# hoisted into its one owner; an entry is allowed only where the two things are
+# NOT the same concept, and its reason is the one-line proof. An entry that
+# stops matching anything is itself a finding: remove it. Paths are relative to
+# this file.
+#
+# Entry kinds ([[similar]], [[name]], [[backend]], [[splat]]) and their keys are
+# documented with `VisualGeometryToolkitCore.check_duplication`.
+#
+# No entries: nothing in this repository restates a concept another package of
+# the stack owns. During the migration (docs/design/inventory.md) a type that
+# moves here is REMOVED from its old owner in the same release cascade; it is
+# never listed here as a tolerated copy.

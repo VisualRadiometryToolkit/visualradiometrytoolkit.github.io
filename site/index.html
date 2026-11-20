@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Visual Radiometry Toolkit — Ties Harder, Felix Seegräber, James Pritts</title>
+<meta name="author" content="Ties Harder, Felix Seegräber, James Pritts">
+<meta name="description" content="Julia packages for radiometric camera models: vignetting, aperture, focus and sensor response, lifting the cameras of the Visual Geometry Toolkit.">
+<meta name="color-scheme" content="light dark">
+<meta property="og:title" content="Visual Radiometry Toolkit">
+<meta property="og:description" content="Julia packages for radiometric camera models: vignetting, aperture, focus and sensor response, lifting the cameras of the Visual Geometry Toolkit.">
+<meta property="og:url" content="https://visualradiometrytoolkit.github.io/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Visual Radiometry Toolkit">
+<meta property="og:image" content="https://visualradiometrytoolkit.github.io/icons/social-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The Visual Radiometry Toolkit logo: a lens aperture of seven blades.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Visual Radiometry Toolkit">
+<meta name="twitter:description" content="Julia packages for radiometric camera models: vignetting, aperture, focus and sensor response, lifting the cameras of the Visual Geometry Toolkit.">
+<meta name="twitter:image" content="https://visualradiometrytoolkit.github.io/icons/social-card.png">
+<link rel="canonical" href="https://visualradiometrytoolkit.github.io/">
+<link rel="icon" type="image/svg+xml" href="icons/vrt_logo.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="64x64" href="icons/favicon-64.png">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.63.2/juliamono.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Federo&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+
+<header class="hero">
+  <div class="iris-banner font-b">
+    <div class="iris-stage">
+      <svg class="iris-art" width="1701" height="925" viewBox="0 0 1701 925" aria-hidden="true"></svg>
+      <div class="iris-title defocus" aria-hidden="true">
+        <p class="who">Ties Harder<br>Felix Seegräber<br>James Pritts</p>
+        <p class="what">Visual Radiometry<br>Toolkit</p>
+      </div>
+      <div class="iris-title">
+        <p class="who"><span class="sr-only">by </span><a href="https://github.com/Ties-Harder">Ties Harder</a><br><a href="https://www.uni-kiel.de/en/person/seegraeber-felix-68860">Felix Seegräber</a><br><a href="https://prittjam.github.io/">James Pritts</a></p>
+        <h1 class="what">Visual Radiometry<br>Toolkit</h1>
+      </div>
+    </div>
+    <div class="iris-shade"></div>
+  </div>
+  <p class="tagline">Julia packages for radiometric camera models: vignetting, aperture, focus and sensor response, lifting the cameras of the Visual Geometry Toolkit</p>
+  <p class="affil"><a href="https://www.marine-ai.de/">Marine Data Science</a> · <a href="https://www.uni-kiel.de/en/">Kiel University</a></p>
+  <nav class="actions">
+    <a class="btn brand" href="#get-started">Get started</a>
+    <a class="btn" href="#packages">Packages</a>
+    <a class="btn" href="#publications">Publications</a>
+    <a class="btn" href="https://github.com/VisualRadiometryToolkit">GitHub</a>
+  </nav>
+</header>
+
+<section id="ecosystem">
+  <h2>Ecosystem</h2>
+  <p class="lead">Radiometry lifts geometry. The toolkit builds on the <a href="https://visualgeometrytoolkit.github.io">Visual Geometry Toolkit</a> (the blue node, its <a href="#foundation">foundation</a>): a radiometric camera wraps one of its cameras and adds what decides how much light each pixel collects. The dependency runs one way; no package of the Visual Geometry Toolkit depends on this one. The amber node is a <a href="#related-packages">related package</a>, maintained outside the toolkit; the dashed arrows are dependencies being built (its port onto the toolkit), and the dashed pill is the paper it accompanies. Click a node to open it.</p>
+  <figure class="graph">
+    <pre class="mermaid" id="ecosystem-graph">
+flowchart TD
+    VGTK["&lt;img class='nicon' src='icons/vgt_logo.svg' width='24' height='24'&gt;Visual Geometry Toolkit"]
+    VRC["&lt;img class='nicon' src='icons/vrc.svg' width='24' height='24'&gt;VisualRadiometryToolkitCore"]
+    VRIO["&lt;img class='nicon' src='icons/vrio.svg' width='24' height='24'&gt;VisualRadiometryToolkitIO"]
+    RC["&lt;img class='nicon' src='icons/radiometric.svg' width='24' height='24'&gt;RadiometricCamera"]
+
+    VGTK --> VRC
+    VGTK --> VRIO
+    VRC --> VRIO
+    VGTK --> RC
+    VRC -.-> RC
+    VRIO -.-> RC
+
+    P1(["arXiv 2026"])
+
+    RC -.- P1
+
+    class P1 paper
+    class VGTK foundation
+    class RC related
+
+    click VGTK href "https://visualgeometrytoolkit.github.io" _blank
+    click VRC href "https://visualradiometrytoolkit.github.io/VisualRadiometryToolkitCore/" _blank
+    click VRIO href "https://visualradiometrytoolkit.github.io/VisualRadiometryToolkitIO/" _blank
+    click RC href "https://realcamerasareradiometric.github.io" _blank
+    click P1 href "https://arxiv.org/pdf/2611.25265" _blank
+    </pre>
+  </figure>
+</section>
+
+<section id="packages">
+  <h2>Packages</h2>
+  <div class="cards">
+    <article class="card">
+      <img src="icons/vrc.svg" alt="" width="56" height="56">
+      <h3>VisualRadiometryToolkitCore.jl</h3>
+      <p>The types of a radiometric camera: a camera of the Visual Geometry Toolkit together with the parts that decide how much light a pixel collects (vignetting, aperture, focus, sensor response), each part an abstract type whose default is absent and costs nothing.</p>
+      <p class="install">Under construction (0.0.1) · not registered yet</p>
+      <p class="links"><a href="https://visualradiometrytoolkit.github.io/VisualRadiometryToolkitCore/">docs</a><a href="https://github.com/VisualRadiometryToolkit/visualradiometrytoolkit.github.io/tree/main/VisualRadiometryToolkitCore">code</a></p>
+    </article>
+    <article class="card">
+      <img src="icons/vrio.svg" alt="" width="56" height="56">
+      <h3>VisualRadiometryToolkitIO.jl</h3>
+      <p>File formats for the toolkit: vignetting fields, environment lights and radial profiles as self-describing JSON files, in the envelope of VisualGeometryToolkitIO, which declares their units and conventions.</p>
+      <p class="install">Under construction (0.0.1) · not registered yet</p>
+      <p class="links"><a href="https://visualradiometrytoolkit.github.io/VisualRadiometryToolkitIO/">docs</a><a href="https://github.com/VisualRadiometryToolkit/visualradiometrytoolkit.github.io/tree/main/VisualRadiometryToolkitIO">code</a></p>
+    </article>
+  </div>
+</section>
+
+<section id="foundation">
+  <h2>Foundation</h2>
+  <p class="lead">What the toolkit builds on, and whose conventions (naming, signatures, frames, units, Jacobians) it follows.</p>
+  <div class="cards">
+    <article class="card">
+      <img src="icons/vgt_logo.svg" alt="" width="56" height="56">
+      <h3>Visual Geometry Toolkit</h3>
+      <p>Julia packages for multi-view geometry: coordinate frames, camera and lens models, geometric primitives, features, robust estimation and file formats, with physical units throughout. Its core supplies the cameras a radiometric camera lifts, RAW reading and the sensor noise model.</p>
+      <p class="install"><code>pkg&gt; add VisualGeometryToolkitCore</code> · General</p>
+      <p class="links"><a href="https://visualgeometrytoolkit.github.io">project</a><a href="https://visualgeometrytoolkit.github.io/VisualGeometryToolkitCore/">docs</a><a href="https://github.com/VisualGeometryToolkit/VisualGeometryToolkit.jl">code</a></p>
+    </article>
+  </div>
+</section>
+
+<section id="related-packages">
+  <h2>Related packages</h2>
+  <p class="lead">Packages in the toolkit's field, maintained outside of it.</p>
+  <div class="cards">
+    <article class="card">
+      <img src="icons/radiometric.svg" alt="" width="56" height="56">
+      <h3>RadiometricCamera.jl</h3>
+      <p>The package of <a href="#publications">Real Cameras are Radiometric</a>: lifts any central camera model of the Visual Geometry Toolkit to a radiometric one, with a finite aperture, a free-form focus surface and a generic vignetting function, and calibrates it by inverse rendering on the RAW photosites of ordinary calibration images. Its camera model is moving into this toolkit.</p>
+      <p class="install"><code>pkg&gt; add https://github.com/RealCamerasAreRadiometric/realcamerasareradiometric.github.io:RadiometricCamera</code> · General pending</p>
+      <p class="links"><a href="https://realcamerasareradiometric.github.io">project</a><a href="https://realcamerasareradiometric.github.io/docs/">docs</a><a href="https://github.com/RealCamerasAreRadiometric/realcamerasareradiometric.github.io">code</a></p>
+    </article>
+  </div>
+</section>
+
+<section id="get-started">
+  <h2>Get started</h2>
+  <p class="lead">The toolkit is under construction: its packages are skeletons at a placeholder version and are not in a registry yet. The packages require Julia 1.13.</p>
+  <div class="usecases">
+    <div class="usecase">
+      <h3>Radiometric calibration today</h3>
+      <pre><code>pkg&gt; add https://github.com/RealCamerasAreRadiometric/realcamerasareradiometric.github.io:RadiometricCamera</code></pre>
+    </div>
+    <div class="usecase">
+      <h3>The toolkit's core, from this repository</h3>
+      <pre><code>pkg&gt; add https://github.com/VisualRadiometryToolkit/visualradiometrytoolkit.github.io:VisualRadiometryToolkitCore</code></pre>
+    </div>
+    <div class="usecase">
+      <h3>Cameras, lenses, RAW images and sensor noise</h3>
+      <pre><code>pkg&gt; add VisualGeometryToolkitCore</code></pre>
+    </div>
+  </div>
+  <p class="note">There is no meta-package: add the package for what you want to do, and its dependencies come with it. Every dependency of the toolkit is in the Julia General registry.</p>
+</section>
+
+<section id="publications">
+  <h2>Publications</h2>
+  <div class="cards papers">
+    <article class="card paper">
+      <img src="icons/radiometric.svg" alt="" width="56" height="56">
+      <p class="venue">Preprint 2026</p>
+      <h3>Real Cameras are Radiometric</h3>
+      <p class="authors">Ties Harder, Felix Seegräber, David Nakath, Hendrik Sauer, Kevin Köser, James Pritts</p>
+      <div class="links"><a href="https://arxiv.org/pdf/2611.25265">pdf</a><a href="https://arxiv.org/abs/2611.25265">arXiv</a><a href="https://realcamerasareradiometric.github.io">project</a><details class="bibtex"><summary>bibtex</summary><div class="reveal"><button class="copy-btn" type="button" aria-label="Copy BibTeX" title="Copy BibTeX"><svg class="icon-copy" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><svg class="icon-done" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></button><pre>@article{harder2026radiometric,
+  author        = {Harder, Ties and Seegr{\"a}ber, Felix and Nakath, David and
+                   Sauer, Hendrik and K{\"o}ser, Kevin and Pritts, James},
+  title         = {Real Cameras are Radiometric},
+  journal       = {arXiv preprint arXiv:2611.25265},
+  year          = {2026},
+  eprint        = {2611.25265},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CV},
+}</pre></div></details></div>
+    </article>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p>The toolkit is MIT licensed, © James Pritts. <a href="https://github.com/VisualRadiometryToolkit">github.com/VisualRadiometryToolkit</a></p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11.17.2/dist/mermaid.min.js"></script>
+<script src="main.js"></script>
+</body>
+</html>

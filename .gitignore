@@ -1,0 +1,46 @@
+# Workspace-wide rules. Each package directory keeps its own .gitignore for
+# what is specific to it. One untracked workspace Manifest at the root.
+Manifest.toml
+Manifest-v*.toml
+LocalPreferences.toml
+
+# Documenter output, the assembled site and the portal's output
+docs/build/
+site/build/
+site/portal/out/
+
+# Claude Code per-machine state
+.claude/
+**/.claude/
+
+# Julia coverage / memory traces
+*.jl.cov
+*.jl.*.cov
+*.jl.mem
+lcov.info
+
+# Editors, OS
+*~
+*.swp
+*.swo
+\#*\#
+.#*
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Build products: PDFs are never tracked
+*.pdf
+texput.log
+
+# Python side environments (site/tools: pixi)
+.pixi/
+.CondaPkg/
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+
+# Agent workspaces: local only
+.superpowers/

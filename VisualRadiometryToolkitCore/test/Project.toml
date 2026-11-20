@@ -1,0 +1,26 @@
+# The test environment (Pkg ≥ 1.11 form; replaces [extras]/[targets]). A
+# workspace member of ../Project.toml, so Pkg.test() runs it without a sandbox.
+[deps]
+Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
+ExplicitImports = "7d51a73a-1435-4ff3-83d9-f097790105c7"
+InteractiveUtils = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
+JET = "c3a54625-cd67-489e-a8e7-0a5a0ff4e31b"
+ReTestItems = "817f1d60-ba6b-4fd5-9520-3cf149f6a823"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+VisualGeometryToolkitCore = "96820d6b-1dad-4e77-ad4a-8276f2ec1ce7"
+VisualRadiometryToolkitCore = "544ea8c7-2427-4873-ab3e-33acc9dfb29a"
+
+[sources]
+VisualRadiometryToolkitCore = {path = ".."}
+
+[compat]
+Aqua = "0.8.19"
+ExplicitImports = "1.15"
+InteractiveUtils = "1"
+JET = "0.12.3"
+ReTestItems = "1.35.3"
+StaticArrays = "1.9.24"
+Test = "1"
+VisualGeometryToolkitCore = "0.11.1"
+julia = "1.13"

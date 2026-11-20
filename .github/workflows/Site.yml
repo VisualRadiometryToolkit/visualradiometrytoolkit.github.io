@@ -1,0 +1,112 @@
+# The one deploy of https://visualradiometrytoolkit.github.io: the landing page
+# (site/) at the root and every package's Documenter site under /<Package>/.
+#
+#   docs    per package: build its docs (doctests, checkdocs, linkcheck; any
+#           warning fails) and, off a PR, deploy them into this repository's
+#           gh-pages branch at gh-pages/<Package>/{dev,stable,v…}. gh-pages is
+#           the versioned STORE of the package docs; it is not what Pages serves.
+#   site    site/build.sh: the portal (MultiDocumenter over gh-pages: one
+#           navigation bar and search across the packages) with the landing
+#           page at its root, as one tree.
+#   deploy  that tree to GitHub Pages (source: GitHub Actions).
+#
+# A PR builds everything and deploys nothing; a push to main deploys the dev
+# docs and the site; a <Package>-v* tag (TagBot) deploys that package's release
+# docs and the site; nightly and by hand rebuild the site.
+name: Site
+on:
+  push:
+    branches: [main]
+    tags: ['*-v*']
+  pull_request:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+concurrency:
+  # One deploy at a time, in push order; a running deploy is never cancelled.
+  group: ${{ github.event_name == 'pull_request' && format('site-{0}', github.ref) || 'site-deploy' }}
+  cancel-in-progress: false
+permissions:
+  contents: read
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.p.outputs.packages }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with: { version: '1.13' }
+      - id: p
+        shell: bash
+        run: |
+          all=$(julia --startup-file=no -e 'using TOML; p = filter(!=("ci"), TOML.parsefile("Project.toml")["workspace"]["projects"]); print("[" * join(("\"$x\"" for x in p), ",") * "]")')
+          case "${{ github.ref }}" in
+            refs/tags/*)
+              # Only <Package>-v<version> release tags (TagBot) deploy docs.
+              tag="${{ github.ref_name }}"; pkg="${tag%-v*}"
+              if [[ "$tag" =~ ^[A-Za-z]+-v[0-9]+\.[0-9]+\.[0-9]+$ ]] && echo "$all" | grep -q "\"$pkg\""; then
+                echo "packages=[\"$pkg\"]" >> "$GITHUB_OUTPUT"
+              else echo "packages=[]" >> "$GITHUB_OUTPUT"; fi ;;
+            *) echo "packages=$all" >> "$GITHUB_OUTPUT" ;;
+          esac
+  docs:
+    needs: plan
+    if: needs.plan.outputs.packages != '[]'
+    name: docs / ${{ matrix.package }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write   # deploydocs pushes gh-pages with the GITHUB_TOKEN
+      statuses: write
+    strategy:
+      fail-fast: false
+      # The deploys share one gh-pages branch: one package at a time.
+      max-parallel: 1
+      matrix:
+        package: ${{ fromJSON(needs.plan.outputs.packages) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with: { version: '1.13' }
+      - uses: julia-actions/cache@v2
+      # The toolkit logo in every package site's sidebar (Documenter picks up
+      # docs/src/assets/logo.svg); copied at build time, not committed.
+      - run: mkdir -p ${{ matrix.package }}/docs/src/assets && cp site/icons/vrt_logo.svg ${{ matrix.package }}/docs/src/assets/logo.svg
+      - run: julia --project=${{ matrix.package }}/docs -e 'using Pkg; Pkg.instantiate()'
+      - run: julia --project=${{ matrix.package }}/docs --startup-file=no ${{ matrix.package }}/docs/make.jl
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
+  site:
+    needs: docs
+    # also when no package docs were built (a tag that is not a release tag)
+    if: ${{ !cancelled() && (needs.docs.result == 'success' || needs.docs.result == 'skipped') }}
+    name: Build the site
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with: { version: '1.13' }
+      - uses: julia-actions/cache@v2
+      - run: julia --project=site/portal -e 'using Pkg; Pkg.instantiate()'
+      - name: Build the site (portal + landing page)
+        run: site/build.sh "$RUNNER_TEMP/site"
+      - uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'pull_request'
+        with:
+          path: ${{ runner.temp }}/site
+  deploy:
+    needs: site
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

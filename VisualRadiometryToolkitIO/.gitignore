@@ -1,0 +1,11 @@
+Manifest.toml
+Manifest-v*.toml
+LocalPreferences.toml
+*.cov
+
+# Personal Claude Code state (never shared)
+.claude/
+
+# Built by docs/make.jl; the sidebar logo is copied in at build time
+docs/build/
+docs/src/assets/logo.svg
