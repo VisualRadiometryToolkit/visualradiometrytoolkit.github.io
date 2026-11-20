@@ -106,7 +106,3 @@ end
 # The envelope (its coefficients' radiance "relative", as v1 left them in the caller's units); `l_max` → `max_degree`,
 # the type's name.
 _light_map_v2(map::AbstractDict) = Dict{String, Any}((k == "l_max" ? "max_degree" : String(k)) => v for (k, v) in map)
-VgtkIO.migrate_schema(::Val{Symbol("vgio/environment_light/v1")}, old::AbstractDict) =
-    _migrated(old, _ENVIRONMENT_LIGHT_SCHEMA, "map", _light_map_v2)
-VgtkIO.migrate_schema(::Val{Symbol("vgio/environment_light/v1")}, src::AbstractString, dst::AbstractString) =
-    VgtkIO.migrate_file(EnvironmentLight, ENVIRONMENT_LIGHT_KIND, src, dst; what = "the environment light")

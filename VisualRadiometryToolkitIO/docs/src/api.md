@@ -15,12 +15,12 @@ and `save` (public there, not exported: `import VisualGeometryToolkitIO as
 VgtkIO`); this package adds the methods for its types.
 
 ```@docs
-VisualGeometryToolkitIO.save(::AbstractString, ::VisualRadiometryToolkitCore.AbstractVignetting)
-VisualGeometryToolkitIO.load(::Type{VisualRadiometryToolkitCore.AbstractVignetting}, ::AbstractString)
-VisualGeometryToolkitIO.save(::AbstractString, ::VisualRadiometryToolkitCore.EnvironmentLight{<:VisualRadiometryToolkitCore.SphericalHarmonicMap})
-VisualGeometryToolkitIO.load(::Type{VisualRadiometryToolkitCore.EnvironmentLight}, ::AbstractString)
-VisualGeometryToolkitIO.save(::AbstractString, ::VisualRadiometryToolkitCore.BinnedRadialProfile)
-VisualGeometryToolkitIO.load(::Type{VisualRadiometryToolkitCore.BinnedRadialProfile}, ::AbstractString)
+VgtkIO.save(::AbstractString, ::AbstractVignetting)
+VgtkIO.load(::Type{AbstractVignetting}, ::AbstractString)
+VgtkIO.save(::AbstractString, ::EnvironmentLight{<:SphericalHarmonicMap})
+VgtkIO.load(::Type{EnvironmentLight}, ::AbstractString)
+VgtkIO.save(::AbstractString, ::BinnedRadialProfile)
+VgtkIO.load(::Type{BinnedRadialProfile}, ::AbstractString)
 ```
 
 ## The kinds and their tables

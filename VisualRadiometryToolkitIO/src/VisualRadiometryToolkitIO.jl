@@ -93,6 +93,38 @@ json_schemas() = [schema * ".json" => VgtkIO.json_schema(kind; id_base = _SCHEMA
                   for (schema, kind) in (_ENVIRONMENT_LIGHT_SCHEMA => ENVIRONMENT_LIGHT_KIND, _RADIAL_PROFILE_SCHEMA => RADIAL_PROFILE_KIND,
                                          _VIGNETTING_SCHEMA => VIGNETTING_KIND)]
 
+# -----------------------------------------------------------------------------
+# The kinds' methods of VisualGeometryToolkitIO's functions (its declared extension points), each from ONE definition
+# -----------------------------------------------------------------------------
+
+# `save` and `load` of a kind whose file holds one key (the environment light's, whose keys are its body's, are its own).
+for (T, kind, key, save_doc, load_doc) in (
+        (:AbstractVignetting, :VIGNETTING_KIND, :vignetting, _VIGNETTING_SAVE_DOC, _VIGNETTING_LOAD_DOC),
+        (:BinnedRadialProfile, :RADIAL_PROFILE_KIND, :profile, _RADIAL_PROFILE_SAVE_DOC, _RADIAL_PROFILE_LOAD_DOC),
+    )
+    @eval begin
+        @doc $save_doc VgtkIO.save(path::AbstractString, value::$T; provenance::NamedTuple = (;)) =
+            _save_keyed(path, $kind, $(QuoteNode(key)), value, provenance)
+        @doc $load_doc VgtkIO.load(::Type{$T}, path::AbstractString) = _load_keyed($T, path, $kind, $(QuoteNode(key)))
+    end
+end
+
+# The version steps of VisualGeometryToolkitIO 0.9's files: the record step (`migrate_record` runs it on load) and its
+# file form (`vgio_migrate`: through `load` and `save`; `length_unit` whether the kind's `save` takes one — a
+# vignetting file holds no length). vgio/vignetting/v1: the body's own step (`migrate_vignetting_body`).
+# vgio/environment_light/v1: its coefficients' radiance "relative", as v1 left them in the caller's units; the map's
+# `l_max` → `max_degree`, the type's name.
+for (old, schema, T, kind, key, carry, what, length_unit) in (
+        ("vgio/vignetting/v1", :_VIGNETTING_SCHEMA, :AbstractVignetting, :VIGNETTING_KIND, "vignetting", :migrate_vignetting_body, "the vignetting field", false),
+        ("vgio/environment_light/v1", :_ENVIRONMENT_LIGHT_SCHEMA, :EnvironmentLight, :ENVIRONMENT_LIGHT_KIND, "map", :_light_map_v2, "the environment light", true),
+    )
+    @eval begin
+        VgtkIO.migrate_schema(::Val{Symbol($old)}, record::AbstractDict) = _migrated(record, $schema, $key, $carry)
+        VgtkIO.migrate_schema(::Val{Symbol($old)}, src::AbstractString, dst::AbstractString) =
+            VgtkIO.migrate_file($T, $kind, src, dst; what = $what, length_unit = $length_unit)
+    end
+end
+
 # A listed file of each kind, for `VisualGeometryToolkitIO.validate` and a calibration manifest: the owner of a `vgio`
 # kind that moved is keyed by the kind (VisualGeometryToolkitIO's `validate_record`).
 for (key, kind) in (Symbol("vgio/vignetting") => :VIGNETTING_KIND, Symbol("vgio/environment_light") => :ENVIRONMENT_LIGHT_KIND,
