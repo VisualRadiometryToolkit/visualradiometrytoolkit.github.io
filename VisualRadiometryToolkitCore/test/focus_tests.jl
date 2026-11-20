@@ -30,6 +30,8 @@
     f2 = VgtkCore.with_parameters(fa, vals2)
     @test f2.t̂_i == vals2 && f2.nodes == fa.nodes
     @test t̂(f2, tps.nodes[7]) ≈ vals2[7] atol = 1e-9
+    ch = VgtkCore.ParameterManifold(fa)                                 # the chart an estimator steps the nodal values in
+    @test VgtkCore.local_coordinates(ch, VgtkCore.retract(ch, 0.01 .* vals2)) ≈ 0.01 .* vals2
     f32 = VgtkCore.convert_eltype(Float32, fa)
     @test f32 isa Focus{Float32, 25} && f32.kind == fa.kind && f32.w == Float32.(fa.w) && t̂(f32, SVector(244.0f0, 30.0f0)) isa Float32
 end
