@@ -19,7 +19,7 @@ using TOML
 
 const ROOT = dirname(dirname(@__DIR__))
 const REPO = "https://github.com/VisualRadiometryToolkit/visualradiometrytoolkit.github.io.git"
-const WORKSPACE = filter(!=("ci"), TOML.parsefile(joinpath(ROOT, "Project.toml"))["workspace"]["projects"])
+const WORKSPACE = TOML.parsefile(joinpath(ROOT, "Project.toml"))["workspace"]["projects"]   # every member is a package (WORKSPACE.toml: no tooling member)
 # The foundation's documentation: a navbar link, never a second copy.
 const LINKS = ["Visual Geometry Toolkit" => "https://visualgeometrytoolkit.github.io/"]
 
