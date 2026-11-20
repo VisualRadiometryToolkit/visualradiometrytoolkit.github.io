@@ -5,7 +5,8 @@
 #                        in site/SHARED_REF by site/fetch_shared.sh; never tracked here)
 #   <out>/<Package>/     each package's documentation, every published version (site/portal/make.jl: MultiDocumenter
 #                        over this repository's gh-pages branch, or over PORTAL_LOCAL=<dir> holding <Package>/ builds)
-# Usage: site/build.sh [out]   (default site/build). Instantiate site/portal first (README.md).
+# Usage: site/build.sh [out]   (default site/build). Run site/fetch_shared.sh and instantiate site/portal first
+# (CLAUDE.md, "Commands").
 set -euo pipefail
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 out=$(realpath -m "${1:-$root/site/build}")

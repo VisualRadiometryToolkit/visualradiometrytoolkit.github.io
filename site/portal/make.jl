@@ -14,8 +14,11 @@
 #
 # Portal paths are the package names, so a package's docs are at /<Package>/.
 
-using MultiDocumenter
 using TOML
+# portal_pages, portal_docs, portal_out, make_portal: the Visual Geometry Toolkit site's portal builder, used from its
+# repository at the commit pinned in site/SHARED_REF (site/fetch_shared.sh) and never copied; this folder's
+# Project.toml comes the same way.
+include(joinpath(@__DIR__, "..", ".shared", "portal", "stack_portal.jl"))
 
 const ROOT = dirname(dirname(@__DIR__))
 const REPO = "https://github.com/VisualRadiometryToolkit/visualradiometrytoolkit.github.io.git"
@@ -23,30 +26,7 @@ const WORKSPACE = TOML.parsefile(joinpath(ROOT, "Project.toml"))["workspace"]["p
 # The foundation's documentation: a navbar link, never a second copy.
 const LINKS = ["Visual Geometry Toolkit" => "https://visualgeometrytoolkit.github.io/"]
 
-outpath = get(ENV, "PORTAL_OUT", joinpath(@__DIR__, "out"))
-pages = get(ENV, "PORTAL_LOCAL", "")
-if isempty(pages)
-    pages = mktempdir()
-    # no gh-pages branch yet (before the first docs deploy): the portal has no package docs
-    success(pipeline(`git clone -q --depth 1 --branch gh-pages $REPO $pages`; stderr = devnull)) ||
-        @warn "no gh-pages branch at $REPO: the portal holds no package docs"
-end
-
-docs = MultiDocumenter.DropdownComponent[]
-for p in WORKSPACE
-    isdir(joinpath(pages, p)) || (@warn "no docs for $p under $pages"; continue)
-    push!(docs, MultiDocumenter.MultiDocRef(; upstream = joinpath(pages, p), path = p, name = p))
-end
-foreach(((name, url),) -> push!(docs, MultiDocumenter.Link(name, url)), LINKS)
-
-if any(d -> d isa MultiDocumenter.MultiDocRef, docs)
-    MultiDocumenter.make(
-        outpath, docs;
-        search_engine = MultiDocumenter.SearchConfig(index_versions = ["stable", "dev"], engine = MultiDocumenter.FlexSearch),
-        rootpath = "/",
-        canonical_domain = "https://visualradiometrytoolkit.github.io/",
-        sitemap = true,
-    )
-else
-    mkpath(outpath)   # the landing page alone
-end
+# no gh-pages branch yet (before the first docs deploy): the portal has no package docs, the landing page stands alone
+pages = portal_pages(REPO; required = false)
+make_portal(portal_out(joinpath(@__DIR__, "out")), portal_docs(pages, WORKSPACE, LINKS);
+    canonical_domain = "https://visualradiometrytoolkit.github.io/")

@@ -40,6 +40,7 @@ site/.shared/
 site/shared/
 site/icons/vgt_logo.svg
 site/icons/radiometric.svg
+site/portal/Project.toml
 
 # Python side environments
 .pixi/

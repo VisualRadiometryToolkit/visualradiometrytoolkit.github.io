@@ -1,4 +1,5 @@
 # The commit of https://github.com/VisualGeometryToolkit/visualgeometrytoolkit.github.io whose shared landing-page
 # tooling this site uses (site/fetch_shared.sh): the stylesheet base, the graph and BibTeX script, the icon and
-# social-card generators with their Python environment, and the canonical icons. One line: the full commit hash.
-faa47a88521a08116989684ca61e443e34e3ac09
+# social-card generators with their Python environment, the portal builder with its Julia environment, and the
+# canonical icons. One line: the full commit hash.
+eac44cb7da8795d4824a41e81ba4792eccf6a782

@@ -56,6 +56,8 @@ jobs:
       - uses: julia-actions/setup-julia@v2
         with: { version: '1.13' }
       - uses: julia-actions/cache@v2
+      - name: Fetch the tooling shared with the Visual Geometry Toolkit's site (site/SHARED_REF)
+        run: site/fetch_shared.sh
       - run: julia --project=site/portal -e 'using Pkg; Pkg.instantiate()'
       - name: Build the site (portal + landing page)
         run: site/build.sh "$RUNNER_TEMP/site"

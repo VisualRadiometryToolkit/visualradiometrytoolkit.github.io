@@ -53,7 +53,9 @@ generator that VGTK has:
   shows two icons that are the VGTK site's, fetched from its repository at the
   commit in `site/SHARED_REF` by `site/fetch_shared.sh` and never tracked;
   `site/style.css`, `site/main.js` and `site/tools/*.py` hold only what is this
-  site's own (its banner, its icons as data for VGTK's generator).
+  site's own (its banner, its icons as data for VGTK's generator). The portal
+  builder and its environment come the same way: `site/portal/make.jl` names
+  this repository, its packages and its links.
 
 A change that all toolkits need is made in its owner (VGTK), released or
 pinned, and taken here by moving the version or the pin; it is never written
@@ -81,6 +83,7 @@ julia --project=. -e 'using VisualGeometryToolkitCore: stack_ci; exit(stack_ci(A
 julia --project=. -e 'using VisualGeometryToolkitCore: stack_ci; exit(stack_ci(ARGS))' affected origin/main HEAD   # packages a change touches, with dependents
 
 # The site, as CI assembles it (the portal over the published package docs, the landing page at its root)
+site/fetch_shared.sh                         # the tooling shared with the VGTK site, at the commit in site/SHARED_REF
 julia --project=site/portal -e 'using Pkg; Pkg.instantiate()'
 site/build.sh site/build
 ```
