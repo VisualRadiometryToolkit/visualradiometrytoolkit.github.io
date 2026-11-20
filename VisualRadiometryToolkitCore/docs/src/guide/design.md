@@ -97,3 +97,15 @@ types on the CPU and on every GPU backend.
 Estimation (calibrating a radiometric camera from images) is not core: it is
 planned as a later package of this workspace, as VisualGeometryToolkitEstimation
 is to VisualGeometryToolkitCore.
+
+## A textured target holds its own state
+
+A [`TexturedTarget`](@ref) is a posed planar target of
+VisualGeometryToolkitCore with its printed appearance. Its geometry and its
+design stay VisualGeometryToolkitCore's; what a calibration learns about one
+printed target (the warping of the page, the printed edge, the in-plane print
+error) is the target's own state, a field of it. The state is isbits and
+replaced by value, in its own element type: a renderer keeps the target's
+arrays on a device and gives the target the numbers it differentiates. There
+is no scene type: a render takes a camera, a pose and a target, and the image
+size is the camera's.

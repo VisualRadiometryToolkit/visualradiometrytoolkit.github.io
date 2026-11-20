@@ -48,6 +48,8 @@ definition; `VisualRadiometryToolkitCore.𝔣 === VisualRadiometryToolkitCore.fo
 | diffuse weight `μ` | `with_μ` | `with_diffuse_weight` |
 | roughness `α(𝐛)`, refractive index `η(𝐛)` | `𝛂`, `𝛈` | `roughness`, `refractive_index` |
 | Smith `Λ` | `Λ_ggx` | `ggx_lambda` |
+| target centre `𝔟` | `𝔟` | `target_center` |
+| texture albedo `ρ_c(𝐛)` | `ρ_c` | `albedo` |
 
 ```@autodocs
 Modules = [VisualRadiometryToolkitCore]
@@ -152,4 +154,24 @@ numbers, `Float32` in a kernel).
 Modules = [VisualRadiometryToolkitCore]
 Private = false
 Pages = ["scene/materials.jl"]
+```
+
+## Textured targets
+
+A [`TexturedTarget`](@ref) is a printed planar target as the radiometry sees
+it: VisualGeometryToolkitCore's posed planar target (the geometry and the
+design stay there: `PosedTarget`, `PlanarTarget`, `Canvas`, `CanvasTexture`,
+`Quad`, `MappedSurface`) with its appearance attached — the texture (`albedo`,
+the paper's `ρ_c`), and for a design given as a distance map the printed-edge
+model (`edge_albedo`: the ink spread and the print's blur). The target holds
+its own state, a `TargetState`: the nodal heights of its warping, the printed
+edge and the in-plane print error, isbits and replaced by value
+(`with_state`, `with_h`, `with_edge`, `with_inplane`), so a kernel keeps the
+target's arrays on a device and differentiates the state. `target_center` is
+the paper's `𝔟`; both symbols are public aliases.
+
+```@autodocs
+Modules = [VisualRadiometryToolkitCore]
+Private = false
+Pages = ["scene/target_state.jl", "scene/textured_target.jl", "scene/target_warping.jl", "scene/printed_edge.jl"]
 ```

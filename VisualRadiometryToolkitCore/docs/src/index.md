@@ -18,8 +18,9 @@ The package holds the radiometric camera as one object,
 vignetting ([`NoVignetting`](@ref) unless one is stated); the camera's
 back-projection from the aperture disc; the sensor's pixels and the quadrature
 rules of the image-formation integrals; the scene's light
-([`EnvironmentLight`](@ref)) and a surface's reflectance
-([`VisualRadiometryToolkitCore.Material`](@ref)). The [Design](@ref) page states
+([`EnvironmentLight`](@ref)), a surface's reflectance
+([`VisualRadiometryToolkitCore.Material`](@ref)) and a printed planar target
+with its texture and its own state ([`TexturedTarget`](@ref)). The [Design](@ref) page states
 the rules its parts follow.
 
 !!! warning "Not registered yet"

@@ -21,11 +21,15 @@ follows its conventions; nothing there depends on this.
   [`SphericalHarmonicMap`](@ref).
 - A surface's reflectance: [`Material`](@ref), a spatially varying Cook–Torrance
   BSDF with a GGX microfacet distribution.
+- A printed planar target: [`TexturedTarget`](@ref), a posed planar target of
+  VisualGeometryToolkitCore with its texture, its printed edge and its own state
+  ([`TargetState`](@ref): its warping, its printed edge, its in-plane print error).
 """
 module VisualRadiometryToolkitCore
 
 using StaticArrays: SVector, SMatrix, StaticVector
-using LinearAlgebra: LinearAlgebra, dot, normalize
+using LinearAlgebra: LinearAlgebra, I, cross, dot, norm, normalize
+using Adapt: Adapt, adapt   # a textured target's arrays move to a device (scene/textured_target.jl)
 using QuadGK: gauss   # the Gauss–Legendre nodes of the sensor rule (sensor/quadrature.jl)
 using ForwardDiff: ForwardDiff
 using GeometryBasics: GeometryBasics
@@ -43,6 +47,7 @@ import VisualGeometryToolkitCore as VgtkCore   # the spline systems of a focus s
 import VisualGeometryToolkitCore: center, convert_eltype, support_trait, nodes, support,
     parameter_vector, parameter_names, with_parameters, has_units, with_unit,
     project, backproject,   # a radiometric camera's geometric maps, forwarded to its geometric camera; `backproject(camera, 𝐩, 𝐚)`, the radiometric back-projection
+    chart,                  # a textured target's page chart of a world point
     lens                    # refused by name on a radiometric camera (its geometric camera's lens model is `lens(geometric(camera))`)
 
 export AbstractVignetting, NoVignetting, TensorProductVignetting, RadialVignetting, LogVignetting   # a camera's vignetting (camera/vignetting.jl)
@@ -70,6 +75,14 @@ public Material, nonlinear_parameters, with_nonlinear, with_diffuse_weight, text
        ggx_distribution, ggx_lambda, ggx_masking, ggx_masking_shadowing, fresnel_dielectric, sample_visible_normal,
        visible_normal_density, reflection_pdf, reflect, cook_torrance_terms, cook_torrance   # a surface's reflectance: the Cook–Torrance BSDF and its GGX pieces (scene/materials.jl)
 public Θ_m_nonlinear, with_μ, 𝛂, 𝛈, Λ_ggx   # the paper's notation: aliases of nonlinear_parameters, with_diffuse_weight, roughness, refractive_index and ggx_lambda
+export TexturedTarget   # a printed planar target: VisualGeometryToolkitCore's posed target with its texture, printed edge and state (scene/textured_target.jl)
+public TargetState, with_state, with_h, with_edge, with_inplane, height_on, inplane_on, ink_spread, print_blur,
+       EDGE_NC, HEIGHT_NC, HEIGHT_NODES, INPLANE_NC   # the target's own state: its warping, its printed edge, its in-plane print error (scene/target_state.jl)
+public with_sdf, has_sdf, posed_target, board_normal, world_point, target_center, corners, texture_size, intersect_board, board_plane_hit,
+       inside, albedo, printed_albedo, edge_albedo   # its geometry (the page, its chart, a ray's hit) and its appearance (the texture, the printed edge)
+public 𝔟, ρ_c   # the paper's notation: aliases of target_center and albedo
+public warping_nodes, warping_aspect, warping_field, flat_surface, board_height, board_relief, is_warped, BoardRays,
+       inplane_calibration, placed_chart, page_fraction, design_chart, physical_chart, page_points   # its warping and in-plane print error on the state (scene/target_warping.jl)
 public CONTRACT_GENERICS   # the functions another package may add methods to
 
 # The sensor ------------------------------------------------------------------
@@ -85,6 +98,12 @@ include("camera/radiometric_camera.jl") # the radiometric camera and its back-pr
 # The scene's light -----------------------------------------------------------
 include("scene/lights.jl")             # EnvironmentLight, SphericalHarmonicMap, sh_basis (extends vignetting.jl's coefficient_jacobian)
 include("scene/materials.jl")          # Material: the spatially varying Cook–Torrance BSDF
+
+# The printed target -----------------------------------------------------------
+include("scene/target_state.jl")       # TargetState: a textured target's warping, printed edge and in-plane print error, by value
+include("scene/textured_target.jl")    # TexturedTarget: VisualGeometryToolkitCore's posed planar target with its texture and state
+include("scene/target_warping.jl")     # the warped page (Core's HeightField, MappedSurface) and the in-plane print error on the state
+include("scene/printed_edge.jl")       # the printed-edge model of a target with a distance map
 
 """
     CONTRACT_GENERICS

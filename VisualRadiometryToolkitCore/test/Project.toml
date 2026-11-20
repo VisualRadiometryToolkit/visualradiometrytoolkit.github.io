@@ -1,6 +1,7 @@
 # The test environment (Pkg ≥ 1.11 form; replaces [extras]/[targets]). A
 # workspace member of ../Project.toml, so Pkg.test() runs it without a sandbox.
 [deps]
+Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 BSplineKit = "093aae92-e908-43d7-9660-e50ee39d5a0a"
 ExplicitImports = "7d51a73a-1435-4ff3-83d9-f097790105c7"
@@ -23,6 +24,7 @@ VisualGeometryToolkitCore = {url = "https://github.com/VisualGeometryToolkit/Vis
 VisualRadiometryToolkitCore = {path = ".."}
 
 [compat]
+Adapt = "4.8"
 Aqua = "0.8.19"
 BSplineKit = "0.19.3"
 ExplicitImports = "1.15"

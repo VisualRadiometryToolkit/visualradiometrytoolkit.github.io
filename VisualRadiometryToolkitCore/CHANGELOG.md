@@ -25,6 +25,29 @@ The package skeleton.
   `luma_image`) and the quadrature
   rules (`SensorQuadrature`, `ApertureQuadrature` and their samples); the
   material (`Material` and the Cook–Torrance / GGX functions).
+- From RadiometricCamera (its commit ae436a4): the textured target. Its
+  `PrintedTarget` is `TexturedTarget` here — VisualGeometryToolkitCore's posed
+  planar target with its texture, the optional distance map of the printed
+  layout and the page chart (`chart`, `world_point`, `corners`,
+  `intersect_board`, `board_plane_hit`, `board_normal`, `inside`,
+  `texture_size`, `with_sdf`, `has_sdf`); `ρ_c` is `albedo` and `𝔟` is
+  `target_center` (the paper's symbols stay as public aliases); the
+  printed-edge model (`edge_albedo`, and `printed_albedo`: the texture's or the
+  printed edge's); the warping and the in-plane print error (`HEIGHT_NC`,
+  `HEIGHT_NODES`, `INPLANE_NC`, `EDGE_NC`, `warping_nodes`, `warping_aspect`,
+  `warping_field`, `flat_surface`, `board_height`, `board_relief`,
+  `is_warped`, `BoardRays`, `inplane_calibration`, `placed_chart`,
+  `page_fraction`, `design_chart`, `physical_chart`, `page_points`,
+  `posed_target`), with the target's methods of `convert_eltype`, `chart` and
+  Adapt's `adapt_structure`.
+- `TargetState`: a textured target's own state — the nodal heights of its
+  warping `h`, its printed edge `edge` (`ink_spread`, `print_blur`, mm) and its
+  in-plane print error `inplane` — a field of the target (`state`), isbits and
+  replaced by value (`with_state`, `with_h`, `with_edge`, `with_inplane`, on a
+  state or on the target). It was RadiometricCamera's `BoardSurface`, held
+  beside the target in its `Scene`; the functions that took the pair take the
+  target (`edge_albedo(target, 𝐛)`, `BoardRays(target)`,
+  `design_chart(target, 𝐛)`, `posed_target(target)`). There is no scene type.
 - `chief_ray(geometric, 𝐩)`: the one function through which a geometric camera
   carries a radiometric camera (any VisualGeometryToolkitCore camera answers
   it), and `CONTRACT_GENERICS`, the functions another package may add methods
