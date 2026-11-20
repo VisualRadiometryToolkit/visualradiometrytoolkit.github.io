@@ -583,6 +583,7 @@ const VIGNETTING_TAGS = TagRegistry(:vignetting, "Vignetting",
 # A static array's entries as one static vector, column-major: a model's coefficients as its parameter vector.
 @inline _coefficient_vector(A) = SVector{length(A), eltype(A)}(Tuple(A))
 parameter_vector(v::AbstractVignetting) = _coefficient_vector(control_points(v))
+VgtkCore.local_coordinates(ch::VgtkCore.ParameterManifold, v::AbstractVignetting) = VgtkCore.parameter_offsets(ch, v)
 parameter_names(v::AbstractVignetting) = ntuple(i -> Symbol(:c, i), Val(n_control_points(v)))
 function with_parameters(v::AbstractVignetting, θ::AbstractVector)
     n = n_control_points(v)

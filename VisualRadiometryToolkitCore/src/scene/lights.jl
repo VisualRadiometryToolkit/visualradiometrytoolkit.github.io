@@ -204,6 +204,7 @@ with_coefficients(light::EnvironmentLight, a::AbstractMatrix) = EnvironmentLight
 # named `a<channel>_<index>`, unbounded; the centre and the radius are the
 # light's geometry and stay fixed (`with_parameters` keeps them).
 parameter_vector(light::EnvironmentLight) = _coefficient_vector(coefficients(light))
+VgtkCore.local_coordinates(ch::VgtkCore.ParameterManifold, light::EnvironmentLight) = VgtkCore.parameter_offsets(ch, light)
 parameter_names(light::EnvironmentLight) = (a = coefficients(light); C = size(a, 1);
     ntuple(i -> Symbol(:a, (i - 1) % C + 1, :_, (i - 1) ÷ C + 1), Val(length(a))))
 function with_parameters(light::EnvironmentLight, θ::AbstractVector)
