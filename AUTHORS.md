@@ -1,7 +1,5 @@
 # Authors
 
-VisualRadiometryToolkit is developed at Kiel University.
-
 - Ties Harder
 - Felix Seegräber
 - James Pritts (maintainer)
