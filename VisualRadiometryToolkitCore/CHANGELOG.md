@@ -18,9 +18,8 @@ The package skeleton.
   forwards of `project` and `backproject`) and its camera-frame maps
   (`chief_direction`, `focus_point`, `inverse_focus_distance`, `world_ray`,
   `center_of_projection`); the focus surface (`Focus`, `FocusSpline`,
-  `n_nodes`, `focus_distance`) and its kinds on the chief directions
-  (`focus_weights`, `polar_cap_nodes`, `FOCUS_SENSOR`,
-  `FOCUS_DIRECTION_CHART`, `FOCUS_SPHERE`); the sensor domain
+  `n_nodes`, `focus_distance`), a thin plate spline over the sensor; the
+  sensor domain
   (`sensor_position`, `pixel_position`, `pixel_footprint`, `luma`,
   `luma_image`) and the quadrature
   rules (`SensorQuadrature`, `ApertureQuadrature` and their samples); the
@@ -77,10 +76,17 @@ The package skeleton.
   VisualGeometryToolkitCore's `backproject`, the aperture point its third
   argument: `backproject(camera, 𝐩, 𝐚)` (the paper's `π̂⁻¹`, an alias of
   `backproject`). On a camera's parts it is `aperture_direction`.
-- The azimuthal-equidistant chart of a focus surface on the chief directions is
-  VisualGeometryToolkitCore's equidistant lens, called directly
-  (`project(Lens(Equidistant()), d)`, `backproject` its inverse): `ae_chart`
-  and `ae_dir` are not names of this package.
+- The focus surface is the thin plate spline over the sensor, and a camera's
+  inverse focus distance at 𝐩 is that spline at 𝐩. RadiometricCamera's
+  experimental focus surfaces on the chief directions (a thin plate spline in
+  the azimuthal-equidistant chart, a spherical spline) are not taken:
+  `Focus` has no `kind`, and `FocusSpline(nodes, kind)`,
+  `inverse_focus_distance(focus, direction)`, `focus_weights` and
+  `polar_cap_nodes` are refused by name (`FOCUS_SENSOR`,
+  `FOCUS_DIRECTION_CHART`, `FOCUS_SPHERE`, `ae_chart` and `ae_dir` are not
+  names of this package). The nodal weights of a focus surface at a sensor
+  position are VisualGeometryToolkitCore's `nodal_weights` of
+  `FocusSpline(focus).sys`.
 - `lens(camera::RadiometricCameraModel)` is refused by name: `lens` is
   VisualGeometryToolkitCore's lens model of a geometric camera, a radiometric
   camera's is `lens(geometric(camera))`.

@@ -62,15 +62,13 @@ Filter = t -> t !== VisualRadiometryToolkitCore && t !== VisualRadiometryToolkit
 
 The focus surface: the inverse focus distance (`inverse_focus_distance`, the
 paper's `t̂ = 1/𝔱`) along each chief ray,
-a thin plate spline of VisualGeometryToolkitCore over nodes on the sensor (or,
-as an experiment, over the chief directions: the azimuthal-equidistant chart,
-which is VisualGeometryToolkitCore's equidistant lens, or the sphere). A `Focus`
+a thin plate spline of VisualGeometryToolkitCore over nodes on the sensor. A `Focus`
 is isbits, for a kernel; its solver, a `FocusSpline`, stays on the host.
 
 ```@autodocs
 Modules = [VisualRadiometryToolkitCore]
 Private = false
-Pages = ["camera/focus.jl", "camera/focus_charts.jl"]
+Pages = ["camera/focus.jl"]
 ```
 
 ## Sensor and quadrature

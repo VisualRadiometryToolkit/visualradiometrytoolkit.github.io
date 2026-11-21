@@ -41,7 +41,7 @@ using VisualGeometryToolkitCore: EuclideanMap, PixelFrame, unlabel   # a pose (c
 using VisualGeometryToolkitCore: BoundedCamera, CameraModel, AbstractIntrinsics, SplineLens, extent, model, normalized_point   # the geometric camera a radiometric camera lifts
 using VisualGeometryToolkitCore: grid_nodes, square_rule, unit_disc_rule   # a focus surface's sensor grid; the quadrature rules
 using GeometryBasics: Rect
-import VisualGeometryToolkitCore as VgtkCore   # the spline systems of a focus surface and the equidistant lens, reached qualified (camera/focus.jl, focus_charts.jl)
+import VisualGeometryToolkitCore as VgtkCore   # the spline system of a focus surface, reached qualified (camera/focus.jl)
 # VisualGeometryToolkitCore's contract generics these types answer: a field's centre and element type, the support
 # protocol of a surface's control points, the parameter protocol, a light's units
 import VisualGeometryToolkitCore: center, convert_eltype, support_trait, nodes, support,
@@ -65,7 +65,6 @@ public chief_ray, chief_direction, center_of_projection, focus_point, aperture_d
 public 𝔭, 𝔣, π̂⁻¹   # the paper's notation: aliases of center_of_projection, focus_point and VisualGeometryToolkitCore's backproject
 public Focus, FocusSpline, n_nodes, inverse_focus_distance, focus_distance   # the focus surface: the inverse focus distance as a thin plate spline, and its host-side solver (camera/focus.jl)
 public t̂, 𝔱   # the paper's notation: aliases of inverse_focus_distance and focus_distance
-public FOCUS_SENSOR, FOCUS_DIRECTION_CHART, FOCUS_SPHERE, focus_weights, polar_cap_nodes   # the focus kinds: the sensor chart, a direction chart, the sphere (camera/focus_charts.jl)
 public sensor_position, pixel_position, pixel_footprint, luma, luma_image   # the sensor domain: Julia's pixel indices and sensor positions, a pixel's footprint, luma (sensor/notation.jl)
 public 𝐩_of_pixel, pixel_of_𝐩, ℐ_𝐮   # the paper's notation: aliases of sensor_position, pixel_position and pixel_footprint
 public SensorQuadrature, ApertureQuadrature, sensor_samples, aperture_samples, aperture_border, sensor_sample, aperture_sample,
@@ -92,7 +91,6 @@ include("sensor/quadrature.jl")        # the quadrature rules of the image-forma
 # The camera's parts ---------------------------------------------------------
 include("camera/vignetting.jl")        # the vignetting fields and their protocol; NoVignetting, the absent one
 include("camera/focus.jl")             # the focus surface and its host-side solver
-include("camera/focus_charts.jl")      # the focus kinds on the chief directions
 include("camera/radiometric_camera.jl") # the radiometric camera and its back-projection from the aperture
 
 # The scene's light -----------------------------------------------------------

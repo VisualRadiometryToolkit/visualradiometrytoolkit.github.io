@@ -171,12 +171,10 @@ Dual-generic: when `π⁻¹` carries partials the normalisation projects them on
     inverse_focus_distance(geometric, focus::Focus, 𝐩)
     inverse_focus_distance(camera::RadiometricCameraModel, 𝐩)
 
-The camera's inverse focus distance at the sensor position 𝐩 (the paper's `t̂(𝐩)`; public alias `t̂`). EXPERIMENT (focus-ab): the
-sensor TPS at 𝐩 (kind 0), or a direction chart's surface at the chief direction of 𝐩 through the geometric camera (kinds 1, 2;
-focus_charts.jl).
+The camera's inverse focus distance at the sensor position 𝐩 (the paper's `t̂(𝐩)`; public alias `t̂`): the focus
+surface's thin plate spline at 𝐩.
 """
-@inline inverse_focus_distance(geometric, f::Focus, 𝐩::StaticVector{2}) =
-    f.kind == 0 ? inverse_focus_distance(f, 𝐩) : inverse_focus_distance(f, chief_direction(geometric, 𝐩))
+@inline inverse_focus_distance(geometric, f::Focus, 𝐩::StaticVector{2}) = inverse_focus_distance(f, 𝐩)
 @inline inverse_focus_distance(c::RadiometricCameraModel, 𝐩::StaticVector{2}) = inverse_focus_distance(c.geometric, c.focus, 𝐩)
 
 """

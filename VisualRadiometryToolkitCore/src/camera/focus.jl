@@ -21,46 +21,33 @@ struct Focus{T, N}
     t̂_i::SVector{N, T}
     w::SVector{N, T}
     a::SVector{3, T}
-    kind::Int          # EXPERIMENT (focus-ab): 0 sensor TPS (pixels), 1 direction-chart TPS, 2 spherical spline (focus_charts.jl)
 end
-Focus{T, N}(nodes, t̂_i, w, a) where {T, N} = Focus{T, N}(nodes, t̂_i, w, a, 0)
 
 """
-    FocusSpline(nodes[, kind = 0])
+    FocusSpline(nodes)
 
-The host-side solver of a focus surface on `N` nodes: VisualGeometryToolkitCore's `ThinPlateSplineSystem` of the nodes (kind 0: the
-sensor (pixels); kind 1, EXPERIMENT focus-ab: the azimuthal-equidistant direction chart) or its `SphericalSplineSystem` of their directions
-(kind 2). The host evaluates through the system (Core's `tps_coefficients` / `spherical_spline_coefficients`, `nodal_weights`);
-`coeff` is the map of nodal values to `Focus`'s `(w; a₁, a_x, a_y)` in one layout for every kind (the sphere's constant-only map padded
-with two zero rows), which the device evaluations convert to Float32.
+The host-side solver of a focus surface on `N` nodes of the sensor (pixels): VisualGeometryToolkitCore's `ThinPlateSplineSystem` of
+the nodes. The host evaluates through the system (Core's `tps_coefficients`, `nodal_weights`); `coeff` is the system's map of nodal
+values to `Focus`'s `(w; a₁, a_x, a_y)`, which the device evaluations convert to Float32.
 """
 struct FocusSpline{N, S}
     sys::S
     nodes::SVector{N, SVector{2, Float64}}
     coeff::Matrix{Float64}                   # (N+3) × N
-    kind::Int
 end
-function FocusSpline(nodes::AbstractVector{<:StaticVector{2}}, kind::Integer = 0)
+function FocusSpline(nodes::AbstractVector{<:StaticVector{2}})
     N = length(nodes)
     ns = SVector{N}(SVector{2, Float64}.(nodes))
-    if kind == 2
-        sys = VgtkCore.SphericalSplineSystem([_chart_direction(n) for n in ns])
-        return FocusSpline{N, typeof(sys)}(sys, ns, vcat(sys.coeff, zeros(2, N)), 2)
-    end
     sys = VgtkCore.ThinPlateSplineSystem(collect(ns))
-    return FocusSpline{N, typeof(sys)}(sys, ns, sys.coeff, Int(kind))
+    return FocusSpline{N, typeof(sys)}(sys, ns, sys.coeff)
 end
-"""The host-side solver rebuilt from a focus's nodes and kind."""
-FocusSpline(f::Focus) = FocusSpline(SVector{2, Float64}.(f.nodes), f.kind)
+"""The host-side solver rebuilt from a focus's nodes."""
+FocusSpline(f::Focus) = FocusSpline(SVector{2, Float64}.(f.nodes))
 
 function Focus(tps::FocusSpline{N}, t̂_i::AbstractVector{T}) where {N, T}
-    w, a = _focus_coefficients(tps.sys, t̂_i)
-    return Focus{T, N}(SVector{N}(SVector{2, T}.(tps.nodes)), SVector{N, T}(t̂_i), SVector{N, T}(w), SVector{3, T}(a), tps.kind)
+    w, a = VgtkCore.tps_coefficients(tps.sys, t̂_i)
+    return Focus{T, N}(SVector{N}(SVector{2, T}.(tps.nodes)), SVector{N, T}(t̂_i), SVector{N, T}(w), SVector{3, T}(a))
 end
-# (w, a) through the nodal values: Core's coefficient maps; the sphere's constant-only spline has a_x = a_y = 0
-_focus_coefficients(sys::VgtkCore.ThinPlateSplineSystem, t) = VgtkCore.tps_coefficients(sys, t)
-_focus_coefficients(sys::VgtkCore.SphericalSplineSystem, t) =
-    ((w, a₁) = VgtkCore.spherical_spline_coefficients(sys, t); (w, SVector(a₁, zero(a₁), zero(a₁))))
 
 """
     Focus(n, distance, W, H; T = Float64)
@@ -80,11 +67,9 @@ Base.values(f::Focus) = f.t̂_i                                 # its nodal valu
 
 """
     inverse_focus_distance(f::Focus, 𝐩::StaticVector{2})
-    inverse_focus_distance(f::Focus, direction::StaticVector{3})
 
-The inverse focus distance of the focus surface `f`, the paper's `t̂ = 1/𝔱` (public alias `t̂`): at the sensor position 𝐩 (COLMAP
-pixels; the sensor chart's thin plate spline), or — for a surface on the chief directions (a direction chart or the sphere,
-focus_charts.jl) — at the unit chief direction `direction`.
+The inverse focus distance of the focus surface `f`, the paper's `t̂ = 1/𝔱` (public alias `t̂`), at the sensor position 𝐩 (COLMAP
+pixels): the thin plate spline's value there.
 """
 @inline inverse_focus_distance(f::Focus, 𝐩::StaticVector{2}) = VgtkCore.tps_evaluate(f.nodes, f.w, f.a, 𝐩)
 
@@ -103,9 +88,21 @@ with_parameters(f::Focus, θ) = Focus(FocusSpline(f), θ)
 VgtkCore.local_coordinates(ch::VgtkCore.ParameterManifold, f::Focus) = VgtkCore.parameter_offsets(ch, f)   # its chart coordinates on a ParameterManifold
 function convert_eltype(::Type{T}, f::Focus{S, N}) where {T, S, N}
     nodes = map(n -> SVector{2, T}(n), f.nodes)
-    return Focus{T, N}(nodes, map(T, f.t̂_i), map(T, f.w), map(T, f.a), f.kind)
+    return Focus{T, N}(nodes, map(T, f.t̂_i), map(T, f.w), map(T, f.a))
 end
 
 # The paper's notation, as public aliases of the same functions (one definition each)
 const t̂ = inverse_focus_distance
 const 𝔱 = focus_distance
+
+# ---- removed: the focus surfaces on the chief directions (a thin plate spline in the azimuthal-equidistant chart, a spherical
+# spline). The focus surface is the thin plate spline over the sensor; the removed call forms and names are refused by name.
+_removed_focus_kind(what) = throw(ArgumentError(
+    "$what was removed with the focus surfaces on the chief directions: the focus surface is the thin plate spline over the sensor"))
+FocusSpline(::AbstractVector{<:StaticVector{2}}, kind::Integer) =
+    _removed_focus_kind("FocusSpline(nodes, kind) (a focus kind; the solver is `FocusSpline(nodes)`, its nodes sensor positions in pixels)")
+inverse_focus_distance(::Focus, ::StaticVector{3}) =
+    _removed_focus_kind("inverse_focus_distance(focus, direction) (the surface is read at a sensor position: `inverse_focus_distance(focus, 𝐩)`)")
+focus_weights(args...; kwargs...) =
+    _removed_focus_kind("focus_weights (the nodal weights at a sensor position are VisualGeometryToolkitCore's `nodal_weights(FocusSpline(focus).sys, 𝐩)`)")
+polar_cap_nodes(args...; kwargs...) = _removed_focus_kind("polar_cap_nodes")
