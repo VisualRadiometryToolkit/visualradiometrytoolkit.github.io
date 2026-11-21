@@ -175,7 +175,7 @@ end
     bk = with_state(b, VgtkCore.convert_eltype(Float32, b.state))
     ρa = anchored_albedo(bk, 𝐱₀, seed(Float32))
     @test ρa isa SVector{3, D32}
-    @test ForwardDiff.value(ρa[1]) ≈ ForwardDiff.value(ref[1]) rtol = 1.0e-6
+    @test ForwardDiff.value(ρa[1]) ≈ ForwardDiff.value(ref[1]) rtol = 1.0e-5                 # the edge profile in Float32
     ea = abs(slope(ρa) / slope(ref) - 1)
     # the same lookup in Float32 throughout (the target and the point rounded): the coarse world point moves the slope
     b32 = VgtkCore.convert_eltype(Float32, b)
