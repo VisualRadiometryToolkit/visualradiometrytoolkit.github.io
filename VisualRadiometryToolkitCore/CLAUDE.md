@@ -6,8 +6,8 @@ code in this package. The workspace's rules are in the repository root's
 
 VisualRadiometryToolkitCore: the types of a radiometric camera, a camera of
 VisualGeometryToolkitCore together with the parts that decide how much light a
-pixel collects. Under construction: version 0.0.1 is a placeholder and the
-package is not registered.
+pixel collects (its focus surface, its aperture radius, its vignetting), and
+of the scene it sees (an environment light, a material, a textured target).
 
 ## The rules of this package
 
@@ -15,16 +15,22 @@ package is not registered.
   VisualGeometryToolkitCore and on nothing else of the stack
   (`configs/stack_dependencies.toml`). It never asks VisualGeometryToolkitCore
   to know about it.
-- **A camera part is an abstract type with a `No…` default.** The default is a
-  singleton with no parameters (no calibration coordinates, no Jacobian
-  columns) that compiles away; a kernel never tests a part against `nothing`.
-  `NoVignetting` is the pattern; the manual's Design page states the rules.
+- **The vignetting is an abstract type with an absent default, `NoVignetting`.**
+  It is a singleton with no parameters (no calibration coordinates, no Jacobian
+  columns) whose value is `true`; a kernel never tests a vignetting against
+  `nothing`. The manual's Design page states the rules.
+- **One implementation of each camera-frame map, on the parts it reads.**
+  `RadiometricCameraModel` and any record holding the same parts forward to it
+  (`CONTRACT_GENERICS`).
+- **Public names are descriptive ASCII**; a symbol of the paper is a `const`
+  alias of the same function, never a second definition.
 - **Methods on VisualGeometryToolkitCore's functions land on its contract
   generics only** (`VisualGeometryToolkitCore.CONTRACT_GENERICS`; the quality
   gate enforces it). A protocol that is not a contract there is not extended
   from here: it moves here first.
 - **What moves here is removed from where it was**, by name, with its
-  replacement, in the same release cascade. Nothing is kept in two places.
+  replacement. Nothing is kept in two places (`DUPLICATION.toml` at the root
+  has no entry).
 
 ## Testing
 

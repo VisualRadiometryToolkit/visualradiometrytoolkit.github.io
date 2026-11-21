@@ -12,46 +12,69 @@ and follows its conventions (naming, signatures, frames, units, Jacobians),
 which are stated once, [there](https://visualgeometrytoolkit.github.io/VisualGeometryToolkitCore/dev/guide/conventions/);
 no package of the Visual Geometry Toolkit depends on this one.
 
-The package holds the radiometric camera as one object,
-[`RadiometricCameraModel`](@ref): any geometric camera with its focus surface
-([`VisualRadiometryToolkitCore.Focus`](@ref)), its aperture radius and its
-vignetting ([`NoVignetting`](@ref) unless one is stated); the camera's
-back-projection from the aperture disc; the sensor's pixels and the quadrature
-rules of the image-formation integrals; the scene's light
-([`EnvironmentLight`](@ref)), a surface's reflectance
-([`VisualRadiometryToolkitCore.Material`](@ref)) and a printed planar target
-with its texture and its own state ([`TexturedTarget`](@ref)). The [Design](@ref) page states
-the rules its parts follow.
+The camera model is that of the paper
+[Real Cameras are Radiometric](https://arxiv.org/abs/2611.25265).
 
-!!! warning "Not registered yet"
-    The package is at the placeholder version 0.0.1 and is not in a registry.
+## What it provides
+
+- the radiometric camera, [`RadiometricCameraModel`](@ref), and its
+  back-projection from the aperture disc;
+- the focus surface ([`VisualRadiometryToolkitCore.Focus`](@ref)), a thin plate
+  spline over the sensor;
+- the vignetting fields ([`TensorProductVignetting`](@ref),
+  [`RadialVignetting`](@ref), [`LogVignetting`](@ref)), the absent vignetting
+  [`NoVignetting`](@ref) and a measured radial profile
+  ([`VisualRadiometryToolkitCore.BinnedRadialProfile`](@ref));
+- the quadrature rules on a pixel and on the aperture
+  ([`VisualRadiometryToolkitCore.SensorQuadrature`](@ref),
+  [`VisualRadiometryToolkitCore.ApertureQuadrature`](@ref));
+- the scene: an [`EnvironmentLight`](@ref) of a [`SphericalHarmonicMap`](@ref),
+  a Cook–Torrance [`VisualRadiometryToolkitCore.Material`](@ref) and a
+  [`TexturedTarget`](@ref) with its printed-edge model and its state.
+
+The public names are descriptive; the symbols of the paper are public aliases
+of the same functions ([The paper's notation](@ref)).
 
 ## Installation
 
 ```julia-repl
-pkg> add https://github.com/VisualRadiometryToolkit/visualradiometrytoolkit.github.io:VisualRadiometryToolkitCore
+pkg> add VisualGeometryToolkitCore VisualRadiometryToolkitCore StaticArrays
 ```
 
 Julia 1.13 or later. Every dependency is in the General registry.
+VisualGeometryToolkitCore defines the geometric camera that a radiometric
+camera holds.
 
 ## Example
 
-A camera that is given no vignetting attenuates nothing, and the absent
-vignetting costs nothing: it has no parameters, and a kernel that multiplies by
-its value is compiled to one that does not multiply.
+The example builds a radiometric camera from a pinhole camera, and
+back-projects a sensor position from a point of the aperture: the ray passes
+through the focus point of that sensor position.
 
 ```julia
 using VisualGeometryToolkitCore, VisualRadiometryToolkitCore
 using StaticArrays: SMatrix, SVector
+using LinearAlgebra: norm
 
+# A geometric camera on a 1200 × 800 image: focal length 900 pixels, a pinhole lens.
 K = CameraCalibrationMat(SMatrix{3, 3}(900.0, 0, 0, 0, 900.0, 0, 600.0, 400.0, 1))
-geometric = BoundedCamera(CameraModel(LogicalIntrinsics(K), Pinhole()), Size2(1200, 800))   # any geometric camera, on its pixels
-camera = RadiometricCameraModel(geometric; focus = 1.5, aperture_radius = 0.004)             # focused at 1.5 m, a 4 mm aperture radius
-camera.vignetting                                                                            # NoVignetting(): none was stated
-𝐩 = SVector(700.0, 300.0)                                                                    # a sensor position (COLMAP pixels)
-𝐚 = SVector(0.002, 0.0, 0.0)                                                                 # a point of the aperture disc (camera frame, m)
-backproject(camera, 𝐩, 𝐚)                                                                    # the ray's unit direction from 𝐚 to the focus point of 𝐩 (the paper's π̂⁻¹)
+geometric = BoundedCamera(CameraModel(LogicalIntrinsics(K), Pinhole()), Size2(1200, 800))
+
+# The radiometric camera: focused at 1.5 m, with an aperture of radius 4 mm.
+camera = RadiometricCameraModel(geometric; focus = 1.5, aperture_radius = 0.004)
+camera.vignetting === NoVignetting()                   # true
+
+𝐩 = SVector(700.0, 300.0)                              # a sensor position (pixels)
+𝐚 = SVector(0.002, 0.0, 0.0)                           # a point of the aperture disc (camera frame, metres)
+𝐟 = VisualRadiometryToolkitCore.focus_point(camera, 𝐩) # where the rays of 𝐩 meet (camera frame, metres)
+norm(𝐟) ≈ 1.5                                          # true
+d = backproject(camera, 𝐩, 𝐚)                          # the unit direction of the ray from 𝐚 through 𝐟
+d ≈ (𝐟 - 𝐚) / norm(𝐟 - 𝐚)                              # true
 ```
+
+A camera that is given no vignetting attenuates nothing, and the absent
+vignetting costs nothing: it has no parameters, and its value is `true`, the
+identity of the product it enters.
 
 ```jldoctest
 julia> using VisualGeometryToolkitCore, VisualRadiometryToolkitCore
@@ -69,6 +92,18 @@ julia> v(SVector(1200.0, 800.0)) * 0.25
 julia> parameter_names(v)
 ()
 ```
+
+## Documentation
+
+- **Explanation**: [Design](@ref), how a radiometric camera is composed and
+  the rules its parts follow.
+- **Reference**: the [API Reference](@ref) (the camera, its focus surface, the
+  sensor and the vignetting fields) and the
+  [API Reference: the scene](@ref) (lights, materials, textured targets).
+
+[VisualRadiometryToolkitIO](https://visualradiometrytoolkit.github.io/VisualRadiometryToolkitIO/)
+saves and loads the vignetting fields, environment lights and radial profiles
+of this package.
 
 ## Citing
 

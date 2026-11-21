@@ -1,4 +1,5 @@
-# The documentation site: a hand-written manual (docs/src/index.md) and an @autodocs API reference (docs/src/api.md). Build locally:
+# The documentation site: a hand-written manual (docs/src/index.md and docs/src/guide/) and an API reference
+# (docs/src/api.md). Build locally:
 #
 #   julia --project=docs --startup-file=no docs/make.jl     # → docs/build/index.html
 #
@@ -37,6 +38,7 @@ makedocs(;
     linkcheck_ignore = [r"^https://github\.com/", r"^https://visualradiometrytoolkit\.github\.io"],
     pages = [
         "Home" => "index.md",
+        "The kinds" => "guide/kinds.md",
         "API Reference" => "api.md",
     ],
 )

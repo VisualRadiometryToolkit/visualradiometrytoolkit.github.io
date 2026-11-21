@@ -1,34 +1,16 @@
 # Releasing
 
-**Nothing is released yet.** VisualRadiometryToolkitCore is at the placeholder
-version 0.0.1 and is in no registry; the registration lint (CLAUDE.md,
-"Commands") warns on the
-placeholder and fails if a registry already holds the package. This file states
-how the first release and every later one are made.
-
-## The registries
-
-The stack's rule holds here: every package is registered from a subdirectory of
-this repository in exactly ONE registry.
-
-- **First: [CauRegistry](https://github.com/prittjam/CauRegistry.jl)**, the
-  stack's own registry. VisualRadiometryToolkitCore's first registration
-  (0.1.0) is there, with `subdir = "VisualRadiometryToolkitCore"`.
-  RadiometricCamera (in CauRegistry) depends on it from there in its next minor
-  release.
-- **Later: General**, in dependency order: VisualRadiometryToolkitCore first,
-  then RadiometricCamera. A package leaves CauRegistry when its first General
-  version merges (its folder and its `Registry.toml` line removed in one
-  registry commit, after General holds every version CauRegistry had).
-
-One registry per package means one release step and no version that is in one
-registry and not the other; nothing installed breaks when an entry moves, since
-a Manifest records UUID, version and tree hash, never the registry. Users add
-CauRegistry only for the packages not yet in General.
+Every package is registered in the [General](https://github.com/JuliaRegistries/General)
+registry from its subdirectory of this repository (`subdir = "<Package>"`),
+each with its own version. A package's first registration is version 0.1.0;
+the registration lint (CLAUDE.md, "Commands") applies the first-registration
+rules to a package General does not hold; a package at the placeholder
+version of `WORKSPACE.toml` is under construction and is not registered.
 
 The Visual Geometry Toolkit packages this workspace depends on are taken from
-the registry that holds them (General), never from a path: `[sources]` in this
-repository name its own packages only.
+General, never from a path or a git revision: `[sources]` in this repository
+name its own packages only (the root project's, and a test or docs project's
+`{path = ".."}`).
 
 ## Before the first release
 
@@ -42,8 +24,6 @@ Once, by the owner:
 2. Codecov: enable the repository (uploads are by OIDC; no token secret).
 3. Zenodo, if the toolkit is to have a DOI: as for the Visual Geometry Toolkit
    (ONE concept DOI for the repository; then `doi:` in `CITATION.cff`).
-4. CI, where it must resolve a package that is only in CauRegistry: add the
-   registry before instantiating (today every dependency is in General).
 
 ## A release
 
@@ -52,30 +32,23 @@ Once, by the owner:
    - GPU items, once the package has any: `CUDA_VISIBLE_DEVICES=0 julia --project=VisualRadiometryToolkitCore -e 'using Pkg; Pkg.test()'`. Never device 1.
    - Strict run: `Pkg.test(; julia_args = ["--depwarn=error"])` for each package.
    - The fresh-clone gate: clone, resolve the workspace from scratch, `Pkg.test()`.
-3. Bump `version` in `<Package>/Project.toml` (the first release: 0.0.1 → 0.1.0;
-   the registration lint then applies the first-registration rules); widen
-   dependents' compat in the same commit if the bump is breaking. Raise every
-   compat floor to the gated environment's resolution.
-4. A package not yet in General: register it in CauRegistry from a clean
-   checkout of that commit (`LocalRegistry.register("<Package>"; registry =
-   "CauRegistry", repo = "https://github.com/VisualRadiometryToolkit/visualradiometrytoolkit.github.io.git")`;
-   the subdirectory is detected) and push the registry.
-5. A package in General: comment on that commit `@JuliaRegistrator register
-   subdir=<Package>` (one comment per package, dependency order), with release
-   notes for a breaking version (AutoMerge requires them). A dependent's
-   release waits for the merge. New packages wait three days in General.
+3. Bump `version` in `<Package>/Project.toml`; widen dependents' compat in the
+   same commit if the bump is breaking. Raise every compat floor to the gated
+   environment's resolution.
+4. Run the registration lint (for a package General does not hold yet, without
+   `--subsequent`).
+5. Comment on that commit `@JuliaRegistrator register subdir=<Package>` (one
+   comment per package, in dependency order: VisualRadiometryToolkitCore, then
+   VisualRadiometryToolkitIO), with release notes for a breaking version
+   (AutoMerge requires them). A dependent's release waits for the merge. A new
+   package waits three days in General.
 6. TagBot tags `<Package>-v<version>` and creates the GitHub release; the tag
    push builds that package's docs into `gh-pages/<Package>/v<version>` and
-   redeploys the site. (TagBot follows General; for a CauRegistry-only release
-   tag `<Package>-v<version>` on the release commit by hand.)
+   redeploys the site. No tag is made by hand before the registration.
 
-## The migration releases
+## Moving a type between packages
 
-The radiometric types of VisualGeometryToolkitCore and the camera model of
-RadiometricCamera move here in a release cascade, stated in
-[docs/design/inventory.md](docs/design/inventory.md): this package's release
-that holds a type comes first (CauRegistry); the release of the package that
-held it retires it by name with its replacement; the dependants' releases
-follow. A type is never released in two packages as two owners: while a copy
-exists on both sides between releases, it is listed in `DUPLICATION.toml` with
-the release that removes it.
+A type is never released in two packages as two owners. The release of the
+package that receives it comes first; the release of the package that held it
+retires it by name with its replacement; the dependants' releases follow.
+`DUPLICATION.toml` has no entry for a moved type.

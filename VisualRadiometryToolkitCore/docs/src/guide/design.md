@@ -1,12 +1,12 @@
 # Design
 
-This page states the design the package is built to. What exists today is
-marked. The generic radiometric types of
-[RadiometricCamera](https://realcamerasareradiometric.github.io) (the code of
-the paper "Real Cameras are Radiometric") and of VisualGeometryToolkitCore are
-here; the paper's calibration method stays in RadiometricCamera. The item by
-item inventory and the order of the moves are in the repository,
-[`docs/design/inventory.md`](https://github.com/VisualRadiometryToolkit/visualradiometrytoolkit.github.io/blob/main/docs/design/inventory.md).
+This page states the design of the package. Its types came from two places:
+the vignetting fields, the measured radial profile and the environment light
+were VisualGeometryToolkitCore's (up to its 0.11); the radiometric camera, the
+focus surface, the quadrature rules, the material and the textured target were
+[RadiometricCamera](https://realcamerasareradiometric.github.io)'s (the code of
+the paper "Real Cameras are Radiometric"). The paper's calibration method
+stays in RadiometricCamera.
 
 ## Radiometry lifts geometry
 
@@ -21,45 +21,49 @@ the reverse, so the dependency runs one way:
   Geometry Toolkit depends on this package;
 - the conventions are the Visual Geometry Toolkit's and are not restated here.
 
-RAW reading and the sensor's *noise* model stay in VisualGeometryToolkitCore:
+RAW reading and the sensor's noise model are VisualGeometryToolkitCore's:
 feature detectors, which are geometry, read RAW photosites and weigh them by
 their noise.
 
-## A camera is made of parts, and every part can be absent
+## A camera is one object, made of four parts
 
-Each thing that changes how much light a pixel collects is a **part** of the
-camera: an abstract type, with the concrete models as its subtypes. Every part
-has an absent default, named `No…`:
+A [`RadiometricCameraModel`](@ref) holds the geometric camera and the three
+things that change how much light a pixel collects:
 
-| part | what it models | absent default | status |
-|---|---|---|---|
-| vignetting | attenuation across the sensor | [`NoVignetting`](@ref): `V ≡ 1` | **here**, with the B-spline fields |
-| aperture | the opening that admits light | a point aperture (a pinhole) | **here** as the camera's aperture radius and its quadrature ([`VisualRadiometryToolkitCore.ApertureQuadrature`](@ref)); the absent default is planned |
-| focus | where the camera is in focus | everything in focus | **here** as the focus surface ([`VisualRadiometryToolkitCore.Focus`](@ref)); the absent default is planned |
-| blur | the point spread on the sensor | no blur | planned, from VisualGeometryToolkitCore |
+| part | what it is | how it is stated |
+|---|---|---|
+| `geometric` | the geometric camera: any VisualGeometryToolkitCore camera bounded by its image | the constructor's argument |
+| `focus` | the focus surface, a [`VisualRadiometryToolkitCore.Focus`](@ref): the inverse focus distance along each chief ray, a thin plate spline over the sensor | a `Focus`, or a distance in metres (the surface focused at that distance everywhere) |
+| `aperture_radius` | the radius of the aperture disc, in metres; its quadrature is a [`VisualRadiometryToolkitCore.ApertureQuadrature`](@ref) | a number; it has no default, because it is a physical statement about the camera |
+| `vignetting` | the attenuation across the sensor, an [`AbstractVignetting`](@ref) | a field, or nothing: the default is [`NoVignetting`](@ref) |
 
-The rules every absent default follows, with [`NoVignetting`](@ref) as the
-first instance:
+Each part is replaced by value (`with_geometric`, `with_focus`,
+`with_aperture_radius`, `with_vignetting`); the image size is the geometric
+camera's and is stated once.
+
+## The absent vignetting
+
+The vignetting is an abstract type, and its default is absent:
+[`NoVignetting`](@ref), `V ≡ 1`. It follows four rules:
 
 1. **A singleton.** It has no fields and no type parameters, so a camera that
    holds it is no larger, and it is `isbits` on every backend.
 2. **No parameters.** Its parameter vector is empty: it adds no coordinates to
-   a calibration and no columns to a Jacobian. A calibration of a camera with
-   an absent part is the calibration of a camera without that part, not one
-   with a part held fixed.
-3. **It compiles away.** A kernel reaches a part through the part's type, so
-   the absent default is resolved by dispatch at compile time: its value is
-   the identity of the operation it enters (`true` for a factor), or the
-   kernel has a method for it that omits the term. No branch is taken at run
+   a calibration and no columns to a Jacobian. A calibration of a camera
+   without a vignetting is not one with a vignetting held fixed.
+3. **It compiles away.** A kernel reaches the vignetting through its type, so
+   the absent one is resolved by dispatch at compile time: its value is
+   `true`, the identity of the product it enters. No branch is taken at run
    time and no `nothing` is tested.
-4. **It is the default.** A radiometric camera built from a geometric camera
-   alone has every part absent, and is that geometric camera: it renders what
-   a pinhole renderer renders.
+4. **It is the default.** [`RadiometricCameraModel`](@ref) composed from a
+   geometric camera has [`NoVignetting`](@ref) unless a vignetting is stated;
+   a field to estimate (a [`TensorProductVignetting`](@ref), a
+   [`RadialVignetting`](@ref)) is asked for by name, by the calibration that
+   estimates it.
 
-[`RadiometricCameraModel`](@ref) composed from a geometric camera has
-[`NoVignetting`](@ref) unless a vignetting is stated; a field to estimate (a
-[`TensorProductVignetting`](@ref), a [`RadialVignetting`](@ref)) is asked for
-by name, by the calibration that estimates it.
+A vignetting model of another package is a subtype of
+[`AbstractVignetting`](@ref). A camera that does not use it pays nothing for
+it, and code written before it keeps its meaning.
 
 ## One implementation, on the parts it reads
 
@@ -74,27 +78,21 @@ geometric camera enters through one function,
 VisualGeometryToolkitCore camera answers; it and the forwarded maps are this
 package's `CONTRACT_GENERICS`, the functions another package may add methods to.
 
-A model is therefore extended by adding a part or a subtype of a part. A camera
-that does not use the extension pays nothing for it, and code written before
-the extension keeps its meaning.
-
 ## The layout
 
 `src/VisualRadiometryToolkitCore.jl` lists the files:
 
 - `sensor/`: sensor positions and pixels, and the quadrature rules of the
   integrals a pixel's value is (over the pixel's footprint and the aperture);
-- `camera/`: the parts (vignetting, focus) and the radiometric camera that
-  holds them, with its back-projection from the aperture;
-- `scene/`: lights and materials.
+- `camera/`: the vignetting fields, the focus surface and the radiometric
+  camera that holds them, with its back-projection from the aperture;
+- `scene/`: the environment light, the material, and the textured target with
+  its state, its warping and its printed-edge model.
 
 The kernels that evaluate a pixel's flux against a scene are their owner's
 (RadiometricCamera's, for its printed calibration target); they call these
-types on the CPU and on every GPU backend.
-
-Estimation (calibrating a radiometric camera from images) is not core: it is
-planned as a later package of this workspace, as VisualGeometryToolkitEstimation
-is to VisualGeometryToolkitCore.
+types on the CPU and on a GPU. Calibrating a radiometric camera from images is
+not in this package either: the paper's calibration is RadiometricCamera's.
 
 ## A textured target holds its own state
 

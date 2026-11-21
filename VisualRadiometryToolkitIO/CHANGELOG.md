@@ -1,10 +1,14 @@
 # VisualRadiometryToolkitIO changelog
 
-## 0.0.1 (placeholder, not registered)
+## 0.1.0
 
-The radiometric file kinds move here from VisualGeometryToolkitIO (its 0.10 held them; its 0.11 drops them), with the
-types they hold, which moved from VisualGeometryToolkitCore to VisualRadiometryToolkitCore. No schema name and no file
-changes: every file written before the move loads here.
+The first release. The package holds the file kinds of VisualRadiometryToolkitCore's vignetting fields, environment
+lights and measured radial profiles. The kinds came from VisualGeometryToolkitIO (its 0.10 and earlier held them; its
+0.11.0 refuses a file of these kinds and names this package), with the types they hold, which came from
+VisualGeometryToolkitCore to VisualRadiometryToolkitCore. No schema name and no file changes: every file written
+before the move loads here. Migration from VisualGeometryToolkitIO 0.10: load this package; the calls are the same
+(`load(AbstractVignetting, path)`, `save(path, v)`, with the types imported from VisualRadiometryToolkitCore). It
+depends on VisualGeometryToolkitCore 0.12, VisualGeometryToolkitIO 0.11 and VisualRadiometryToolkitCore 0.1.
 
 - **`vgio/vignetting/v2.0`** (an `AbstractVignetting`), **`vgio/environment_light/v2.0`** (an `EnvironmentLight` of a
   `SphericalHarmonicMap`) and **`vgio/radial_profile/v1.0`** (a `BinnedRadialProfile`): each kind's table

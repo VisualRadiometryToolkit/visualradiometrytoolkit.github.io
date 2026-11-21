@@ -1,63 +1,53 @@
 # VisualRadiometryToolkitIO.jl
 
 The file formats of the [Visual Radiometry Toolkit](https://visualradiometrytoolkit.github.io):
-the radiometric types of
+the vignetting fields, environment lights and measured radial profiles of
 [VisualRadiometryToolkitCore](https://visualradiometrytoolkit.github.io/VisualRadiometryToolkitCore/)
-saved and loaded as self-describing files, in the envelope and under the
+saved and loaded as self-describing JSON files, in the envelope and under the
 schema rules of
 [VisualGeometryToolkitIO](https://visualgeometrytoolkit.github.io/VisualGeometryToolkitIO/)
 (one envelope that declares units and conventions; every earlier schema
 version a published file holds still loads).
 
-!!! warning "Under construction"
-    The package is at the placeholder version 0.0.1 and is not in a registry.
+## What it provides
 
-## The kinds
+- three file kinds, `vgio/vignetting`, `vgio/environment_light` and
+  `vgio/radial_profile`, read and written with VisualGeometryToolkitIO's
+  `load`, `save` and `validate` ([The kinds](@ref));
+- the earlier versions of those kinds, read on load and rewritten once by
+  `VisualGeometryToolkitIO.vgio_migrate`;
+- the tables of the three bodies, for a record of another package that embeds
+  a vignetting, a light or a radial profile
+  ([Embedding a body in another record](@ref));
+- a published JSON Schema of every kind ([JSON Schemas](@ref)).
 
-Each kind is the serialization of one VisualRadiometryToolkitCore type. The
-two verbs are VisualGeometryToolkitIO's, `load(T, path)` and `save(path,
-value)`; this package adds the methods for its types, so a reader reaches
-every kind of the stack through the same two calls.
+## Installation
 
-| Kind | Value | Read | Written |
-|---|---|---|---|
-| `vgio/vignetting/v2.0` | an `AbstractVignetting`: a `TensorProductVignetting` (its knots stated), a `RadialVignetting` (its `chart` always stated) or a `LogVignetting`, positions in any registered pixel frame (`units.pixel`); rebuilt bit for bit | `load(AbstractVignetting, path)` | `save(path, v)` |
-| `vgio/environment_light/v2.0` | an `EnvironmentLight` of a `SphericalHarmonicMap`: centre and radius in `units.length` (a plain light refused), coefficients per channel in `units.radiance`, the degree `max_degree` and the basis convention stated (`real_orthonormal_no_condon_shortley`) | `load(EnvironmentLight, path)` | `save(path, light; length_unit = mm)` |
-| `vgio/radial_profile/v1.0` | a `BinnedRadialProfile`: a measured profile binned by its chart's coordinate (a flat field by field angle), its chart's centre and radius in `units.pixel`, its edges in `units.angle` | `load(BinnedRadialProfile, path)` | `save(path, p)` |
+```julia-repl
+pkg> add VisualGeometryToolkitIO VisualRadiometryToolkitCore VisualRadiometryToolkitIO StaticArrays
+```
+
+Julia 1.13 or later. Every dependency is in the General registry.
+VisualRadiometryToolkitCore defines the types that are saved and loaded;
+VisualGeometryToolkitIO defines the two verbs, `load` and `save`.
+
+## Example
+
+The example saves a radial vignetting field and loads it back. `load` and
+`save` are public in VisualGeometryToolkitIO but not exported, so they are
+called through a module alias.
 
 ```julia
 import VisualGeometryToolkitIO as VgtkIO
 using VisualRadiometryToolkitCore, VisualRadiometryToolkitIO
 using StaticArrays: SVector
 
-v = RadialVignetting(7, SVector(320.25, 241.75), 401.25)      # a radial profile of 7 control points
-VgtkIO.save("vignetting.json", v)
-VgtkIO.load(AbstractVignetting, "vignetting.json") == v      # true
-VgtkIO.validate("vignetting.json")                           # "vignetting"
+path = joinpath(mktempdir(), "vignetting.json")
+v = RadialVignetting(7, SVector(320.25, 241.75), 401.25)   # a radial profile of 7 control points: centre and radius in pixels
+VgtkIO.save(path, v)
+VgtkIO.load(AbstractVignetting, path) == v                 # true
+VgtkIO.validate(path) == "vignetting"                      # true
 ```
-
-## Where the kinds came from
-
-The three kinds were VisualGeometryToolkitIO's up to its 0.10 and moved here
-with the types they hold. Their schema names did not change, so a file written
-before the move loads here as it is. A `vgio/vignetting/v1` or
-`vgio/environment_light/v1` file (VisualGeometryToolkitIO 0.9's) reads through
-its version step, and `VisualGeometryToolkitIO.vgio_migrate(path)` rewrites
-one once. Without this package loaded, VisualGeometryToolkitIO refuses a file
-of these kinds by name and names this package.
-
-## Embedding a body in another record
-
-Each body is a value on VisualGeometryToolkitIO's `VgioStyle`: a record of
-another package that holds a vignetting, a light or a radial profile writes it
-with `JSON.lower(style, value)` (or leaves the value in the record for the
-style to lower) and reads it with `JSON.lift(style, AbstractVignetting,
-record)`, `JSON.lift(style, EnvironmentLight, record)` or `JSON.lift(style,
-BinnedRadialProfile, record)`. A kind that states its table
-(`VisualGeometryToolkitIO.KindSpec`) names the body's table:
-[`VIGNETTING_BODY`](@ref VisualRadiometryToolkitIO.VIGNETTING_BODY),
-[`ENVIRONMENT_LIGHT_BODY`](@ref VisualRadiometryToolkitIO.ENVIRONMENT_LIGHT_BODY),
-[`RADIAL_PROFILE_BODY`](@ref VisualRadiometryToolkitIO.RADIAL_PROFILE_BODY).
 
 ## JSON Schemas
 
@@ -72,3 +62,27 @@ reader checks and published with this manual:
 
 [`json_schemas`](@ref VisualRadiometryToolkitIO.json_schemas) returns them; a
 test holds the published files to the generator's output.
+
+## Documentation
+
+- **Explanation and how-to**: [The kinds](@ref), what each kind holds, where
+  the kinds came from, and how a record of another package embeds a body.
+- **Reference**: the [API Reference](@ref).
+
+## Citing
+
+If you use the package, please cite the paper whose camera model the toolkit
+carries:
+
+```bibtex
+@article{harder2026radiometric,
+  author        = {Harder, Ties and Seegr{\"a}ber, Felix and Nakath, David and
+                   Sauer, Hendrik and K{\"o}ser, Kevin and Pritts, James},
+  title         = {Real Cameras are Radiometric},
+  journal       = {arXiv preprint arXiv:2611.25265},
+  year          = {2026},
+  eprint        = {2611.25265},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CV},
+}
+```

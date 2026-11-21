@@ -1,19 +1,39 @@
 # VisualRadiometryToolkitCore changelog
 
-## 0.0.1 (placeholder, not registered)
+## 0.1.0
 
-The package skeleton.
+The first release. The package holds the types of a radiometric camera and of
+the scene it sees. They came from two places: the vignetting fields, the
+measured radial profile and the scene's light from VisualGeometryToolkitCore
+(its 0.11 and earlier held them; its 0.12.0 refuses each name and names this
+package), and the radiometric camera, the focus surface, the quadrature rules,
+the material and the textured target from RadiometricCamera (the code of the
+paper "Real Cameras are Radiometric"). It depends on VisualGeometryToolkitCore
+0.12.
 
 ### Added
 
+- From VisualGeometryToolkitCore, with the same names and behaviour: the
+  vignetting fields (`AbstractVignetting`, `TensorProductVignetting`,
+  `RadialVignetting`, `LogVignetting`, `log_spline`, `VIGNETTING_TAGS`, and
+  their verbs `coefficient_jacobian`, `active_coefficients`, `control_points`,
+  `with_control_points`, `n_control_points`, `knot_vectors`, `spline_degree`,
+  `field_radius`, `radial_coordinate`, `radial_chart`, `RADIAL_CHARTS`,
+  `projective_chart`, `projective_knots`, `with_center`, `center_gradient`,
+  `pole_regular_basis`); the measured radial profile (`BinnedRadialProfile`);
+  the scene's light (`EnvironmentLight`, `SphericalHarmonicMap`, `radiance`,
+  `exit_direction`, `radiance_map`, `coefficients`, `with_coefficients`,
+  `max_degree`, `sh_basis`, `sh_count`, `sh_index`). Migration from
+  VisualGeometryToolkitCore 0.11: import the names from this package; nothing
+  else changes. The types answer VisualGeometryToolkitCore's contract generics
+  (`center`, `convert_eltype`, the support protocol, the parameter protocol,
+  the units of a light).
 - `NoVignetting`: the absent vignetting, `V ≡ 1`. A singleton with no
   parameters (no calibration coordinates, no Jacobian columns) whose value is
-  `true`, so a kernel that multiplies by it is compiled to one that does not.
-  It subtypes VisualGeometryToolkitCore's `AbstractVignetting` and answers its
-  parameter protocol with nothing.
-- From RadiometricCamera (its commit 247c089), under descriptive names (the
-  next entry): the
-  radiometric camera `RadiometricCameraModel` (its composed constructor,
+  `true`, the identity of the product it enters. It subtypes
+  `AbstractVignetting` and answers the parameter protocol with nothing.
+- From RadiometricCamera (its commit 247c089), under descriptive names (listed
+  below): the radiometric camera `RadiometricCameraModel` (its composed constructor,
   `geometric`, `focus`, `aperture_radius` and their `with_…` replacers, the
   forwards of `project` and `backproject`) and its camera-frame maps
   (`chief_direction`, `focus_point`, `inverse_focus_distance`, `world_ray`,
@@ -59,7 +79,7 @@ The package skeleton.
   `Θ_m_nonlinear`, `with_μ`, `𝛂`, `𝛈`, `Λ_ggx`). Against RadiometricCamera's
   names: `chief_dir` → `chief_direction`; `𝔭` → `center_of_projection`; `𝔣` →
   `focus_point`; `t̂` → `inverse_focus_distance` (of a focus surface at a sensor
-  position or at a unit chief direction, which was `t̂_dir`, and of a camera);
+  position, and of a camera);
   `𝔱` → `focus_distance`; `𝐩_of_pixel` → `sensor_position`; `pixel_of_𝐩` →
   `pixel_position`; `ℐ_𝐮` → `pixel_footprint`; `𝐩_sample` → `sensor_sample`;
   `𝐚_sample`, `𝐚_weight`, `𝐚_border` → `aperture_sample`, `aperture_weight`,
@@ -90,9 +110,6 @@ The package skeleton.
 - `lens(camera::RadiometricCameraModel)` is refused by name: `lens` is
   VisualGeometryToolkitCore's lens model of a geometric camera, a radiometric
   camera's is `lens(geometric(camera))`.
-
-### Changed
-
 - `RadiometricCameraModel(geometric; focus, aperture_radius)` has
   `NoVignetting()` unless a vignetting is stated (in RadiometricCamera the
   default was a flat 4 × 4 surface, the start of its calibration: that start is

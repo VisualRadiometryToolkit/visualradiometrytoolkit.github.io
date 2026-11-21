@@ -7,8 +7,7 @@ code in this package. The workspace's rules are in the repository root's
 VisualRadiometryToolkitIO: the file formats of the Visual Radiometry Toolkit,
 the radiometric types of VisualRadiometryToolkitCore as self-describing files.
 It owns the `vgio/vignetting`, `vgio/environment_light` and `vgio/radial_profile`
-kinds (VisualGeometryToolkitIO's up to its 0.10). Under construction: version
-0.0.1 is a placeholder and the package is not registered.
+kinds (VisualGeometryToolkitIO's up to its 0.10).
 
 ## The rules of this package
 
