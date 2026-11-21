@@ -2,4 +2,4 @@
 # tooling this site uses (site/fetch_shared.sh): the stylesheet base, the graph and BibTeX script, the icon and
 # social-card generators with their Python environment, the portal builder with its Julia environment, and the
 # canonical icons. One line: the full commit hash.
-9cb964e16107d6bc61c5e1c033b45609f464bda6
+c353718752484c8bc94094ba9fc5e42e2afde375
