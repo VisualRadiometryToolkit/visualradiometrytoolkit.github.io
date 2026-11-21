@@ -48,7 +48,7 @@ camera holds.
 ## Example
 
 The example builds a radiometric camera from a pinhole camera, and
-back-projects a sensor position from a point of the aperture: the ray passes
+back-projects a sensor position from a point of the aperture: the ray goes
 through the focus point of that sensor position.
 
 ```julia
