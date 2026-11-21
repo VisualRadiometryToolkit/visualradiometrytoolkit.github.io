@@ -2,8 +2,6 @@
 
 # Visual Radiometry Toolkit
 
-by Ties Harder, Felix Seegräber and [James Pritts](https://prittjam.github.io/)
-
 Julia packages for radiometric camera models: what decides how much light a
 pixel collects (vignetting, aperture, focus), as types that lift the cameras
 of the
