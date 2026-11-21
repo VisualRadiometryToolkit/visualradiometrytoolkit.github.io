@@ -4,7 +4,7 @@ The core of the [Visual Radiometry Toolkit](https://visualradiometrytoolkit.gith
 the types of a radiometric camera. A radiometric camera is a camera of the
 [Visual Geometry Toolkit](https://visualgeometrytoolkit.github.io) together
 with the parts that decide how much light a pixel collects: its vignetting,
-its aperture, its focus, its sensor's response.
+its aperture, its focus.
 
 Radiometry lifts geometry. This package depends on
 [VisualGeometryToolkitCore](https://visualgeometrytoolkit.github.io/VisualGeometryToolkitCore/)

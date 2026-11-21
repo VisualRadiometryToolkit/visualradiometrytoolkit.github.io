@@ -23,8 +23,7 @@ the reverse, so the dependency runs one way:
 
 RAW reading and the sensor's *noise* model stay in VisualGeometryToolkitCore:
 feature detectors, which are geometry, read RAW photosites and weigh them by
-their noise. The sensor's *response* (what maps collected light to a digital
-value) is radiometry and belongs here.
+their noise.
 
 ## A camera is made of parts, and every part can be absent
 
@@ -38,7 +37,6 @@ has an absent default, named `No…`:
 | aperture | the opening that admits light | a point aperture (a pinhole) | **here** as the camera's aperture radius and its quadrature ([`VisualRadiometryToolkitCore.ApertureQuadrature`](@ref)); the absent default is planned |
 | focus | where the camera is in focus | everything in focus | **here** as the focus surface ([`VisualRadiometryToolkitCore.Focus`](@ref)); the absent default is planned |
 | blur | the point spread on the sensor | no blur | planned, from VisualGeometryToolkitCore |
-| response | collected light to digital value | the identity | planned |
 
 The rules every absent default follows, with [`NoVignetting`](@ref) as the
 first instance:

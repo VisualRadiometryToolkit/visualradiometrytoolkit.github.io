@@ -7,7 +7,7 @@ The core of the [Visual Radiometry Toolkit](https://visualradiometrytoolkit.gith
 the types of a radiometric camera, a camera of the
 [Visual Geometry Toolkit](https://visualgeometrytoolkit.github.io) together
 with the parts that decide how much light a pixel collects (vignetting,
-aperture, focus, sensor response). Each part is an abstract type whose default
+aperture, focus). Each part is an abstract type whose default
 is absent and compiles away.
 
 It holds the radiometric camera as one object (`RadiometricCameraModel`: a
