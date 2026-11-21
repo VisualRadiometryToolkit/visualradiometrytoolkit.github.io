@@ -3,7 +3,8 @@
 ## 0.1.1
 
 Compat only: on VisualGeometryToolkitCore 0.13 (`[compat]` `"0.13"`), the release that adds the artifact store and
-removes the spherical spline and the dilogarithm, which this package does not use. No code changed.
+removes the spherical spline and the dilogarithm, which this package does not use. No source changed; a test reads
+an ArgumentError's message through VisualGeometryToolkitCore's `thrown_message`, no copy of its own.
 
 ## 0.1.0
 

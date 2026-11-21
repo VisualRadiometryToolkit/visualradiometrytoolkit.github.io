@@ -41,7 +41,7 @@
     @test inverse_focus_distance(nothing, fa, SVector(244.0, 30.0)) === inverse_focus_distance(fa, SVector(244.0, 30.0))
 
     # the focus surfaces on the chief directions were removed: their call forms and names are refused by name
-    message(f) = try f(); "" catch e; e isa ArgumentError ? e.msg : rethrow() end
+    message = VgtkCore.thrown_message        # the stack's one capture of an ArgumentError's message (Core's Test extension)
     for m in (message(() -> FocusSpline(tps.nodes, 1)), message(() -> FocusSpline(tps.nodes, 0)),
               message(() -> inverse_focus_distance(fa, SVector(0.0, 0.0, 1.0))),
               message(() -> VisualRadiometryToolkitCore.focus_weights(tps, nothing, SVector(1.0, 2.0))),

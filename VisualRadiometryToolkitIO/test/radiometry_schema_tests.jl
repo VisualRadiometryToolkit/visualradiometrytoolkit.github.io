@@ -32,7 +32,7 @@
             @test load(AbstractVignetting, joinpath(dir, "r.json")) == v
         end
         save(joinpath(dir, "r.json"), rv)
-        edited(f) = (t = JSON.parse(read(joinpath(dir, "r.json"), String)); f(t); q = joinpath(dir, "bad.json"); write(q, JSON.json(t)); q)
+        edited(f) = VgtkIO.edited_copy(f, joinpath(dir, "r.json"))   # the record edited into one its reader refuses
         @test_throws ArgumentError load(AbstractVignetting, edited(t -> delete!(t["vignetting"], "chart")))   # v2.0: required
         @test_throws ArgumentError load(AbstractVignetting, edited(t -> t["vignetting"]["chart"] = "polar"))
         # a projective profile of n ≤ 2p control points (written under the knot rule before VisualGeometryToolkitCore 0.10.11)
@@ -100,7 +100,7 @@ end
     using VisualGeometryToolkitCore: center, radius, with_unit
     using VisualGeometryToolkitIO: VgioStyle
     s = VgioStyle(; length_unit = mm)
-    roundtrip(T, x; kw...) = JSON.lift(s, T, JSON.parse(JSON.json((body = x,); style = s)).body; kw...)
+    roundtrip(T, x) = VgtkIO.nested_roundtrip(T, x; style = s)
     v = LogVignetting(with_control_points(RadialVignetting(6, SVector(320.0, 240.0), 400.0), [0.5 + 0.01i for i in 1:6]))
     @test control_points(roundtrip(AbstractVignetting, v)) == control_points(v)
     L = with_unit(EnvironmentLight(SphericalHarmonicMap(ones(3, 4), 1), SVector(0.1, -0.2, 0.3), 1.5), m)
@@ -113,7 +113,7 @@ end
     using VisualRadiometryToolkitCore: RadialVignetting, AbstractVignetting, EnvironmentLight, SphericalHarmonicMap
     using VisualGeometryToolkitCore: with_unit
     mktempdir() do dir
-        edited(src, f) = (t = JSON.parse(read(src, String); dicttype = Dict{String, Any}); f(t); q = joinpath(dir, "bad.json"); write(q, JSON.json(t)); q)
+        edited(src, f) = VgtkIO.edited_copy(f, src)
         p = joinpath(dir, "v.json")
         save(p, RadialVignetting(5, SVector(10.0, 20.0), 30.0))
         @test_throws ArgumentError load(AbstractVignetting, edited(p, t -> t["vignetting"]["type"] = "polynomial"))

@@ -2,8 +2,10 @@
 
 ## 0.1.1
 
-Compat only: on VisualGeometryToolkitCore 0.13 and VisualGeometryToolkitIO 0.11.1 (`[compat]` `"0.13"`, `"0.11.1"`), the release that adds the artifact store and
-removes the spherical spline and the dilogarithm, which this package does not use. No code changed.
+On VisualGeometryToolkitCore 0.13 and VisualGeometryToolkitIO 0.11.2 (`[compat]` `"0.13"`, `"0.11.2"`): Core's
+release adds the artifact store and removes the spherical spline and the dilogarithm, which this package does not
+use. The tests read a body nested in another record and edit a record into one its reader refuses through
+VisualGeometryToolkitIO's `nested_roundtrip` and `edited_copy` (0.11.2), no copy of their own. No source changed.
 
 ## 0.1.0
 
