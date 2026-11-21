@@ -24,10 +24,7 @@
   a Float32 cosine, `1 − cos²θ` loses the small angles: 0.2 % of tan²θ at
   θ = 0.005) and `x / (2(1 + √(1 + x)))` for `√(1 + x) − 1`.
   `visible_normal_density` and `cook_torrance_terms` take Λ of their
-  directions. The floors of cos²θ in Λ, of the visible-normal cap and of the
-  cosines in `cook_torrance_terms` are Float64's on every float (a Float32
-  floor was a different function, not a rounding). Float64 values move by
-  rounding only.
+  directions. Float64 values move by rounding only.
 
 ## 0.1.1
 
