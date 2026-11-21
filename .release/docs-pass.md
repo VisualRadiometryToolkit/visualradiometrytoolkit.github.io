@@ -1,4 +1,4 @@
-docs-pass: 7b83647
+docs-pass: fa66cb0
 landing: this repository's `site/` (read, not edited: its cards and install lines name no VisualGeometryToolkit version)
 
 # VisualRadiometryToolkitCore 0.1.1, VisualRadiometryToolkitIO 0.1.1 docs review
@@ -7,6 +7,10 @@ Compat only (7b83647): VisualGeometryToolkitCore "0.13", VisualGeometryToolkitIO
 test/ and docs/ projects; no public name, docstring, page or example changed. The CHANGELOGs name the release. Searched:
 the README, the docs pages and the site for a VisualGeometryToolkit version (only docs/design/inventory.md's history,
 which stays).
+
+Then fa66cb0: the tests use VisualGeometryToolkitCore's `thrown_message` and VisualGeometryToolkitIO's `nested_roundtrip` and
+`edited_copy` (the upstream duplication gate's four findings); VisualGeometryToolkitIO's compat floor 0.11.2; the CHANGELOGs
+say so. No docstring or page changed.
 
 ---
 
