@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Visual Radiometry Toolkit — Ties Harder, Felix Seegräber, James Pritts</title>
 <meta name="author" content="Ties Harder, Felix Seegräber, James Pritts">
-<meta name="description" content="Julia packages for radiometric camera models: vignetting, aperture, focus and sensor response, lifting the cameras of the Visual Geometry Toolkit.">
+<meta name="description" content="Julia packages for radiometric camera models: vignetting, aperture and focus, lifting the cameras of the Visual Geometry Toolkit.">
 <meta name="color-scheme" content="light dark">
 <meta property="og:title" content="Visual Radiometry Toolkit">
-<meta property="og:description" content="Julia packages for radiometric camera models: vignetting, aperture, focus and sensor response, lifting the cameras of the Visual Geometry Toolkit.">
+<meta property="og:description" content="Julia packages for radiometric camera models: vignetting, aperture and focus, lifting the cameras of the Visual Geometry Toolkit.">
 <meta property="og:url" content="https://visualradiometrytoolkit.github.io/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Visual Radiometry Toolkit">
@@ -18,7 +18,7 @@
 <meta property="og:image:alt" content="The Visual Radiometry Toolkit logo: a lens aperture of seven blades.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Visual Radiometry Toolkit">
-<meta name="twitter:description" content="Julia packages for radiometric camera models: vignetting, aperture, focus and sensor response, lifting the cameras of the Visual Geometry Toolkit.">
+<meta name="twitter:description" content="Julia packages for radiometric camera models: vignetting, aperture and focus, lifting the cameras of the Visual Geometry Toolkit.">
 <meta name="twitter:image" content="https://visualradiometrytoolkit.github.io/icons/social-card.png">
 <link rel="canonical" href="https://visualradiometrytoolkit.github.io/">
 <link rel="icon" type="image/svg+xml" href="icons/vrt_logo.svg">
@@ -49,7 +49,7 @@
     </div>
     <div class="iris-shade"></div>
   </div>
-  <p class="tagline">Julia packages for radiometric camera models: vignetting, aperture, focus and sensor response, lifting the cameras of the Visual Geometry Toolkit</p>
+  <p class="tagline">Julia packages for radiometric camera models: vignetting, aperture and focus, lifting the cameras of the Visual Geometry Toolkit</p>
   <p class="affil"><a href="https://www.marine-ai.de/">Marine Data Science</a> · <a href="https://www.uni-kiel.de/en/">Kiel University</a></p>
   <nav class="actions">
     <a class="btn brand" href="#get-started">Get started</a>
@@ -100,15 +100,15 @@ flowchart TD
     <article class="card">
       <img src="icons/vrc.svg" alt="" width="56" height="56">
       <h3>VisualRadiometryToolkitCore.jl</h3>
-      <p>The types of a radiometric camera: a camera of the Visual Geometry Toolkit together with the parts that decide how much light a pixel collects (vignetting, aperture, focus, sensor response), each part an abstract type whose default is absent and costs nothing.</p>
-      <p class="install">Under construction (0.0.1) · not registered yet</p>
+      <p>The types of a radiometric camera: a camera of the Visual Geometry Toolkit together with the parts that decide how much light a pixel collects (its focus surface, its aperture and its vignetting), with the scene it sees: lights, materials and a textured target.</p>
+      <p class="install"><code>pkg&gt; add VisualRadiometryToolkitCore</code> · registration in General pending</p>
       <p class="links"><a href="https://visualradiometrytoolkit.github.io/VisualRadiometryToolkitCore/">docs</a><a href="https://github.com/VisualRadiometryToolkit/visualradiometrytoolkit.github.io/tree/main/VisualRadiometryToolkitCore">code</a></p>
     </article>
     <article class="card">
       <img src="icons/vrio.svg" alt="" width="56" height="56">
       <h3>VisualRadiometryToolkitIO.jl</h3>
       <p>File formats for the toolkit: vignetting fields, environment lights and radial profiles as self-describing JSON files, in the envelope of VisualGeometryToolkitIO, which declares their units and conventions.</p>
-      <p class="install">Under construction (0.0.1) · not registered yet</p>
+      <p class="install"><code>pkg&gt; add VisualRadiometryToolkitIO</code> · registration in General pending</p>
       <p class="links"><a href="https://visualradiometrytoolkit.github.io/VisualRadiometryToolkitIO/">docs</a><a href="https://github.com/VisualRadiometryToolkit/visualradiometrytoolkit.github.io/tree/main/VisualRadiometryToolkitIO">code</a></p>
     </article>
   </div>
@@ -144,7 +144,7 @@ flowchart TD
 
 <section id="get-started">
   <h2>Get started</h2>
-  <p class="lead">The toolkit is under construction: its packages are skeletons at a placeholder version and are not in a registry yet. The packages require Julia 1.13.</p>
+  <p class="lead">The packages are at their first release, 0.1.0; their registration in the General registry is pending. They require Julia 1.13.</p>
   <div class="usecases">
     <div class="usecase">
       <h3>Radiometric calibration today</h3>
