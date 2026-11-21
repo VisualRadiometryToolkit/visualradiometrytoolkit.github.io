@@ -15,6 +15,19 @@
   numbers. A Float32 world point a metre from the origin is ≈ 0.06 µm coarse,
   and on a printed edge with a 0.03 mm blur that moves the slope by about 1 %.
   The page and its maps are in the anchor's float, the state in any numbers.
+- `ggx_lambda(α, ω)`, `ggx_masking(α, ω)`, `ggx_masking_shadowing(α, ω, ω′)`
+  of the directions themselves (the cosine forms stay).
+
+### Changed
+
+- Smith Λ without cancellation: `tan²θ` from the direction's components (from
+  a Float32 cosine, `1 − cos²θ` loses the small angles: 0.2 % of tan²θ at
+  θ = 0.005) and `x / (2(1 + √(1 + x)))` for `√(1 + x) − 1`.
+  `visible_normal_density` and `cook_torrance_terms` take Λ of their
+  directions. The floors of cos²θ in Λ, of the visible-normal cap and of the
+  cosines in `cook_torrance_terms` are Float64's on every float (a Float32
+  floor was a different function, not a rounding). Float64 values move by
+  rounding only.
 
 ## 0.1.1
 
