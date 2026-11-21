@@ -1,3 +1,15 @@
+docs-pass: 7b83647
+landing: this repository's `site/` (read, not edited: its cards and install lines name no VisualGeometryToolkit version)
+
+# VisualRadiometryToolkitCore 0.1.1, VisualRadiometryToolkitIO 0.1.1 docs review
+
+Compat only (7b83647): VisualGeometryToolkitCore "0.13", VisualGeometryToolkitIO "0.11.1" in both packages and their
+test/ and docs/ projects; no public name, docstring, page or example changed. The CHANGELOGs name the release. Searched:
+the README, the docs pages and the site for a VisualGeometryToolkit version (only docs/design/inventory.md's history,
+which stays).
+
+---
+
 docs-pass: cb60c54
 landing: this repository's `site/` (read, not edited). `site/index.html` needs: the two cards' install lines ("Under construction (0.0.1) · not registered yet") replaced by `pkg> add VisualRadiometryToolkitCore` and `pkg> add VisualRadiometryToolkitIO`; the "Get started" lead ("under construction: its packages are skeletons at a placeholder version and are not in a registry yet") replaced by the install line; the tagline, the three description meta tags and the VisualRadiometryToolkitCore card name a fourth camera part that the package does not have and say "each part an abstract type whose default is absent" — the parts are the focus surface, the aperture radius and the vignetting, and only the vignetting has an absent default.
 
