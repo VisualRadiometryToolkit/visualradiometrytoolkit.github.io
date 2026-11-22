@@ -25,6 +25,9 @@ makedocs(;
         prettyurls = get(ENV, "CI", "false") == "true",
         canonical = "https://visualradiometrytoolkit.github.io/VisualRadiometryToolkitCore/",
         edit_link = "main",
+        # api.html is 109.7 KiB (measured 2026-11-22), over the default 100 KiB
+        # warning; the hard limit (200 KiB) stays.
+        size_threshold_warn = 128 * 2^10,
     ),
     # The docs gates of the stack: every public docstring is in the manual, the
     # doctests run, every external link resolves, and nothing is warnonly — a
