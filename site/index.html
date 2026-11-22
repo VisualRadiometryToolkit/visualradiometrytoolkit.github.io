@@ -57,7 +57,7 @@
 
 <section id="ecosystem">
   <h2>Ecosystem</h2>
-  <p class="lead">Radiometry lifts geometry. The toolkit builds on the <a href="https://visualgeometrytoolkit.github.io">Visual Geometry Toolkit</a> (the blue node, its <a href="#foundation">foundation</a>): a radiometric camera wraps one of its cameras and adds what decides how much light each pixel collects. The dependency runs one way; no package of the Visual Geometry Toolkit depends on this one. The amber node is a <a href="#related-packages">related package</a>, maintained outside the toolkit; the dashed arrows are dependencies being built (its port onto the toolkit), and the dashed pill is the paper it accompanies. Click a node to open it.</p>
+  <p class="lead">Radiometry lifts geometry. The toolkit builds on the <a href="https://visualgeometrytoolkit.github.io">Visual Geometry Toolkit</a> (the blue node, its <a href="#foundation">foundation</a>): a radiometric camera wraps one of its cameras and adds what decides how much light each pixel collects. The dependency runs one way; no package of the Visual Geometry Toolkit depends on this one. The amber node is a <a href="#related-packages">related package</a>, maintained outside the toolkit and built on it and on the Visual Geometry Toolkit; the dashed pill is the paper it accompanies. Click a node to open it.</p>
   <figure class="graph">
     <pre class="mermaid" id="ecosystem-graph">
 flowchart TD
@@ -70,8 +70,8 @@ flowchart TD
     VGTK --> VRIO
     VRC --> VRIO
     VGTK --> RC
-    VRC -.-> RC
-    VRIO -.-> RC
+    VRC --> RC
+    VRIO --> RC
 
     P1(["arXiv 2026"])
 
@@ -131,8 +131,8 @@ flowchart TD
     <article class="card">
       <img src="icons/radiometric.svg" alt="" width="56" height="56">
       <h3>RadiometricCamera.jl</h3>
-      <p>The package of <a href="#publications">Real Cameras are Radiometric</a>: lifts any central camera model of the Visual Geometry Toolkit to a radiometric one, with a finite aperture, a free-form focus surface and a generic vignetting function, and calibrates it by inverse rendering on the RAW photosites of ordinary calibration images. Its camera model is moving into this toolkit.</p>
-      <p class="install"><code>pkg&gt; add https://github.com/RealCamerasAreRadiometric/realcamerasareradiometric.github.io:RadiometricCamera</code> · General pending</p>
+      <p>The package of <a href="#publications">Real Cameras are Radiometric</a>: lifts any central camera model of the Visual Geometry Toolkit to a radiometric one, with a finite aperture, a free-form focus surface and a generic vignetting function, and calibrates it by inverse rendering on the RAW photosites of ordinary calibration images. Its camera model is this toolkit's: it builds on VisualRadiometryToolkitCore and VisualRadiometryToolkitIO.</p>
+      <p class="install"><code>pkg&gt; add https://github.com/RealCamerasAreRadiometric/realcamerasareradiometric.github.io:RadiometricCamera</code> · installs once the toolkit's packages are in General (pending)</p>
       <p class="links"><a href="https://realcamerasareradiometric.github.io">project</a><a href="https://realcamerasareradiometric.github.io/docs/">docs</a><a href="https://github.com/RealCamerasAreRadiometric/realcamerasareradiometric.github.io">code</a></p>
     </article>
   </div>
@@ -140,7 +140,7 @@ flowchart TD
 
 <section id="get-started">
   <h2>Get started</h2>
-  <p class="lead">The packages are at their first release, 0.1.0; their registration in the General registry is pending. They require Julia 1.13.</p>
+  <p class="lead">The packages are at 0.1.1; their registration in the General registry is pending. They require Julia 1.13.</p>
   <div class="usecases">
     <div class="usecase">
       <h3>Radiometric calibration today</h3>
