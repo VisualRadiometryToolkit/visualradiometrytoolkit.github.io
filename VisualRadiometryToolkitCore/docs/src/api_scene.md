@@ -14,8 +14,14 @@ sphere (the distant light is its limit as the radius grows). The map is a
 coefficients. Everything is isbits and allocation-free, for a kernel; the
 centre and radius are lengths (`ustrip(m, light)` for the kernel's plain form).
 
+A map's terms are named by their degree and order `(l, m)`; a light about a board takes the sphere that holds the board's
+cameras and its whole page:
+
 ```julia
-light = EnvironmentLight(SphericalHarmonicMap(a, 2), SVector(0.0, 0.0, 0.0), 1.5)   # 3 × 9 coefficients, centre, radius
+sky = SphericalHarmonicMap(2, (0, 0) => (2.0, 1.9, 1.8), (1, 0) => (0.4, 0.3, 0.2))   # a coloured light, brighter towards +z
+coefficients(sky, 1, 0)                                       # (0.4, 0.3, 0.2)
+light = EnvironmentLight(sky, board, poses)                   # about the board's centre, holding every camera and corner
+light = EnvironmentLight(sky, SVector(0.0, 0.0, 0.0), 1.5)    # or a centre and a radius
 VisualRadiometryToolkitCore.radiance(light, x, ω)            # per channel, arriving at x from direction ω
 ```
 
@@ -50,8 +56,13 @@ model (`edge_albedo`: the ink spread and the print's blur). The target holds
 its own state, a `TargetState`: the nodal heights of its warping, the printed
 edge and the in-plane print error, isbits and replaced by value
 (`with_state`, `with_h`, `with_edge`, `with_inplane`), so a kernel keeps the
-target's arrays on a device and differentiates the state. `target_center` is
-the paper's `𝔟`; both symbols are public aliases.
+target's arrays on a device and differentiates the state. Its centre is
+VisualGeometryToolkitCore's `centroid`, the paper's `𝔟` (a public alias).
+
+A bare board posed in the world is a target: `TexturedTarget(PosedTarget(Board(Size2(width = 2m, height = 2m), [-1m, -1m]),
+pose), texture)` lays the texture over the board when the target has no canvas. The board faces the side its cameras are on:
+a camera's calibration state or render orients it by the camera's pose, `with_facing(board, viewpoint)`; until then it faces
+the design's +z, the printed side of the design chart.
 
 ```@autodocs
 Modules = [VisualRadiometryToolkitCore]

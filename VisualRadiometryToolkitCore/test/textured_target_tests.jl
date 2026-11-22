@@ -2,7 +2,7 @@
 
 @testitem "textured target: the page, its chart, its albedo" begin
     using Test
-    using VisualRadiometryToolkitCore: TexturedTarget, TargetState, posed_target, board_normal, world_point, target_center, corners,
+    using VisualRadiometryToolkitCore: TexturedTarget, TargetState, posed_target, board_normal, world_point, with_facing, corners,
                                        texture_size, intersect_board, board_plane_hit, inside, albedo, printed_albedo, has_sdf
     import VisualRadiometryToolkitCore as VrtkCore
     import VisualGeometryToolkitCore as VgtkCore
@@ -11,15 +11,16 @@
 
     tex = zeros(4, 6, 3); tex[:, 1:3, :] .= 0.2; tex[:, 4:6, :] .= 0.8
     𝐨 = SVector(-0.3, -0.2, 1.0); 𝐮 = SVector(0.6, 0.0, 0.0); 𝐯 = SVector(0.0, 0.4, 0.0)
-    b = TexturedTarget(𝐨, 𝐮, 𝐯, tex; facing = SVector(0.0, 0.0, 0.0))
+    b = with_facing(TexturedTarget(𝐨, 𝐮, 𝐯, tex), SVector(0.0, 0.0, 0.0))
     @test b.state === TargetState{Float64}() && isbits(b.state) && !has_sdf(b)
     @test texture_size(b) == (4, 6) && b.size == SVector(0.6, 0.4)
     # the geometry is VisualGeometryToolkitCore's posed planar target; the flat target as designed is its own posed target
     @test posed_target(b) === b.target && b.target isa VgtkCore.PosedTarget
     @test world_point(b, SVector(0.0, 0.0)) ≈ 𝐨 && world_point(b, SVector(1.0, 1.0)) ≈ 𝐨 + 𝐮 + 𝐯
     @test collect(corners(b)) ≈ [𝐨, 𝐨 + 𝐮, 𝐨 + 𝐮 + 𝐯, 𝐨 + 𝐯]
-    @test target_center(b) ≈ 𝐨 + 𝐮 / 2 + 𝐯 / 2
-    @test VrtkCore.𝔟 === target_center && VrtkCore.ρ_c === albedo            # the paper's notation: public aliases, the same functions
+    @test VgtkCore.centroid(b) ≈ 𝐨 + 𝐮 / 2 + 𝐯 / 2
+    @test VrtkCore.𝔟 === VgtkCore.centroid && VrtkCore.ρ_c === albedo         # the paper's notation: public aliases, the same functions
+    @test board_normal(with_facing(b, SVector(0.0, 0.0, 2.0))) ≈ SVector(0.0, 0.0, 1.0)   # oriented by a viewpoint on the other side
     @test board_normal(b) ≈ SVector(0.0, 0.0, -1.0)                           # towards the camera at the origin
     𝐛 = SVector(0.3, 0.7)
     @test VgtkCore.chart(b, world_point(b, 𝐛)) ≈ 𝐛
@@ -45,7 +46,7 @@ end
 
 @testitem "textured target: its own state, by value" begin
     using Test
-    using VisualRadiometryToolkitCore: TexturedTarget, TargetState, with_state, with_h, with_edge, with_inplane, height_on, inplane_on,
+    using VisualRadiometryToolkitCore: TexturedTarget, TargetState, with_facing, with_state, with_h, with_edge, with_inplane, height_on, inplane_on,
                                        ink_spread, print_blur, EDGE_NC, HEIGHT_NC, HEIGHT_NODES, INPLANE_NC, with_sdf, has_sdf,
                                        edge_albedo, printed_albedo, albedo
     import VisualGeometryToolkitCore as VgtkCore
@@ -64,7 +65,7 @@ end
     @test VgtkCore.convert_eltype(Float32, s1) isa TargetState{Float32}
 
     tex = fill(0.5, 4, 6, 3)
-    b = TexturedTarget(SVector(-0.3, -0.2, 1.0), SVector(0.6, 0.0, 0.0), SVector(0.0, 0.4, 0.0), tex; facing = SVector(0.0, 0.0, 0.0))
+    b = with_facing(TexturedTarget(SVector(-0.3, -0.2, 1.0), SVector(0.6, 0.0, 0.0), SVector(0.0, 0.4, 0.0), tex), SVector(0.0, 0.0, 0.0))
     # the state is replaced by value: the same arrays (no copy), the state in its own element type
     b1 = with_state(b, s1)
     @test b1.state === s1 && b1.texture === b.texture && b1.quad === b.quad && b1.warping === b.warping
@@ -96,7 +97,7 @@ end
 
 @testitem "textured target: the warped page and the in-plane print error" begin
     using Test
-    using VisualRadiometryToolkitCore: TexturedTarget, TargetState, with_state, with_h, HEIGHT_NC, HEIGHT_NODES, warping_nodes,
+    using VisualRadiometryToolkitCore: TexturedTarget, TargetState, with_facing, with_state, with_h, HEIGHT_NC, HEIGHT_NODES, warping_nodes,
                                        warping_aspect, warping_field, flat_surface, board_height, board_relief, is_warped, BoardRays,
                                        intersect_board, world_point, board_normal, posed_target, inplane_calibration, placed_chart,
                                        page_fraction, design_chart, physical_chart, page_points
@@ -107,7 +108,7 @@ end
 
     tex = fill(0.5, 4, 6, 3)
     𝐨 = SVector(-0.3, -0.2, 1.0); 𝐮 = SVector(0.6, 0.0, 0.0); 𝐯 = SVector(0.0, 0.4, 0.0)
-    b = TexturedTarget(𝐨, 𝐮, 𝐯, tex; facing = SVector(0.0, 0.0, 0.0))
+    b = with_facing(TexturedTarget(𝐨, 𝐮, 𝐯, tex), SVector(0.0, 0.0, 0.0))
     @test warping_aspect(b) ≈ 0.4 / 0.6 && length(warping_nodes(warping_aspect(b))) == HEIGHT_NC
     @test b.warping isa VgtkCore.MappedSurface && flat_surface(b.target) isa VgtkCore.MappedSurface
     h0 = zero(SVector{HEIGHT_NC, Float64})

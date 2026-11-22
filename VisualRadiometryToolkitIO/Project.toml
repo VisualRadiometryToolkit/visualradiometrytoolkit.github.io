@@ -1,6 +1,6 @@
 name = "VisualRadiometryToolkitIO"
 uuid = "c447a127-8502-41e7-ac3e-ce2a12d00bd3"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Ties Harder", "Felix Seegräber", "James Pritts <jbpritts@gmail.com>"]
 
 [deps]
@@ -17,7 +17,7 @@ JSON = "1.13.4"
 StaticArrays = "1.9.24"
 VisualGeometryToolkitCore = "0.13"
 VisualGeometryToolkitIO = "0.11.2"
-VisualRadiometryToolkitCore = "0.1"
+VisualRadiometryToolkitCore = "0.2"
 julia = "1.13"
 
 [workspace]

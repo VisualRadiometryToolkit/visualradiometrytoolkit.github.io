@@ -48,32 +48,32 @@ The radiometric camera composed from its geometric camera `geometric` (a VisualG
 `BoundedCamera` of a `CameraModel` over any lens, a spline camera included; the camera's field `geometric`) by adding the three
 parts a geometric camera lacks:
 
-- `focus`: the focus surface, a [`Focus`](@ref), or a distance in metres — the surface focused at that distance everywhere
-  (`Focus(geometric, distance)`, a 3 × 3 thin plate spline on the camera's image);
-- `aperture_radius`: the radius r of the aperture disc, metres;
+- `focus`: the focus surface, a [`Focus`](@ref), or a distance — a length (`1.5m`) or plain metres — the surface focused at that
+  distance everywhere (`Focus(geometric, distance)`, a 3 × 3 thin plate spline on the camera's image);
+- `aperture_radius`: the radius r of the aperture disc, a length (`2mm`) or plain metres;
 - `vignetting`: an [`AbstractVignetting`](@ref) on the camera's image; by default the absent one, [`NoVignetting`](@ref): V ≡ 1 with
   no parameters, which a kernel does not multiply by. A field to estimate is stated: a [`TensorProductVignetting`](@ref) or a
   [`RadialVignetting`](@ref).
 
-The image size is the geometric camera's (`extent`): it is stated once. The camera's parts are replaced one at a time by
-[`with_geometric`](@ref), [`with_focus`](@ref), [`with_aperture_radius`](@ref) and [`with_vignetting`](@ref).
+Lengths are taken in metres at construction (the camera stores plain metres, as its kernels read them). The image size is the
+geometric camera's (`extent`): it is stated once. The camera's parts are replaced one at a time by [`with_geometric`](@ref),
+[`with_focus`](@ref), [`with_aperture_radius`](@ref) and [`with_vignetting`](@ref).
 """
-function RadiometricCameraModel(geometric::BoundedCamera; focus, aperture_radius::Real,
-                                vignetting::AbstractVignetting = NoVignetting())
-    return RadiometricCameraModel(geometric, _focus_surface(geometric, focus), aperture_radius, vignetting)
+function RadiometricCameraModel(geometric::BoundedCamera; focus, aperture_radius, vignetting::AbstractVignetting = NoVignetting())
+    return RadiometricCameraModel(geometric, _focus_surface(geometric, focus), strip_or_bare(VgtkCore.m, aperture_radius), vignetting)
 end
 _focus_surface(geometric, focus::Focus) = focus
-_focus_surface(geometric, distance::Real) = Focus(geometric, distance)
+_focus_surface(geometric, distance) = Focus(geometric, distance)
 
 """
     Focus(geometric, distance; n = 3, T = Float64)
 
-The constant focus surface `𝔱 ≡ distance` (metres) on the `n × n` grid of the image of the geometric camera `geometric` (its
-`extent`): `Focus(n, distance, W, H)`.
+The constant focus surface `𝔱 ≡ distance` (a length, or plain metres) on the `n × n` grid of the image of the geometric camera
+`geometric` (its `extent`): `Focus(n, distance, W, H)`.
 """
-function Focus(geometric::BoundedCamera, distance::Real; n::Integer = 3, T = Float64)
+function Focus(geometric::BoundedCamera, distance; n::Integer = 3, T = Float64)
     W, H = extent(geometric)
-    return Focus(n, distance, W, H; T)
+    return Focus(n, strip_or_bare(VgtkCore.m, distance), W, H; T)
 end
 
 """

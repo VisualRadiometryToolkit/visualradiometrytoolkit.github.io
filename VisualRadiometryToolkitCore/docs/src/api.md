@@ -48,7 +48,7 @@ definition; `VisualRadiometryToolkitCore.𝔣 === VisualRadiometryToolkitCore.fo
 | diffuse weight `μ` | `with_μ` | `with_diffuse_weight` |
 | roughness `α(𝐛)`, refractive index `η(𝐛)` | `𝛂`, `𝛈` | `roughness`, `refractive_index` |
 | Smith `Λ` | `Λ_ggx` | `ggx_lambda` |
-| target centre `𝔟` | `𝔟` | `target_center` |
+| target centre `𝔟` | `𝔟` | `centroid` (VisualGeometryToolkitCore's) |
 | texture albedo `ρ_c(𝐛)` | `ρ_c` | `albedo` |
 
 ```@autodocs
