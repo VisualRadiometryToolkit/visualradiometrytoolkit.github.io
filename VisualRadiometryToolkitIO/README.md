@@ -19,7 +19,12 @@ a published file holds still loads.
 pkg> add VisualGeometryToolkitIO VisualRadiometryToolkitCore VisualRadiometryToolkitIO StaticArrays
 ```
 
-Julia 1.13 or later. Every dependency is in the General registry.
+Julia 1.13 or later. Every dependency of the toolkit is in the General
+registry. The registration of VisualRadiometryToolkitCore and of this package
+in General is pending; until it is merged, `add` takes the repository's URL
+and each package's directory,
+`https://github.com/VisualRadiometryToolkit/visualradiometrytoolkit.github.io:VisualRadiometryToolkitCore`
+and `…:VisualRadiometryToolkitIO`.
 VisualRadiometryToolkitCore defines the types that are saved and loaded;
 VisualGeometryToolkitIO defines the two verbs, `load` and `save`.
 

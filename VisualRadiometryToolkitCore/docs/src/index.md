@@ -41,7 +41,10 @@ of the same functions ([The paper's notation](@ref)).
 pkg> add VisualGeometryToolkitCore VisualRadiometryToolkitCore StaticArrays
 ```
 
-Julia 1.13 or later. Every dependency is in the General registry.
+Julia 1.13 or later. Every dependency is in the General registry. The
+package's own registration in General is pending; until it is merged, `add`
+takes the repository's URL and the package's directory,
+`https://github.com/VisualRadiometryToolkit/visualradiometrytoolkit.github.io:VisualRadiometryToolkitCore`.
 VisualGeometryToolkitCore defines the geometric camera that a radiometric
 camera holds.
 

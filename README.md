@@ -31,8 +31,11 @@ served at <https://visualradiometrytoolkit.github.io>.
 pkg> add VisualRadiometryToolkitCore VisualRadiometryToolkitIO
 ```
 
-Julia 1.13 or later. Every dependency is in the General registry. Each
-package's README has an example.
+Julia 1.13 or later. Every dependency is in the General registry. The
+packages' own registration in General is pending; until it is merged, `add`
+takes this repository's URL and the package's directory, as in
+`https://github.com/VisualRadiometryToolkit/visualradiometrytoolkit.github.io:VisualRadiometryToolkitCore`.
+Each package's README has an example.
 
 ## Working in the repository
 
