@@ -15,8 +15,7 @@ from stack_social_card import social_card
 
 TITLE = "Visual Radiometry Toolkit"
 TAGLINE = ["Julia packages for radiometric camera",
-           "models: vignetting, aperture, focus",
-           "and sensor response"]
+           "models: vignetting, aperture and focus"]
 URL = "visualradiometrytoolkit.github.io"
 
 social_card(OUT / "social-card.png", logo_image(360), TITLE, TAGLINE, URL, (154, 29, 22))
