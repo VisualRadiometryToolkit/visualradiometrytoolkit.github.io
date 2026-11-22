@@ -46,7 +46,11 @@ it: VisualGeometryToolkitCore's posed planar target (the geometry and the
 design stay there: `PosedTarget`, `PlanarTarget`, `Canvas`, `CanvasTexture`,
 `Quad`, `MappedSurface`) with its appearance attached — the texture (`albedo`,
 the paper's `ρ_c`), and for a design given as a distance map the printed-edge
-model (`edge_albedo`: the ink spread and the print's blur). The target holds
+model (`edge_albedo`: the ink spread and the print's blur). What a renderer
+reads at a ray's hit is `physical_albedo`, the albedo at the design point the
+physical page point shows under the in-plane print error; `anchored_albedo` is
+the same at a point given as a Float64 anchor and a kernel's Float32 offset,
+read in the anchor's precision. The target holds
 its own state, a `TargetState`: the nodal heights of its warping, the printed
 edge and the in-plane print error, isbits and replaced by value
 (`with_state`, `with_h`, `with_edge`, `with_inplane`), so a kernel keeps the
