@@ -136,7 +136,7 @@ const 𝔟 = centroid   # the paper's notation: the same function
 """
     EnvironmentLight(map, board::TexturedTarget, poses)
 
-The light of the radiance `map` (a [`SphericalHarmonicMap`](@ref)) on the sphere about the board's centre (its [`centroid`](@ref))
+The light of the radiance `map` (a [`SphericalHarmonicMap`](@ref)) on the sphere about the board's centre (VisualGeometryToolkitCore's `centroid`)
 that holds every camera centre of `poses` (camera → world) and every corner of the page, so that every light ray from the page
 leaves the sphere (no ray of a board point falls back to its closest point, [`exit_direction`](@ref)).
 """
