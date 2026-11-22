@@ -18,7 +18,9 @@ a field fitted to a function.
   in the world). A physical (unitful) posed target is taken in metres at entry.
 - `with_facing(board, viewpoint)`.
 - `RadiometricCameraModel(geometric; focus, aperture_radius)` and `Focus(geometric, distance)` take lengths (`1.5m`, `2mm`);
-  plain numbers stay metres.
+  plain numbers stay metres. `f_number = N` states the aperture as the photographer's stop instead: r = f / 2N, f the camera's
+  focal length as a length (VisualGeometryToolkitCore 0.13.3's `metric_focal_length`, a camera bounded by its sensor).
+  VisualGeometryToolkitCore compat `"0.13.3"`.
 - `EnvironmentLight(map, board::TexturedTarget, poses)`: the light on the sphere about the board's centre that holds every
   camera centre and every corner of the page.
 - `SphericalHarmonicMap(l_max, (l, m) => values, …)` and `coefficients(map_or_light, l, m)`.

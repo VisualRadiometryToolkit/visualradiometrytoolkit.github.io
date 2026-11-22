@@ -93,4 +93,11 @@ end
     @test aperture_radius(RadiometricCameraModel(g; focus = 150cm, aperture_radius = 0.2cm)) ≈ 0.002
     @test Focus(g, 1.5m).t̂_i ≈ Focus(g, 1.5).t̂_i
     @test_throws Exception RadiometricCameraModel(g; focus = 1.5m, aperture_radius = 2.0VisualGeometryToolkitCore.px)
+    # the photographer's stop: an 8 mm lens on a sensor of 20 μm pixels at f/2 has an aperture radius of 2 mm
+    sensor = VisualGeometryToolkitCore.Sensor(Size2(320, 240), 20VisualGeometryToolkitCore.μm)
+    lens_on_sensor = BoundedCamera(8mm, sensor; lens = Lens(DoubleSphere(0.25, 0.4)))
+    @test aperture_radius(RadiometricCameraModel(lens_on_sensor; focus = 1.5m, f_number = 2)) ≈ 0.002
+    @test_throws ArgumentError RadiometricCameraModel(lens_on_sensor; focus = 1.5m)                                  # no aperture
+    @test_throws ArgumentError RadiometricCameraModel(lens_on_sensor; focus = 1.5m, f_number = 2, aperture_radius = 2mm)   # two
+    @test_throws ArgumentError RadiometricCameraModel(g; focus = 1.5m, f_number = 2)                                 # no pitch
 end

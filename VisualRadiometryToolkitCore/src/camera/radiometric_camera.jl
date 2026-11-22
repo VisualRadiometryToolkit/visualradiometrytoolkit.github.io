@@ -50,7 +50,9 @@ parts a geometric camera lacks:
 
 - `focus`: the focus surface, a [`Focus`](@ref), or a distance — a length (`1.5m`) or plain metres — the surface focused at that
   distance everywhere (`Focus(geometric, distance)`, a 3 × 3 thin plate spline on the camera's image);
-- `aperture_radius`: the radius r of the aperture disc, a length (`2mm`) or plain metres;
+- `aperture_radius`: the radius r of the aperture disc, a length (`2mm`) or plain metres; or `f_number` N instead: the
+  photographer's stop, r = f / 2N with f the camera's focal length as a length (VisualGeometryToolkitCore's
+  `metric_focal_length`: a camera bounded by its sensor, `BoundedCamera(8mm, sensor; lens)`);
 - `vignetting`: an [`AbstractVignetting`](@ref) on the camera's image; by default the absent one, [`NoVignetting`](@ref): V ≡ 1 with
   no parameters, which a kernel does not multiply by. A field to estimate is stated: a [`TensorProductVignetting`](@ref) or a
   [`RadialVignetting`](@ref).
@@ -59,8 +61,17 @@ Lengths are taken in metres at construction (the camera stores plain metres, as 
 geometric camera's (`extent`): it is stated once. The camera's parts are replaced one at a time by [`with_geometric`](@ref),
 [`with_focus`](@ref), [`with_aperture_radius`](@ref) and [`with_vignetting`](@ref).
 """
-function RadiometricCameraModel(geometric::BoundedCamera; focus, aperture_radius, vignetting::AbstractVignetting = NoVignetting())
-    return RadiometricCameraModel(geometric, _focus_surface(geometric, focus), strip_or_bare(VgtkCore.m, aperture_radius), vignetting)
+function RadiometricCameraModel(geometric::BoundedCamera; focus, aperture_radius = nothing, f_number = nothing,
+                                vignetting::AbstractVignetting = NoVignetting())
+    (aperture_radius === nothing) == (f_number === nothing) &&
+        throw(ArgumentError("RadiometricCameraModel: state the aperture once, its `aperture_radius` (a length) or its `f_number`"))
+    r = aperture_radius === nothing ? _stop_radius(geometric, f_number) : strip_or_bare(VgtkCore.m, aperture_radius)
+    return RadiometricCameraModel(geometric, _focus_surface(geometric, focus), r, vignetting)
+end
+# the aperture radius of the stop N: f / 2N, f the camera's metric focal length, in metres
+function _stop_radius(geometric::BoundedCamera, N::Real)
+    isfinite(N) && N > 0 || throw(ArgumentError("RadiometricCameraModel: the f-number is positive and finite, got $N"))
+    return FlexUnits.ustrip(VgtkCore.m, VgtkCore.metric_focal_length(geometric)) / (2 * N)
 end
 _focus_surface(geometric, focus::Focus) = focus
 _focus_surface(geometric, distance) = Focus(geometric, distance)
