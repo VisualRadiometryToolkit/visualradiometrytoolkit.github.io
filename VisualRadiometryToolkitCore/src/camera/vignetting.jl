@@ -670,34 +670,22 @@ end
 convert_eltype(::Type{T}, v::NoVignetting) where {T <: Real} = v
 
 # ---------------------------------------------------------------------------
-# A field fitted to a function
+# A field fitted to a function (internal until the migration names it)
 # ---------------------------------------------------------------------------
 
-"""
-    fit_vignetting(f, field::AbstractVignetting; samples = 33) -> FitResult{typeof(field), Nothing}
-
-The field of `field`'s kind, knots, centre and degree whose control points fit the function `f(𝐩)` of the sensor position (COLMAP
-pixels) by least squares: `f` sampled on `samples` points per axis of the field's domain — a tensor field's knot box, a radial
-profile's radius out to its field radius along +x (a radial field is symmetric) — and the control points solved on the field's
-own basis ([`coefficient_jacobian`](@ref)), one linear solve. Function first, so a `do` block works. The estimate is the fitted
-field; the result's `rms` is over the samples, its record `(Success, ClosedForm)`. A domain whose samples do not determine every
-control point (a projective chart's tail beyond the field radius) is an `ArgumentError`.
-
-```julia
-cos⁴(𝐩) = cos(angle_between(backproject(geometric, 𝐩), SVector(0.0, 0.0, 1.0)))^4      # natural vignetting
-V = estimate(fit_vignetting(cos⁴, RadialVignetting(6, geometric)))
-```
-"""
-function fit_vignetting(f, field::AbstractVignetting; samples::Integer = 33)
+# INTERNAL (not exported, not public, undocumented): the field of `field`'s kind, knots, centre and degree whose control points
+# fit the function `f(𝐩)` of the sensor position (COLMAP pixels) by least squares — `f` sampled on `samples` points per axis of the
+# field's domain (a tensor field's knot box; a radial profile's radius out to its field radius along +x), one linear solve on the
+# field's own basis (`coefficient_jacobian`). Its public name is given once, as a problem and algorithm, by the stack's
+# solve(problem, algorithm) migration (VRTK's wave); until then only this package's tests and its dependents' internals call it.
+# A domain whose samples do not determine every control point is an ArgumentError.
+function _vignetting_least_squares(f, field::AbstractVignetting; samples::Integer = 33)
     us = _fit_samples(field, Int(samples))
     A = reduce(vcat, (transpose(Vector{Float64}(coefficient_jacobian(field, 𝐩))) for 𝐩 in us))
     b = Float64[f(𝐩) for 𝐩 in us]
     LinearAlgebra.rank(A) == size(A, 2) || throw(ArgumentError(
-        "fit_vignetting: the $(length(us)) samples of the field's domain determine $(LinearAlgebra.rank(A)) of its $(size(A, 2)) control points"))
-    P = A \ b
-    fitted = with_control_points(field, reshape(P, size(control_points(field))))
-    r = A * P - b
-    return VgtkCore.FitResult(fitted, VgtkCore.ReturnCode.Success, VgtkCore.ClosedForm, 0, VgtkCore.rms(r), length(r), nothing)
+        "_vignetting_least_squares: the $(length(us)) samples of the field's domain determine $(LinearAlgebra.rank(A)) of its $(size(A, 2)) control points"))
+    return with_control_points(field, reshape(A \ b, size(control_points(field))))
 end
 function _fit_samples(v::TensorProductVignetting, n::Int)
     (kx, ky) = knot_vectors(v)
@@ -706,5 +694,5 @@ function _fit_samples(v::TensorProductVignetting, n::Int)
 end
 _fit_samples(v::RadialVignetting, n::Int) =
     [center(v) + SVector(d, 0.0) for d in range(0.0, Float64(field_radius(v)); length = n)]
-_fit_samples(v::LogVignetting, n::Int) = throw(ArgumentError("fit_vignetting: a LogVignetting is not linear in its control points; fit its spline"))
-_fit_samples(v::AbstractVignetting, n::Int) = throw(ArgumentError("fit_vignetting: no sampled domain for a $(nameof(typeof(v)))"))
+_fit_samples(v::LogVignetting, n::Int) = throw(ArgumentError("_vignetting_least_squares: a LogVignetting is not linear in its control points; fit its spline"))
+_fit_samples(v::AbstractVignetting, n::Int) = throw(ArgumentError("_vignetting_least_squares: no sampled domain for a $(nameof(typeof(v)))"))

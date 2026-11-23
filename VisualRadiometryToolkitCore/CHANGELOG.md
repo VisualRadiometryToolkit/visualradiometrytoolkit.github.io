@@ -24,10 +24,9 @@ a field fitted to a function.
 - `EnvironmentLight(map, board::TexturedTarget, poses)`: the light on the sphere about the board's centre that holds every
   camera centre and every corner of the page.
 - `SphericalHarmonicMap(l_max, (l, m) => values, …)` and `coefficients(map_or_light, l, m)`.
-- `fit_vignetting(f, field)`: the field's control points fitted to a function of the sensor position by least squares
-  (VisualGeometryToolkitCore's `FitResult`), and `RadialVignetting(n, geometric)`: the flat radial profile about a camera's
-  principal point out to the farthest point it images.
-- `diffuse_weight(material)`. `Material`, `with_vignetting` and `fit_vignetting` are exported.
+- `RadialVignetting(n, geometric)`: the flat radial profile about a camera's principal point out to the farthest point it
+  images.
+- `diffuse_weight(material)`. `Material` and `with_vignetting` are exported.
 
 ## 0.1.1
 

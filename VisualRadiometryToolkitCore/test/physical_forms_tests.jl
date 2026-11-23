@@ -53,9 +53,9 @@ end
 
 @testitem "physical forms: a field fitted to a function, a radial profile about the camera" begin
     using Test
-    using VisualRadiometryToolkitCore: RadialVignetting, TensorProductVignetting, LogVignetting, fit_vignetting, control_points, field_radius
-    using VisualGeometryToolkitCore: BoundedCamera, CameraModel, CameraCalibrationMat, Lens, DoubleSphere, Size2, Rect, estimate, rms,
-        retcode, ReturnCode
+    using VisualRadiometryToolkitCore: RadialVignetting, TensorProductVignetting, LogVignetting, control_points, field_radius
+    import VisualRadiometryToolkitCore as VrtkCore
+    using VisualGeometryToolkitCore: BoundedCamera, CameraModel, CameraCalibrationMat, Lens, DoubleSphere, Size2, Rect
     using StaticArrays: SVector
 
     K = CameraCalibrationMat(412.0, 0.0, 0.0, 0.0, 412.0, 0.0, 150.0, 110.0, 1.0)
@@ -65,17 +65,16 @@ end
     @test all(==(1.0), control_points(v))                                     # flat
     # a function the field holds exactly is recovered exactly, on either kind of field
     quad(𝐩) = 1 - 0.3 * ((𝐩[1] - 150) / 214)^2
-    r = fit_vignetting(quad, RadialVignetting(6, g; degree = 2))
-    @test retcode(r) == ReturnCode.Success && rms(r) < 1e-12
-    @test estimate(r)(SVector(150.0, 110.0 + 100.0)) ≈ quad(SVector(250.0, 110.0))   # radial: the same at the same distance
+    r = VrtkCore._vignetting_least_squares(quad, RadialVignetting(6, g; degree = 2))
+    @test maximum(abs(r(SVector(150.0 + d, 110.0)) - quad(SVector(150.0 + d, 110.0))) for d in 0.0:5.0:210.0) < 1e-10
+    @test r(SVector(150.0, 110.0 + 100.0)) ≈ quad(SVector(250.0, 110.0))   # radial: the same at the same distance
     t = TensorProductVignetting((4, 4), Rect(0, 0, 320, 240); degree = 2)
     plane(𝐩) = 0.9 + 1.0e-4 * 𝐩[1] - 2.0e-4 * 𝐩[2]
-    rt = fit_vignetting(plane, t)
-    @test rms(rt) < 1e-12 && estimate(rt)(SVector(37.0, 201.0)) ≈ plane(SVector(37.0, 201.0))
-    @test fit_vignetting(t) do 𝐩
-        1.0
-    end |> estimate |> control_points |> P -> all(≈(1.0), P)
-    @test_throws ArgumentError fit_vignetting(plane, LogVignetting(t))
+    rt = VrtkCore._vignetting_least_squares(plane, t)
+    @test rt(SVector(37.0, 201.0)) ≈ plane(SVector(37.0, 201.0))
+    @test all(≈(1.0), control_points(VrtkCore._vignetting_least_squares(_ -> 1.0, t)))
+    @test_throws ArgumentError VrtkCore._vignetting_least_squares(plane, LogVignetting(t))
+    @test !Base.ispublic(VisualRadiometryToolkitCore, :_vignetting_least_squares)   # internal until the migration names it
 end
 
 @testitem "physical forms: a camera's lengths" begin

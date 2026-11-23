@@ -53,7 +53,6 @@ import VisualGeometryToolkitCore: center, centroid, convert_eltype, support_trai
 export AbstractVignetting, NoVignetting, TensorProductVignetting, RadialVignetting, LogVignetting   # a camera's vignetting (camera/vignetting.jl)
 public log_spline        # a LogVignetting's spline of log V
 public VIGNETTING_TAGS   # the fields' TagRegistry: the `type` of VisualRadiometryToolkitIO's vignetting body
-export fit_vignetting   # a field fitted to a function of the sensor position (camera/vignetting.jl)
 public coefficient_jacobian, active_coefficients, control_points, with_control_points, n_control_points, knot_vectors, spline_degree,
        field_radius, radial_coordinate, pole_regular_basis   # the fields' basis, accessors and a radial profile's regular subspace
 public RADIAL_CHARTS, BinnedRadialProfile, projective_chart, projective_knots, radial_chart, with_center, center_gradient   # a radial profile's chart and centre; a measured profile
