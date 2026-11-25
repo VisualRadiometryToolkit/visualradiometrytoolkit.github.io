@@ -1,5 +1,17 @@
 # VisualRadiometryToolkitCore changelog
 
+## 0.1.2
+
+On VisualGeometryToolkitCore 0.14 (`[compat]` `"0.14"`), the release that moves estimation to `solve(problem,
+algorithm)`. This package calls no estimator, and no public name, signature or behaviour changes: a patch release.
+
+- The part replacers (`with_geometric`, `with_focus`, `with_aperture_radius`, `with_vignetting`) and a textured
+  target's `with_state` replace their field with Accessors' `@set`, the stack's one idiom for a value with one part
+  replaced, instead of each restating its type's constructor (VisualGeometryToolkitCore 0.14's duplication gate
+  found `with_vignetting` and `with_state` to be one body). New dependency: Accessors.
+- The README's and the manual's example builds its pinhole camera as `Lens(Perspective())`: VisualGeometryToolkitCore
+  0.14 removed the alias `Pinhole`.
+
 ## 0.1.1
 
 Compat only: on VisualGeometryToolkitCore 0.13 (`[compat]` `"0.13"`), the release that adds the artifact store and

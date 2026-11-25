@@ -39,7 +39,7 @@ using LinearAlgebra: norm
 
 # A geometric camera on a 1200 × 800 image: focal length 900 pixels, a pinhole lens.
 K = CameraCalibrationMat(SMatrix{3, 3}(900.0, 0, 0, 0, 900.0, 0, 600.0, 400.0, 1))
-geometric = BoundedCamera(CameraModel(LogicalIntrinsics(K), Pinhole()), Size2(1200, 800))
+geometric = BoundedCamera(CameraModel(LogicalIntrinsics(K), Lens(Perspective())), Size2(1200, 800))
 
 # The radiometric camera: focused at 1.5 m, with an aperture of radius 4 mm.
 camera = RadiometricCameraModel(geometric; focus = 1.5, aperture_radius = 0.004)

@@ -1,9 +1,10 @@
 name = "VisualRadiometryToolkitCore"
 uuid = "544ea8c7-2427-4873-ab3e-33acc9dfb29a"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Ties Harder", "Felix Seegräber", "James Pritts <jbpritts@gmail.com>"]
 
 [deps]
+Accessors = "7d9f7c33-5ae7-4f3b-8dc6-eff91059b697"
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
 CoordinateTransformations = "150eb455-5306-5404-9cee-2592286d6298"
 FlexUnits = "76e01b6b-c995-4ce6-8559-91e72a3d4e95"
@@ -15,6 +16,7 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 VisualGeometryToolkitCore = "96820d6b-1dad-4e77-ad4a-8276f2ec1ce7"
 
 [compat]
+Accessors = "0.1.46"
 Adapt = "4.8"
 CoordinateTransformations = "0.6.4"
 FlexUnits = "0.6.16"
@@ -25,6 +27,10 @@ QuadGK = "2.11.3"
 StaticArrays = "1.9.24"
 VisualGeometryToolkitCore = "0.14"
 julia = "1.13"
+
+[sources]
+# TEMPORARY: solve branch; remove when Core 0.14 etc. are registered
+VisualGeometryToolkitCore = {path = "/home/jbpritts/src/_wt-solve-core014/VisualGeometryToolkitCore"}
 
 [workspace]
 projects = ["test", "docs"]

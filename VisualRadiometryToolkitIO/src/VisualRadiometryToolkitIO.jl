@@ -43,10 +43,9 @@ using VisualRadiometryToolkitCore: AbstractVignetting, TensorProductVignetting, 
 # -----------------------------------------------------------------------------
 
 # The pixel frame VisualRadiometryToolkitCore's values hold their positions in (a field's knots and centre, a profile's
-# centre): COLMAP pixels. A file in another frame moves them by the frames' offset on the way in and out.
-const _VALUE_PIXEL_FRAME = PixelFrame{:colmap}
-_to_file(s::VgioStyle) = VgtkIO.pixel_frame_offset(_VALUE_PIXEL_FRAME, VgtkIO.pixel_frame(s))
-_from_file(s::VgioStyle) = VgtkIO.pixel_frame_offset(VgtkIO.pixel_frame(s), _VALUE_PIXEL_FRAME)
+# centre): COLMAP pixels, `PixelFrame{:colmap}`. A file in another frame moves them by the frames' offset on the way in and out.
+_to_file(s::VgioStyle) = VgtkIO.pixel_frame_offset(PixelFrame{:colmap}, VgtkIO.pixel_frame(s))
+_from_file(s::VgioStyle) = VgtkIO.pixel_frame_offset(VgtkIO.pixel_frame(s), PixelFrame{:colmap})
 
 
 # Where the published JSON Schemas of these kinds live (docs/src/schemas, at the path of each schema string).

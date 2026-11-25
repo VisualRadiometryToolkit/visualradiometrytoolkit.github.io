@@ -14,8 +14,11 @@
     using Test
     import VisualGeometryToolkitCore as VgtkCore
     import VisualRadiometryToolkitCore
+    import VisualGeometryToolkitIO   # TEMPORARY: solve branch; remove when Core 0.14 etc. are registered
     VgtkCore.test_readme_example(pkgdir(VisualRadiometryToolkitIO);
-        developed = Dict("VisualRadiometryToolkitCore" => pkgdir(VisualRadiometryToolkitCore)), checks = """
+        developed = Dict("VisualRadiometryToolkitCore" => pkgdir(VisualRadiometryToolkitCore),
+                         # TEMPORARY: solve branch; remove when Core 0.14 etc. are registered (no registry has IO 0.12 yet)
+                         "VisualGeometryToolkitIO" => pkgdir(VisualGeometryToolkitIO)), checks = """
     # What the example's comments claim: the file exists, and the field read
     # back is the radial field that was written.
     @test isfile(readme.path)

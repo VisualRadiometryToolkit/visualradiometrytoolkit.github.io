@@ -81,25 +81,25 @@ end
 
 The camera with its geometric camera (the field `geometric`, Θ_d) replaced.
 """
-with_geometric(c::RadiometricCameraModel, geometric) = RadiometricCameraModel(geometric, c.focus, c.aperture_radius, c.vignetting)
+with_geometric(c::RadiometricCameraModel, geometric) = @set c.geometric = geometric
 """
     with_focus(camera::RadiometricCameraModel, focus::Focus) -> RadiometricCameraModel
 
 The camera with its focus surface (Θ_f) replaced.
 """
-with_focus(c::RadiometricCameraModel, f::Focus) = RadiometricCameraModel(c.geometric, f, c.aperture_radius, c.vignetting)
+with_focus(c::RadiometricCameraModel, f::Focus) = @set c.focus = f
 """
     with_aperture_radius(camera::RadiometricCameraModel, r) -> RadiometricCameraModel
 
 The camera with its aperture radius r (metres) replaced.
 """
-with_aperture_radius(c::RadiometricCameraModel, r::Real) = RadiometricCameraModel(c.geometric, c.focus, r, c.vignetting)
+with_aperture_radius(c::RadiometricCameraModel, r::Real) = @set c.aperture_radius = r
 """
     with_vignetting(camera::RadiometricCameraModel, vignetting::AbstractVignetting) -> RadiometricCameraModel
 
 The camera with its vignetting replaced.
 """
-with_vignetting(c::RadiometricCameraModel, v::AbstractVignetting) = RadiometricCameraModel(c.geometric, c.focus, c.aperture_radius, v)
+with_vignetting(c::RadiometricCameraModel, v::AbstractVignetting) = @set c.vignetting = v
 """
     focus(camera::RadiometricCameraModel) -> Focus
 

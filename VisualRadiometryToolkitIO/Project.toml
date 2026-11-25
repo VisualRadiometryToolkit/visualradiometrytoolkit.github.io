@@ -1,6 +1,6 @@
 name = "VisualRadiometryToolkitIO"
 uuid = "c447a127-8502-41e7-ac3e-ce2a12d00bd3"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Ties Harder", "Felix Seegräber", "James Pritts <jbpritts@gmail.com>"]
 
 [deps]
@@ -22,6 +22,7 @@ julia = "1.13"
 
 [sources]
 # TEMPORARY: solve branch; remove when Core 0.14 etc. are registered
+VisualGeometryToolkitCore = {path = "/home/jbpritts/src/_wt-solve-core014/VisualGeometryToolkitCore"}
 VisualGeometryToolkitIO = {path = "/home/jbpritts/src/_wt-solve-core014/VisualGeometryToolkitIO"}
 
 [workspace]

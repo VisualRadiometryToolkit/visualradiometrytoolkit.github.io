@@ -1,5 +1,13 @@
 # VisualRadiometryToolkitIO changelog
 
+## 0.1.2
+
+On VisualGeometryToolkitCore 0.14 and VisualGeometryToolkitIO 0.12 (`[compat]` `"0.14"`, `"0.12"`): the releases
+that move estimation to `solve(problem, algorithm)` and carry a fit record through IO's style codec. This package
+reads and writes no fit record, and no public name, schema or file changes: a patch release. The pixel frame of the
+values is spelled `PixelFrame{:colmap}` where it is used, not held in a private `const` (VisualGeometryToolkitCore
+0.14's naming rule R20: no `const` names one concrete instantiation of a stack type).
+
 ## 0.1.1
 
 On VisualGeometryToolkitCore 0.13 and VisualGeometryToolkitIO 0.11.2 (`[compat]` `"0.13"`, `"0.11.2"`): Core's

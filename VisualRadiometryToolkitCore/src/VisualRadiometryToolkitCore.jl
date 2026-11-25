@@ -28,6 +28,7 @@ follows its conventions; nothing there depends on this.
 module VisualRadiometryToolkitCore
 
 using StaticArrays: SVector, SMatrix, StaticVector
+using Accessors: @set   # a part replaced by value: the camera's `with_*`, a textured target's `with_state` (the stack's one idiom)
 using LinearAlgebra: LinearAlgebra, I, cross, dot, norm, normalize
 using Adapt: Adapt, adapt   # a textured target's arrays move to a device (scene/textured_target.jl)
 using QuadGK: gauss   # the Gauss–Legendre nodes of the sensor rule (sensor/quadrature.jl)

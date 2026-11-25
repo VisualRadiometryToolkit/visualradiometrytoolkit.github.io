@@ -179,8 +179,7 @@ const ρ_c = albedo   # the paper's notation: the same function
 The target with its state replaced, by value: the same page, texture and distance map (no array is copied or converted), the state
 in ITS element type — dual numbers of a Jacobian, Float32 on a device.
 """
-@inline with_state(b::TexturedTarget, state::TargetState) =
-    TexturedTarget(b.target, b.quad, b.size, b.facing, b.texture, b.sdf, b.page_mm, b.warping, state)
+@inline with_state(b::TexturedTarget, state::TargetState) = @set b.state = state
 @inline with_h(b::TexturedTarget, h) = with_state(b, with_h(b.state, h))
 @inline with_edge(b::TexturedTarget, edge) = with_state(b, with_edge(b.state, edge))
 @inline with_inplane(b::TexturedTarget, θ) = with_state(b, with_inplane(b.state, θ))
