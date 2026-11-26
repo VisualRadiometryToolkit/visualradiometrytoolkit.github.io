@@ -61,3 +61,33 @@
     g = ForwardDiff.derivative(a -> cook_torrance(m, ρ, a, ηb, ω_o, ω_i, h)[1], αb)
     @test g ≈ (cook_torrance(m, ρ, αb + 1e-6, ηb, ω_o, ω_i, h)[1] - cook_torrance(m, ρ, αb - 1e-6, ηb, ω_o, ω_i, h)[1]) / 2e-6 rtol = 1e-5
 end
+
+@testitem "materials: Smith Λ near the normal in Float32 (from the direction's components, no cancellation)" begin
+    using Test
+    using VisualRadiometryToolkitCore: ggx_lambda, ggx_masking, ggx_masking_shadowing
+    using StaticArrays: SVector
+    import ForwardDiff
+
+    # the reference at the Float32 direction itself: Λ = (√(1 + α² tan²θ) − 1) / 2 in BigFloat, its α derivative α tan²θ / (2 √(1 + α² tan²θ))
+    tan²(ω) = (big(ω[1])^2 + big(ω[2])^2) / big(ω[3])^2
+    Λref(α, ω) = (sqrt(1 + big(α)^2 * tan²(ω)) - 1) / 2
+    dΛref(α, ω) = big(α) * tan²(ω) / (2 * sqrt(1 + big(α)^2 * tan²(ω)))
+    for θ in (1.0e-3, 5.0e-3, 2.0e-2, 0.3, 1.2), α in (0.1, 0.6)
+        ω = SVector{3, Float32}(sin(θ), 0, cos(θ))
+        @test Float64(abs(ggx_lambda(Float32(α), ω) / Λref(Float32(α), ω) - 1)) < 1.0e-6
+        g = ForwardDiff.derivative(a -> ggx_lambda(a, ω), Float32(α))
+        @test Float64(abs(g / dΛref(Float32(α), ω) - 1)) < 1.0e-5
+        # Float64: the direction's form and the cosine's agree
+        ω64 = SVector(sin(θ), 0.0, cos(θ))
+        @test ggx_lambda(α, ω64) ≈ ggx_lambda(α, cos(θ)) rtol = 1.0e-9
+    end
+    # grazing: the floor holds, finite, the direction's form the cosine's
+    for T in (Float32, Float64), α in (0.1, 0.6)
+        ωg = SVector{3, T}(1, 0, 0)
+        @test isfinite(ggx_lambda(T(α), ωg)) && ggx_lambda(T(α), ωg) ≈ ggx_lambda(T(α), zero(T)) rtol = 1.0e-5
+    end
+    # the masking functions take a direction or its cosine
+    ω = SVector(0.3, 0.1, 0.95)
+    @test ggx_masking(0.4, ω) == 1 / (1 + ggx_lambda(0.4, ω))
+    @test ggx_masking_shadowing(0.4, ω, SVector(-0.2, 0.0, 0.98)) ≈ 1 / (1 + ggx_lambda(0.4, ω) + ggx_lambda(0.4, SVector(-0.2, 0.0, 0.98)))
+end

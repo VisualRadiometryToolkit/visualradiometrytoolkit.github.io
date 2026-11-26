@@ -78,16 +78,32 @@ convert_eltype(::Type{T}, m::Material) where {T} = Material(T(m.roughness_ink), 
     return α^2 / (π * t^2)
 end
 
-"""Smith Λ for GGX at `cosθ = ω ⋅ 𝐧` (public alias `Λ_ggx`)."""
-@inline function ggx_lambda(α, cosθ)
-    T = typeof(α * cosθ)
-    μ² = max(cosθ^2, sqrt(eps(T)) * T(1//1000))
-    return (sqrt(1 + α^2 * (1 - μ²) / μ²) - 1) / 2
+"""
+    ggx_lambda(α, ω::StaticVector{3})
+    ggx_lambda(α, cosθ)
+
+Smith Λ for GGX, `Λ = (√(1 + α² tan²θ) − 1) / 2` (public alias `Λ_ggx`), of the direction `ω` (local frame, any length) or of
+`cosθ = ω ⋅ 𝐧`. Evaluated as `x / (2 (1 + √(1 + x)))` with `x = α² tan²θ` (the same number, without the cancellation of `√(1 + x) − 1`
+at small x) and, from the direction, `tan²θ = (ω_x² + ω_y²) / ω_z²` (from `cosθ`, `(1 − cos²θ) / cos²θ` loses the small angles to the
+rounding of `cosθ`: in Float32 near the normal, at θ = 0.005, 0.2 % of tan²θ). The direction is a `StaticVector{3}`, not zero; a
+grazing one is floored as before (`cos²θ ≥ 10⁻³ √eps` of the float, relative to `|ω|²`).
+"""
+@inline function ggx_lambda(α, ω::StaticVector{3})
+    s² = ω[1]^2 + ω[2]^2
+    μ² = max(ω[3]^2, _grazing_floor(α, s²) * (s² + ω[3]^2))
+    return _ggx_lambda_of(α^2 * s² / μ²)
 end
-"""Smith masking of one direction, `G_1(ω) = 1/(1 + Λ(ω))`."""
-@inline ggx_masking(α, cosθ) = 1 / (1 + ggx_lambda(α, cosθ))
-"""Height-correlated `G_2(ω, ω′) = 1/(1 + Λ(ω) + Λ(ω′))` (Heitz 2014)."""
-@inline ggx_masking_shadowing(α, cosθ, cosθ′) = 1 / (1 + ggx_lambda(α, cosθ) + ggx_lambda(α, cosθ′))
+@inline function ggx_lambda(α, cosθ)
+    μ² = max(cosθ^2, _grazing_floor(α, cosθ))
+    return _ggx_lambda_of(α^2 * (1 - μ²) / μ²)
+end
+"""cos²θ's floor in Λ (a grazing direction's tan²θ stays finite): `10⁻³ √eps` of the float of `α x`."""
+@inline _grazing_floor(α, x) = (T = float(typeof(α * x)); sqrt(eps(T)) * T(1//1000))
+@inline _ggx_lambda_of(x) = x / (2 * (1 + sqrt(1 + x)))
+"""Smith masking of one direction, `G_1(ω) = 1/(1 + Λ(ω))` (of the direction, a `StaticVector{3}`, or of its `cosθ`: [`ggx_lambda`](@ref))."""
+@inline ggx_masking(α, ω) = 1 / (1 + ggx_lambda(α, ω))
+"""Height-correlated `G_2(ω, ω′) = 1/(1 + Λ(ω) + Λ(ω′))` (Heitz 2014), of the directions or of their `cosθ`s."""
+@inline ggx_masking_shadowing(α, ω, ω′) = 1 / (1 + ggx_lambda(α, ω) + ggx_lambda(α, ω′))
 
 """
     fresnel_dielectric(η, c) 
@@ -123,7 +139,7 @@ end
 """Visible-normal density `D^v(𝐧, ω; α) = G_1(ω) max(0, ω⋅𝐧) D(𝐧) / cosθ(ω)`."""
 @inline function visible_normal_density(α, 𝐧::StaticVector{3}, ω::StaticVector{3})
     ωn = dot(ω, 𝐧)
-    return ggx_masking(α, ω[3]) * max(ωn, zero(ωn)) * ggx_distribution(α, 𝐧[3]) / ω[3]
+    return ggx_masking(α, ω) * max(ωn, zero(ωn)) * ggx_distribution(α, 𝐧[3]) / ω[3]
 end
 
 """PDF of the reflected direction ω′ = 2(ω⋅𝐧)𝐧 − ω: `D^v(𝐧, ω; α)/(4 ω⋅𝐧)`."""
@@ -142,7 +158,7 @@ The two terms of `f_c^CT` **without** the μ weights: `ρ_c/π` and
     cosθ = ω[3]; cosθ′ = ω′[3]
     c = abs(dot(ω, 𝐧_h))
     ϵ = sqrt(eps(typeof(ForwardDiff.value(cosθ))))
-    k = ggx_distribution(α, 𝐧_h[3]) * ggx_masking_shadowing(α, cosθ, cosθ′) / (4 * max(cosθ, ϵ) * max(cosθ′, ϵ))
+    k = ggx_distribution(α, 𝐧_h[3]) * ggx_masking_shadowing(α, ω, ω′) / (4 * max(cosθ, ϵ) * max(cosθ′, ϵ))
     spec = SVector(fresnel_dielectric(η[1], c), fresnel_dielectric(η[2], c), fresnel_dielectric(η[3], c)) * k
     return ρ / π, spec
 end

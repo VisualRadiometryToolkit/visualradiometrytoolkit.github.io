@@ -1,5 +1,31 @@
 # VisualRadiometryToolkitCore changelog
 
+## 0.1.2
+
+### Added
+
+- `physical_albedo(target, 𝐛)`: the albedo of the target as printed at the
+  physical page chart 𝐛, `printed_albedo` at the design point that 𝐛 shows
+  under the in-plane print error (`design_chart`). It is what a renderer reads
+  at a ray's hit.
+- `anchored_albedo(target, 𝐱₀, δ𝐱)`: `physical_albedo` at the surface point
+  `𝐱₀ + δ𝐱`, given as an anchor (a hit found once in Float64) and an offset (a
+  kernel's Float32 numbers, its duals). The chart, the design chart and the
+  map's read run in the anchor's precision, and the result is in the offset's
+  numbers. A Float32 world point a metre from the origin is ≈ 0.06 µm coarse,
+  and on a printed edge with a 0.03 mm blur that moves the slope by about 1 %.
+  The page and its maps are in the anchor's float, the state in any numbers.
+- `ggx_lambda(α, ω)`, `ggx_masking(α, ω)`, `ggx_masking_shadowing(α, ω, ω′)`
+  of the directions themselves (the cosine forms stay).
+
+### Changed
+
+- Smith Λ without cancellation: `tan²θ` from the direction's components (from
+  a Float32 cosine, `1 − cos²θ` loses the small angles: 0.2 % of tan²θ at
+  θ = 0.005) and `x / (2(1 + √(1 + x)))` for `√(1 + x) − 1`.
+  `visible_normal_density` and `cook_torrance_terms` take Λ of their
+  directions. Float64 values move by rounding only.
+
 ## 0.1.1
 
 Compat only: on VisualGeometryToolkitCore 0.13 (`[compat]` `"0.13"`), the release that adds the artifact store and

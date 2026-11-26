@@ -78,7 +78,7 @@ export TexturedTarget   # a printed planar target: VisualGeometryToolkitCore's p
 public TargetState, with_state, with_h, with_edge, with_inplane, height_on, inplane_on, ink_spread, print_blur,
        EDGE_NC, HEIGHT_NC, HEIGHT_NODES, INPLANE_NC   # the target's own state: its warping, its printed edge, its in-plane print error (scene/target_state.jl)
 public with_sdf, has_sdf, posed_target, board_normal, world_point, target_center, corners, texture_size, intersect_board, board_plane_hit,
-       inside, albedo, printed_albedo, edge_albedo   # its geometry (the page, its chart, a ray's hit) and its appearance (the texture, the printed edge)
+       inside, albedo, printed_albedo, edge_albedo, physical_albedo, anchored_albedo   # its geometry (the page, its chart, a ray's hit) and its appearance (the texture, the printed edge)
 public 𝔟, ρ_c   # the paper's notation: aliases of target_center and albedo
 public warping_nodes, warping_aspect, warping_field, flat_surface, board_height, board_relief, is_warped, BoardRays,
        inplane_calibration, placed_chart, page_fraction, design_chart, physical_chart, page_points   # its warping and in-plane print error on the state (scene/target_warping.jl)

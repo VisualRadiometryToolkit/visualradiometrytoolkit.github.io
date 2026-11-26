@@ -143,3 +143,44 @@ end
     @test only(P) ≈ xs atol = 1.0e-6
     @test page_points(𝐨, 𝐮, 𝐯, board_normal(b), h0, [𝐛]) ≈ [world_point(b, 𝐛)]
 end
+
+@testitem "textured target: the albedo at a surface point, and its anchored lookup" begin
+    using Test
+    using VisualRadiometryToolkitCore: TexturedTarget, TargetState, with_sdf, with_edge, with_inplane, with_state, physical_albedo,
+                                       anchored_albedo, printed_albedo, design_chart, physical_chart, world_point
+    import VisualGeometryToolkitCore as VgtkCore
+    import ForwardDiff
+    using StaticArrays: SVector
+
+    # a 1 m page a metre from the origin with a vertical ink edge printed with a 0.03 mm blur (the Siemens print's scale), and an
+    # in-plane print error: the distance map's columns 0.25 mm apart, the edge between two of them
+    W = 4000; σ = 0.03; xe = 500.0123                                       # mm
+    sdf = [1000.0 * (j - 0.5) / W - xe for i in 1:4, j in 1:W]
+    b0 = TexturedTarget(SVector(0.7, -0.4, 1.3), SVector(1.0, 0.0, 0.0), SVector(0.0, 1.0, 0.0), fill(0.5, 4, 4, 3);
+                        facing = SVector(0.0, 0.0, 0.0))
+    b = with_inplane(with_edge(with_sdf(b0, sdf, (1000.0, 1000.0)), (0.0, σ)), (1.0e-3, -2.0e-3))
+    𝐛 = physical_chart(b, b.state.inplane, SVector((xe + 0.5σ) / 1000, 0.37))   # where the design's edge + σ/2 is printed
+    @test physical_albedo(b, 𝐛) === printed_albedo(b, design_chart(b, 𝐛))
+    @test 0.6 < physical_albedo(b, 𝐛)[1] < 0.8                               # on the edge's slope
+
+    # the slope along the page's columns (a unit partial of the world point) in Float64, the reference
+    𝐱₀ = world_point(b, 𝐛)
+    seed(F) = SVector(ForwardDiff.Dual{Nothing}(zero(F), one(F)), ForwardDiff.Dual{Nothing}(zero(F), zero(F)), ForwardDiff.Dual{Nothing}(zero(F), zero(F)))
+    D64 = ForwardDiff.Dual{Nothing, Float64, 1}; D32 = ForwardDiff.Dual{Nothing, Float32, 1}
+    ref = anchored_albedo(b, 𝐱₀, seed(Float64))
+    @test ref isa SVector{3, D64}
+    @test ForwardDiff.value(ref[1]) ≈ physical_albedo(b, 𝐛)[1] rtol = 1.0e-12
+    slope(ρ) = Float64(ForwardDiff.partials(ρ[1], 1))
+    # anchored: the page and its maps in Float64, the state and the offset in a kernel's Float32 numbers — the result in them
+    bk = with_state(b, VgtkCore.convert_eltype(Float32, b.state))
+    ρa = anchored_albedo(bk, 𝐱₀, seed(Float32))
+    @test ρa isa SVector{3, D32}
+    @test ForwardDiff.value(ρa[1]) ≈ ForwardDiff.value(ref[1]) rtol = 1.0e-5                 # the edge profile in Float32
+    ea = abs(slope(ρa) / slope(ref) - 1)
+    # the same lookup in Float32 throughout (the target and the point rounded): the coarse world point moves the slope
+    b32 = VgtkCore.convert_eltype(Float32, b)
+    en = abs(slope(physical_albedo(b32, VgtkCore.chart(b32, Float32.(𝐱₀) + seed(Float32)))) / slope(ref) - 1)
+    println("anchored lookup: slope error $ea anchored, $en in Float32 throughout")
+    @test ea < 1.0e-5
+    @test ea < en
+end
