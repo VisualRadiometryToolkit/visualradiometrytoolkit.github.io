@@ -81,7 +81,8 @@ end
     # grazing: the floor holds, finite, the direction's form the cosine's
     for T in (Float32, Float64), α in (0.1, 0.6)
         ωg = SVector{3, T}(1, 0, 0)
-        @test isfinite(ggx_lambda(T(α), ωg)) && ggx_lambda(T(α), ωg) ≈ ggx_lambda(T(α), zero(T)) rtol = 1.0e-5
+        @test isfinite(ggx_lambda(T(α), ωg))
+        @test ggx_lambda(T(α), ωg) ≈ ggx_lambda(T(α), zero(T)) rtol = 1.0e-5
     end
     # the masking functions take a direction or its cosine
     ω = SVector(0.3, 0.1, 0.95)

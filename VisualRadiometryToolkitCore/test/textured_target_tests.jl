@@ -147,7 +147,7 @@ end
 @testitem "textured target: the albedo at a surface point, and its anchored lookup" begin
     using Test
     using VisualRadiometryToolkitCore: TexturedTarget, TargetState, with_sdf, with_edge, with_inplane, with_state, physical_albedo,
-                                       anchored_albedo, printed_albedo, design_chart, physical_chart, world_point
+                                       anchored_albedo, printed_albedo, design_chart, physical_chart, world_point, with_facing
     import VisualGeometryToolkitCore as VgtkCore
     import ForwardDiff
     using StaticArrays: SVector
@@ -156,8 +156,8 @@ end
     # in-plane print error: the distance map's columns 0.25 mm apart, the edge between two of them
     W = 4000; σ = 0.03; xe = 500.0123                                       # mm
     sdf = [1000.0 * (j - 0.5) / W - xe for i in 1:4, j in 1:W]
-    b0 = TexturedTarget(SVector(0.7, -0.4, 1.3), SVector(1.0, 0.0, 0.0), SVector(0.0, 1.0, 0.0), fill(0.5, 4, 4, 3);
-                        facing = SVector(0.0, 0.0, 0.0))
+    b0 = with_facing(TexturedTarget(SVector(0.7, -0.4, 1.3), SVector(1.0, 0.0, 0.0), SVector(0.0, 1.0, 0.0), fill(0.5, 4, 4, 3)),
+                     SVector(0.0, 0.0, 0.0))
     b = with_inplane(with_edge(with_sdf(b0, sdf, (1000.0, 1000.0)), (0.0, σ)), (1.0e-3, -2.0e-3))
     𝐛 = physical_chart(b, b.state.inplane, SVector((xe + 0.5σ) / 1000, 0.37))   # where the design's edge + σ/2 is printed
     @test physical_albedo(b, 𝐛) === printed_albedo(b, design_chart(b, 𝐛))
