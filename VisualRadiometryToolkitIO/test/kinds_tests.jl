@@ -4,13 +4,14 @@
 # another package.
 
 @testitem "kinds: the envelope and the schema names are VisualGeometryToolkitIO's, unchanged; validate and a manifest reach them" setup = [VRIoFixtures] begin
+    using VisualRadiometryToolkitCore: LinearChart
     using VisualRadiometryToolkitCore: AbstractVignetting, RadialVignetting, LogVignetting, with_control_points, EnvironmentLight,
         SphericalHarmonicMap, BinnedRadialProfile
     using VisualGeometryToolkitCore: with_unit
     values = [
         "vignetting" => (AbstractVignetting, LogVignetting(with_control_points(RadialVignetting(6, SVector(320.0, 240.0), 400.0), [0.5 + 0.01i for i in 1:6])), "vgio/vignetting/v2.0"),
         "environment_light" => (EnvironmentLight, with_unit(EnvironmentLight(SphericalHarmonicMap(ones(3, 4), 1), SVector(0.1, -0.2, 0.3), 1.5), m), "vgio/environment_light/v2.0"),
-        "radial_profile" => (BinnedRadialProfile, BinnedRadialProfile(:linear, SVector(2120.5, 1416.25), 2551.0, [0.0, 0.25, 0.5, 1.0], [0.9 0.8 0.6; 0.95 0.85 0.7], [100, 300, 900]), "vgio/radial_profile/v1.0"),
+        "radial_profile" => (BinnedRadialProfile, BinnedRadialProfile(LinearChart(), SVector(2120.5, 1416.25), 2551.0, [0.0, 0.25, 0.5, 1.0], [0.9 0.8 0.6; 0.95 0.85 0.7], [100, 300, 900]), "vgio/radial_profile/v1.0"),
     ]
     mktempdir() do dir
         for (kind, (T, value, schema)) in values
@@ -71,6 +72,7 @@ end
 end
 
 @testitem "kinds: a body's table embeds in a kind of another package" setup = [VRIoFixtures] begin
+    using VisualRadiometryToolkitCore: LinearChart
     import VisualRadiometryToolkitIO
     using VisualRadiometryToolkitCore: AbstractVignetting, RadialVignetting, with_control_points, EnvironmentLight, SphericalHarmonicMap,
         BinnedRadialProfile
@@ -80,7 +82,7 @@ end
         [:profile => VisualRadiometryToolkitIO.RADIAL_PROFILE_BODY]; package = "Toy")
     v = with_control_points(RadialVignetting(7, SVector(320.25, 241.75), 401.25), [0.5 + 0.03i for i in 1:7])
     L = with_unit(EnvironmentLight(SphericalHarmonicMap(ones(3, 4), 1), SVector(0.1, -0.2, 0.3), 1.5), m)
-    p = BinnedRadialProfile(:linear, SVector(100.0, 50.0), 80.0, [0.0, 0.5, 1.0], [0.9 0.7], [10, 20])
+    p = BinnedRadialProfile(LinearChart(), SVector(100.0, 50.0), 80.0, [0.0, 0.5, 1.0], [0.9 0.7], [10, 20])
     mktempdir() do dir
         path = joinpath(dir, "holder.json")
         style = VgtkIO.VgioStyle(; length_unit = m, pixel_frame = PixelFrame{:opencv})

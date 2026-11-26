@@ -35,7 +35,7 @@ using FlexUnits: Units
 using VisualGeometryToolkitCore: PixelFrame, BaseQuantity, tag_of, has_units, mm
 using VisualGeometryToolkitIO: VgioStyle, Record, KindSpec
 using VisualRadiometryToolkitCore: AbstractVignetting, TensorProductVignetting, RadialVignetting, LogVignetting, log_spline,
-    VIGNETTING_TAGS, RADIAL_CHARTS, radial_chart, field_radius, knot_vectors, spline_degree, control_points, with_control_points,
+    VIGNETTING_TAGS, RADIAL_CHART_TAGS, ProjectiveChart, radial_chart, field_radius, knot_vectors, spline_degree, control_points, with_control_points,
     EnvironmentLight, SphericalHarmonicMap, coefficients, max_degree, BinnedRadialProfile
 
 # -----------------------------------------------------------------------------

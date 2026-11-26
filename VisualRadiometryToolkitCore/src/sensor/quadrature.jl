@@ -34,7 +34,7 @@ end
 SensorQuadrature(n::Integer = 2) = SensorQuadrature{Float64}(n)
 Base.length(::SensorQuadrature{T, NS}) where {T, NS} = NS
 
-"""Sensor position (COLMAP pixels) of sub-sample `k` of pixel `(u, v)`, the paper's `𝐩_k` (public alias `𝐩_sample`)."""
+"""Sensor position (COLMAP pixels) of sub-sample `k` of pixel `(u, v)`, the paper's `𝐩_k`."""
 @inline sensor_sample(q::SensorQuadrature, k::Integer, u::Integer, v::Integer) = sensor_position(u + q.offsets[k][1], v + q.offsets[k][2])
 
 """
@@ -75,9 +75,9 @@ The number of samples of the aperture's border ∂𝒜 (`n_φ`).
 """
 n_border(::ApertureQuadrature{T, NA, NB}) where {T, NA, NB} = NB
 
-"""Aperture point `𝐚_l = r â_l` (aperture plane z = 0 of the camera frame) of disc node `l` (public alias `𝐚_sample`)."""
+"""Aperture point `𝐚_l = r â_l` (aperture plane z = 0 of the camera frame) of disc node `l`."""
 @inline aperture_sample(q::ApertureQuadrature, l::Integer, r) = SVector(r * q.â[l][1], r * q.â[l][2], zero(r))
-"""Disc weight `r² w̃_l` of node `l` (public alias `𝐚_weight`)."""
+"""Disc weight `r² w̃_l` of node `l`."""
 @inline aperture_weight(q::ApertureQuadrature, l::Integer, r) = r^2 * q.w̃[l]
 
 """
@@ -85,7 +85,7 @@ n_border(::ApertureQuadrature{T, NA, NB}) where {T, NA, NB} = NB
 
 Polar parameterisation of ∂𝒜: `𝐚(φ) = r (cos φ, sin φ, 0)`, velocity
 `𝐯 = ∂𝐚/∂r = (cos φ, sin φ, 0)`, outward normal `𝐧 = 𝐚/‖𝐚‖` and line element
-`ds = r dφ` (the weight already contains dφ). Public alias: `𝐚_border`.
+`ds = r dφ` (the weight already contains dφ).
 """
 @inline function aperture_border_sample(q::ApertureQuadrature, j::Integer, r)
     s, c = sincos(q.φ_border[j])
@@ -120,8 +120,3 @@ convert_eltype(::Type{T}, q::SensorQuadrature{S, NS}) where {T, S, NS} =
 convert_eltype(::Type{T}, q::ApertureQuadrature{S, NA, NB}) where {T, S, NA, NB} =
     ApertureQuadrature{T, NA, NB}(SVector{NA}(SVector{2, T}.(q.â)), SVector{NA, T}(q.w̃), SVector{NB, T}(q.φ_border), SVector{NB, T}(q.w_border))
 
-# The paper's notation, as public aliases of the same functions (one definition each)
-const 𝐩_sample = sensor_sample
-const 𝐚_sample = aperture_sample
-const 𝐚_weight = aperture_weight
-const 𝐚_border = aperture_border_sample

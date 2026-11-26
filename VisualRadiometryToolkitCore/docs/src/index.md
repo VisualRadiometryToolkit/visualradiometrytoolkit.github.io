@@ -32,8 +32,8 @@ The camera model is that of the paper
   a Cook–Torrance [`VisualRadiometryToolkitCore.Material`](@ref) and a
   [`TexturedTarget`](@ref) with its printed-edge model and its state.
 
-The public names are descriptive; the symbols of the paper are public aliases
-of the same functions ([The paper's notation](@ref)).
+The public names are descriptive: each function is named for what it computes,
+and the paper's symbols stay in the paper.
 
 ## Installation
 

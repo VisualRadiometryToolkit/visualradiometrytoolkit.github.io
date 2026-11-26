@@ -2,7 +2,7 @@
 
 @testitem "focus: the thin plate spline of the inverse focus distance" begin
     using Test
-    using VisualRadiometryToolkitCore: Focus, FocusSpline, n_nodes, inverse_focus_distance, focus_distance, t̂, 𝔱
+    using VisualRadiometryToolkitCore: Focus, FocusSpline, n_nodes, inverse_focus_distance, focus_distance
     using StaticArrays: SVector
     import ForwardDiff
     import VisualGeometryToolkitCore as VgtkCore
@@ -19,7 +19,6 @@
     vals2 = rand(25)
     @test maximum(abs(inverse_focus_distance(Focus(tps, vals2), tps.nodes[i]) - vals2[i]) for i in 1:25) < 1e-9
     f = Focus(5, 1.5, W, H)
-    @test t̂ === inverse_focus_distance && 𝔱 === focus_distance                       # the paper's notation: public aliases, the same functions
     @test focus_distance(f, SVector(280.0, 240.0)) ≈ 1.5 && inverse_focus_distance(f, SVector(40.0, 180.0)) ≈ 1 / 1.5
     fd = Focus(tps, ForwardDiff.Dual.(vals2, 1.0))
     @test inverse_focus_distance(fd, SVector(240.0, 180.0)) isa ForwardDiff.Dual

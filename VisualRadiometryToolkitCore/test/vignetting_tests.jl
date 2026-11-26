@@ -202,13 +202,14 @@ end
 # profile of 16's spacing) the last seven peak at [0.667, 0.667, 0.667, 0.186, 0, 0, 0] and 16 functions act on the
 # pixels a fit sees; a pixel beyond the radius is still inside the knots.
 @testitem "vignetting: projective knots keep the pixel spacing past the rim" begin
+    using VisualRadiometryToolkitCore: ProjectiveChart
     using Test
     using StaticArrays: SVector
     using VisualRadiometryToolkitCore: RadialVignetting, coefficient_jacobian, n_control_points, projective_knots, knot_vectors, radial_coordinate
     using VisualGeometryToolkitCore: clamped_knots
     c, r, p = SVector(2128.0, 1424.0), 1340.0, 3
     raw_peak(v) = [maximum(coefficient_jacobian(v, c + SVector(d, 0.0))[i] for d in range(0, r; length = 2001)) for i in 1:n_control_points(v)]
-    v = RadialVignetting(19, c, r; degree = p, chart = :projective)
+    v = RadialVignetting(19, c, r; degree = p, chart = ProjectiveChart())
     pk = raw_peak(v)
     @test round.(pk[13:19]; digits = 3) == [0.667, 0.667, 0.667, 0.186, 0.0, 0.0, 0.0]
     @test count(>(0), pk) == 16                                   # the functions that act on d ≤ r
@@ -233,24 +234,27 @@ end
     @test length(projective_knots(7, 3)) == 11
 end
 
-# The radial profile's chart (`chart = :projective`, ported from RadiometricCamera's ProjectiveRadialVignetting, owner
+# The radial profile's chart (`chart = ProjectiveChart()`, ported from RadiometricCamera's ProjectiveRadialVignetting, owner
 # decision 22): the knots, the chart's values, the basis on the chart, the pole, the knots form, the centre moved and
 # differentiated, isbits on a device.
 @testitem "vignetting: a radial profile on the projective chart" begin
+    using VisualRadiometryToolkitCore: LinearChart, ProjectiveChart, EquisolidChart, RADIAL_CHART_TAGS
     using Test
     using StaticArrays: SVector
     using LinearAlgebra: dot
     using VisualRadiometryToolkitCore: RadialVignetting, LogVignetting, TensorProductVignetting, with_control_points, control_points, n_control_points, knot_vectors, field_radius, radial_coordinate, coefficient_jacobian, active_coefficients, pole_regular_basis, RADIAL_CHARTS, projective_chart, projective_knots, radial_chart, with_center, center_gradient
-    using VisualGeometryToolkitCore: Rect, center, convert_eltype, bspline_basis
+    using VisualGeometryToolkitCore: Rect, center, convert_eltype, bspline_basis, tag_of
 
-    @test RADIAL_CHARTS == (:linear, :projective, :equisolid)   # equisolid: a measured profile's (BinnedRadialProfile)
+    @test collect(keys(RADIAL_CHART_TAGS)) == ["linear", "projective", "equisolid"]   # equisolid: a measured profile's (BinnedRadialProfile)
+    @test RADIAL_CHART_TAGS["projective"] === ProjectiveChart && tag_of(RADIAL_CHART_TAGS, LinearChart()) == "linear"
     @test only(projective_chart(4.0)(SVector(4.0))) == 0.5 && only(projective_chart(4.0)(SVector(12.0))) == 0.75
     W, H = 4256, 2848
     c0 = SVector(2126.0, 1554.0)
-    vp = RadialVignetting(17, c0, 2560.5; chart = :projective)
+    vp = RadialVignetting(17, c0, 2560.5; chart = ProjectiveChart())
     vl = RadialVignetting(16, SVector(W / 2, H / 2), 2560.5)
-    @test radial_chart(vp) == :projective && radial_chart(vl) == :linear && radial_chart(LogVignetting(vp)) == :projective
-    @test_throws ArgumentError RadialVignetting(8, c0, 100.0; chart = :polar)
+    @test radial_chart(vp) === ProjectiveChart() && radial_chart(vl) === LinearChart() && radial_chart(LogVignetting(vp)) === ProjectiveChart()
+    @test_throws TypeError RadialVignetting(8, c0, 100.0; chart = :polar)
+    @test_throws ArgumentError RadialVignetting(8, c0, 100.0; chart = EquisolidChart())   # a field angle, not a normalized radius
     # the knots: k / (m + k) up to ½ (m = n − 2p = 11 spans uniform in the distance), p − 1 = 2 more at that spacing past the
     # rim, the span to 1, clamped (Core 0.10.11; the item above)
     k = knot_vectors(vp)[1]
@@ -263,7 +267,7 @@ end
     @test radial_coordinate(vp, c0) == 0 && radial_coordinate(vp, c0 + SVector(1e7, 0.0)) < 1
     # the basis on the chart; the row sums to one; the active coefficients are its nonzeros; V(c) = P₁
     Pp = [1.0 - 0.04 * (i - 1)^1.2 for i in 1:17]; vpp = with_control_points(vp, Pp)
-    @test radial_chart(vpp) == :projective
+    @test radial_chart(vpp) === ProjectiveChart()
     for u in (SVector(10.0, 20.0), SVector(2000.0, 1500.0), SVector(4200.0, 10.0))
         d = hypot(u[1] - c0[1], u[2] - c0[2])
         @test vpp(u) ≈ dot(bspline_basis(k, Val(3), d / (r0 + d)), Pp) atol = 1e-13
@@ -273,19 +277,19 @@ end
     end
     @test vpp(c0) == Pp[1] && size(pole_regular_basis(vpp)) == (17, 16) && isbitstype(typeof(vpp))
     @test convert_eltype(Float32, vpp)(SVector(100.0f0, 100.0f0)) ≈ vpp(SVector(100.0, 100.0)) rtol = 1e-6
-    @test radial_chart(convert_eltype(Float32, vpp)) == :projective
+    @test radial_chart(convert_eltype(Float32, vpp)) === ProjectiveChart()
     # the knots form: the record's rebuild, checked
-    @test RadialVignetting(k, c0, r0, Pp; degree = 3, chart = :projective) == vpp
+    @test RadialVignetting(k, c0, r0, Pp; degree = 3, chart = ProjectiveChart()) == vpp
     @test RadialVignetting(knot_vectors(vl)[1], center(vl), field_radius(vl), ones(16); degree = 3) == vl
-    @test_throws ArgumentError RadialVignetting(k[1:(end - 1)], c0, r0, Pp; degree = 3, chart = :projective)
-    @test_throws ArgumentError RadialVignetting(collect(k) .* 2, c0, r0, Pp; degree = 3, chart = :projective)
-    @test_throws ArgumentError RadialVignetting(17, c0, 0.0; chart = :projective)
+    @test_throws ArgumentError RadialVignetting(k[1:(end - 1)], c0, r0, Pp; degree = 3, chart = ProjectiveChart())
+    @test_throws ArgumentError RadialVignetting(collect(k) .* 2, c0, r0, Pp; degree = 3, chart = ProjectiveChart())
+    @test_throws ArgumentError RadialVignetting(17, c0, 0.0; chart = ProjectiveChart())
     # the fields without a chart are the linear chart's
     @test RadialVignetting{Float64, 16, 20, 3}(vl.center, vl.radius, vl.knots, vl.P) == vl
     # the centre moved (the chart and control points kept) and its gradient against central differences, both charts
-    @test radial_chart(with_center(vpp, SVector(2100.0, 1500.0))) == :projective && center(with_center(vpp, (2100.0, 1500.0))) == SVector(2100.0, 1500.0)
+    @test radial_chart(with_center(vpp, SVector(2100.0, 1500.0))) === ProjectiveChart() && center(with_center(vpp, (2100.0, 1500.0))) == SVector(2100.0, 1500.0)
     v16 = with_control_points(vl, [1.0 - 0.05 * i for i in 0:15])
-    v17 = with_control_points(RadialVignetting(17, SVector(W / 2, H / 2), 2560.5; chart = :projective), [1.0 - 0.05 * i for i in 0:16])
+    v17 = with_control_points(RadialVignetting(17, SVector(W / 2, H / 2), 2560.5; chart = ProjectiveChart()), [1.0 - 0.05 * i for i in 0:16])
     for v in (v16, v17), u in (SVector(100.0, 200.0), SVector(3000.0, 2000.0), SVector(W / 2 + 0.3, H / 2 - 0.2))
         g = center_gradient(v, u); h = 1e-3; c = center(v)
         fd = SVector((with_center(v, c + SVector(h, 0.0))(u) - with_center(v, c - SVector(h, 0.0))(u)) / 2h,
@@ -303,6 +307,7 @@ end
 # outputs recorded once by test/data/radial_projective_rc/generate.jl on the same inputs (rc_values.toml). Values and
 # Jacobians — the coefficient row ∂V/∂P, ∂V/∂u, ∂V/∂centre — to rounding.
 @testitem "vignetting: the projective chart is RadiometricCamera's" begin
+    using VisualRadiometryToolkitCore: ProjectiveChart
     using Test
     using StaticArrays: SVector
     using TOML: TOML
@@ -329,7 +334,7 @@ end
     n_points = 0
     for pr in fx["profiles"]
         c = SVector{2}(Float64.(pr["center"]))
-        v = RadialVignetting(Float64.(pr["knots"]), c, pr["radius"], Float64.(pr["P"]); degree = pr["degree"], chart = :projective)
+        v = RadialVignetting(Float64.(pr["knots"]), c, pr["radius"], Float64.(pr["P"]); degree = pr["degree"], chart = ProjectiveChart())
         @test collect(only(knot_vectors(v))) == Float64.(pr["knots"])
         moved = with_center(v, c .+ SVector(7.25, -3.5))
         v32 = convert_eltype(Float32, v)
@@ -354,11 +359,12 @@ end
 # the chain rule `V(u)·∂(log V)/∂c` (ForwardDiff's exp of a Dual: the product, one rounding), against central differences
 # as the radial profile's own gradient is (the item above); a tensor-product field, with no centre parameter, keeps zero.
 @testitem "vignetting: the centre of a log-domain radial field" begin
+    using VisualRadiometryToolkitCore: LinearChart, ProjectiveChart
     using Test
     using StaticArrays: SVector
     using VisualRadiometryToolkitCore: RadialVignetting, LogVignetting, TensorProductVignetting, with_control_points, with_center, center_gradient, radial_chart
     using VisualGeometryToolkitCore: Rect, center
-    for chart in (:linear, :projective)
+    for chart in (LinearChart(), ProjectiveChart())
         s = with_control_points(RadialVignetting(17, SVector(2128.0, 1424.0), 2560.5; chart), [-0.05 * i for i in 0:16])
         v = LogVignetting(s)
         c = SVector(2100.0, 1500.0)

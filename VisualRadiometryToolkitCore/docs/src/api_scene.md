@@ -51,7 +51,7 @@ its own state, a `TargetState`: the nodal heights of its warping, the printed
 edge and the in-plane print error, isbits and replaced by value
 (`with_state`, `with_h`, `with_edge`, `with_inplane`), so a kernel keeps the
 target's arrays on a device and differentiates the state. `target_center` is
-the paper's `𝔟`; both symbols are public aliases.
+the paper's `𝔟`.
 
 ```@autodocs
 Modules = [VisualRadiometryToolkitCore]

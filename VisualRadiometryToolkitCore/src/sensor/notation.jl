@@ -19,7 +19,7 @@ const _COLMAP_TO_JULIA = inv(_JULIA_TO_COLMAP)
 """
     sensor_position(u, v) -> SVector{2}
 
-Sensor position 𝐩 ∈ ℐ (COLMAP pixels; public alias `𝐩_of_pixel`) of the continuous Julia pixel position `(u, v)` (pixel centres at integer `(u, v)`): VisualGeometryToolkitCore's
+Sensor position 𝐩 ∈ ℐ (COLMAP pixels) of the continuous Julia pixel position `(u, v)` (pixel centres at integer `(u, v)`): VisualGeometryToolkitCore's
 origin map.
 """
 @inline function sensor_position(u, v)
@@ -32,7 +32,7 @@ end
 """
     pixel_position(𝐩) -> SVector{2}
 
-Inverse of [`sensor_position`](@ref): continuous Julia pixel position of a sensor position (public alias `pixel_of_𝐩`).
+Inverse of [`sensor_position`](@ref): continuous Julia pixel position of a sensor position.
 """
 @inline function pixel_position(𝐩::StaticVector{2})
     T = eltype(𝐩)
@@ -43,7 +43,7 @@ end
 """
     pixel_footprint(u, v) -> (lo::SVector{2}, hi::SVector{2})
 
-Bounds of the footprint ℐ_𝐮 ⊂ ℐ of pixel `(u, v)` (the paper's `ℐ_𝐮`, a public alias): its corners `(u ∓ ½, v ∓ ½)` in COLMAP pixels.
+Bounds of the footprint ℐ_𝐮 ⊂ ℐ of pixel `(u, v)` (the paper's `ℐ_𝐮`): its corners `(u ∓ ½, v ∓ ½)` in COLMAP pixels.
 """
 @inline pixel_footprint(u::Integer, v::Integer) = (sensor_position(u - 0.5, v - 0.5), sensor_position(u + 0.5, v + 0.5))
 
@@ -64,7 +64,3 @@ The Rec. 709 luma plane (`luma`) of an `H × W × 3` image, pixel by pixel; an `
 luma_image(img::AbstractArray{<:Real, 3}) = size(img, 3) == 1 ? img[:, :, 1] :
     [luma(SVector(img[v, u, 1], img[v, u, 2], img[v, u, 3])) for v in axes(img, 1), u in axes(img, 2)]
 
-# The paper's notation, as public aliases of the same functions (one definition each)
-const 𝐩_of_pixel = sensor_position
-const pixel_of_𝐩 = pixel_position
-const ℐ_𝐮 = pixel_footprint

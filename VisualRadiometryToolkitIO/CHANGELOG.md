@@ -8,6 +8,10 @@ reads and writes no fit record, and no public name, schema or file changes: a pa
 values is spelled `PixelFrame{:colmap}` where it is used, not held in a private `const` (VisualGeometryToolkitCore
 0.14's naming rule R20: no `const` names one concrete instantiation of a stack type).
 
+On VisualRadiometryToolkitCore 0.2 (`[compat]` `"0.2"`): a radial chart is a type there, so the vignetting and
+radial-profile bodies read and write it through VisualRadiometryToolkitCore's `RADIAL_CHART_TAGS`. The stored
+`chart` strings, the schemas and every file are unchanged.
+
 ## 0.1.1
 
 On VisualGeometryToolkitCore 0.13 and VisualGeometryToolkitIO 0.11.2 (`[compat]` `"0.13"`, `"0.11.2"`): Core's

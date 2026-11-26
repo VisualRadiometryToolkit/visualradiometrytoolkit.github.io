@@ -10,10 +10,6 @@
     using StaticArrays: SVector
     using LinearAlgebra: dot
     import VisualGeometryToolkitCore as VgtkCore
-    # the paper's notation: public aliases, the same functions
-    @test VrtkCore.𝐩_of_pixel === sensor_position && VrtkCore.pixel_of_𝐩 === pixel_position && VrtkCore.ℐ_𝐮 === pixel_footprint &&
-          VrtkCore.𝐩_sample === sensor_sample && VrtkCore.𝐚_sample === aperture_sample && VrtkCore.𝐚_weight === aperture_weight &&
-          VrtkCore.𝐚_border === aperture_border_sample
 
     sq = SensorQuadrature(3)
     @test sum(sq.weights) ≈ 1

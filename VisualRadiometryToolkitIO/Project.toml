@@ -17,7 +17,7 @@ JSON = "1.13.4"
 StaticArrays = "1.9.24"
 VisualGeometryToolkitCore = "0.14"
 VisualGeometryToolkitIO = "0.12"
-VisualRadiometryToolkitCore = "0.1"
+VisualRadiometryToolkitCore = "0.2"
 julia = "1.13"
 
 [sources]

@@ -19,7 +19,6 @@
     @test world_point(b, SVector(0.0, 0.0)) ≈ 𝐨 && world_point(b, SVector(1.0, 1.0)) ≈ 𝐨 + 𝐮 + 𝐯
     @test collect(corners(b)) ≈ [𝐨, 𝐨 + 𝐮, 𝐨 + 𝐮 + 𝐯, 𝐨 + 𝐯]
     @test target_center(b) ≈ 𝐨 + 𝐮 / 2 + 𝐯 / 2
-    @test VrtkCore.𝔟 === target_center && VrtkCore.ρ_c === albedo            # the paper's notation: public aliases, the same functions
     @test board_normal(b) ≈ SVector(0.0, 0.0, -1.0)                           # towards the camera at the origin
     𝐛 = SVector(0.3, 0.7)
     @test VgtkCore.chart(b, world_point(b, 𝐛)) ≈ 𝐛

@@ -4,6 +4,7 @@
 # EnvironmentLight of a SphericalHarmonicMap, `max_degree`; a plain light refused; the basis convention pinned), the
 # bodies nested in another record, and the validator's refusals.
 @testitem "radiometric kinds: vignetting, environment light round trip" setup = [VRIoFixtures] begin
+    using VisualRadiometryToolkitCore: ProjectiveChart
     using VisualRadiometryToolkitCore: AbstractVignetting, TensorProductVignetting, RadialVignetting, LogVignetting, with_control_points,
         control_points, knot_vectors, EnvironmentLight, SphericalHarmonicMap, coefficients, max_degree
     using VisualGeometryToolkitCore: center, radius, with_unit, Rect
@@ -11,7 +12,7 @@
     mktempdir() do dir
         tv = with_control_points(TensorProductVignetting((5, 4), Rect(0.0, 0.0, 640.0, 480.0); degree = (2, 3)), [w(i, j) for i in 1:5, j in 1:4])
         rv = with_control_points(RadialVignetting(7, SVector(320.3, 241.7), 401.25), [w(i, 1) for i in 1:7])
-        pv = with_control_points(RadialVignetting(8, SVector(320.3, 241.7), 401.25; chart = :projective), [w(i, 1) for i in 1:8])
+        pv = with_control_points(RadialVignetting(8, SVector(320.3, 241.7), 401.25; chart = ProjectiveChart()), [w(i, 1) for i in 1:8])
         for v in (tv, rv, pv, LogVignetting(rv), LogVignetting(tv), LogVignetting(pv))
             p = joinpath(dir, "v.json")
             save(p, v)

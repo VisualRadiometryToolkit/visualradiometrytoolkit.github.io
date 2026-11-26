@@ -13,7 +13,7 @@
 #      TensorProductVignetting, RadialVignetting, LogVignetting: positions in pixels of the file's `units.pixel` (any
 #      registered pixel frame; the fields hold COLMAP pixels, so a file in another frame moves them by its offset on
 #      the way in), V unitless; a tensor surface's knots are stated (rebuilt exactly); a radial profile's are its
-#      count's, degree's and chart's (`RADIAL_CHARTS`, always stated: a declaration has no default).
+#      count's, degree's and chart's (a tag of `RADIAL_CHART_TAGS`, always stated: a declaration has no default).
 #
 # The body is a value on VisualGeometryToolkitIO's style, so another kind's record can nest it:
 # `JSON.lower(style, v)` and `JSON.lift(style, AbstractVignetting, record)`; its table is `VIGNETTING_BODY`. The kind's
@@ -33,7 +33,7 @@ _vignetting_body(T::Type{<:TensorProductVignetting}, self) = VgtkIO.object_spec(
 _vignetting_body(T::Type{<:RadialVignetting}, self) = VgtkIO.object_spec(
     :type => _vignetting_type(T), :degree => VgtkIO.integer_spec(; positive = true),
     :center => VgtkIO.array_spec(VgtkIO.real_spec(); length = 2), :radius => VgtkIO.real_spec(),
-    :chart => VgtkIO.named_spec(in(String.(RADIAL_CHARTS)), "a radial chart ($(join(String.(RADIAL_CHARTS), ", ")))"),
+    :chart => VgtkIO.named_spec(in(keys(RADIAL_CHART_TAGS)), "a radial chart ($(join(keys(RADIAL_CHART_TAGS), ", ")))"),
     :control_points => VgtkIO.array_spec(VgtkIO.real_spec()))
 _vignetting_body(T::Type{<:LogVignetting}, self) = VgtkIO.object_spec(:type => _vignetting_type(T), :spline => self)
 _vignetting_tags() = join(keys(VIGNETTING_TAGS), ", ")
@@ -90,7 +90,7 @@ end
 function JSON.lower(s::VgioStyle, v::RadialVignetting)
     c = _to_file(s)
     return (type = tag_of(VIGNETTING_TAGS, v), degree = only(spline_degree(v)), center = Float64.(collect(VgtkCore.center(v)) .+ c),
-            radius = Float64(field_radius(v)), chart = String(radial_chart(v)), control_points = Float64.(collect(vec(control_points(v)))))
+            radius = Float64(field_radius(v)), chart = tag_of(RADIAL_CHART_TAGS, radial_chart(v)), control_points = Float64.(collect(vec(control_points(v)))))
 end
 JSON.lower(s::VgioStyle, v::LogVignetting) = (type = tag_of(VIGNETTING_TAGS, v), spline = JSON.lower(s, log_spline(v)))
 JSON.lower(::VgioStyle, v::AbstractVignetting) = throw(ArgumentError("save: a $(typeof(v)) has no vgio/vignetting body ($(_vignetting_tags()))"))
@@ -106,12 +106,12 @@ end
 function _lift_vignetting(s::VgioStyle, ::Type{<:RadialVignetting}, b::Record)
     c = _from_file(s)
     P = Float64[Float64(x::Real) for x in b.control_points]
-    chart = Symbol(b.chart::String)
+    chart = RADIAL_CHART_TAGS[b.chart::String]()
     p = Int(b.degree)
     # the projective knots need more than 2p control points (VisualGeometryToolkitCore 0.10.11's rule, now this stack's
     # `projective_knots`: p − 1 knots beyond the rim at the pixel spacing); a record of fewer was written under the
     # earlier rule, which no reader rebuilds
-    (chart === :projective && length(P) <= 2p) && throw(ArgumentError(
+    (chart isa ProjectiveChart && length(P) <= 2p) && throw(ArgumentError(
         "load: a vgio/vignetting radial profile on the projective chart has $(length(P)) control points of degree $p; its knots " *
             "(VisualGeometryToolkitCore 0.10.11's projective_knots) need at least $(2p + 1) (2p + 1). A record of fewer " *
             "was written under the knot rule before Core 0.10.11 (one span beyond the rim): refit the profile"))

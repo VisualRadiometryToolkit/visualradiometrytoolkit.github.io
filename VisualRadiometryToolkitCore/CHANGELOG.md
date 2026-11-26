@@ -1,9 +1,35 @@
 # VisualRadiometryToolkitCore changelog
 
-## 0.1.2
+## 0.2.0 (unreleased)
 
 On VisualGeometryToolkitCore 0.14 (`[compat]` `"0.14"`), the release that moves estimation to `solve(problem,
-algorithm)`. This package calls no estimator, and no public name, signature or behaviour changes: a patch release.
+algorithm)`. This package calls no estimator. The stack's conformance audit (V1–V7) makes it a breaking minor: one
+name per thing, type arguments positional, and the radial chart a type. Every value is the same.
+
+### Breaking
+
+- **The paper's notation aliases are deleted** (one name per thing: no alias, no `const` rebinding). Each name is its
+  function's: `𝔭` → `center_of_projection`, `𝔣` → `focus_point`, `π̂⁻¹` → VisualGeometryToolkitCore's `backproject`
+  (its radiometric method, `backproject(camera, 𝐩, 𝐚)`), `t̂` → `inverse_focus_distance`, `𝔱` → `focus_distance`,
+  `𝐩_of_pixel` → `sensor_position`, `pixel_of_𝐩` → `pixel_position`, `ℐ_𝐮` → `pixel_footprint`, `𝐩_sample` →
+  `sensor_sample`, `𝐚_sample` → `aperture_sample`, `𝐚_weight` → `aperture_weight`, `𝐚_border` →
+  `aperture_border_sample`, `Θ_m_nonlinear` → `nonlinear_parameters`, `with_μ` → `with_diffuse_weight`, `𝛂` →
+  `roughness`, `𝛈` → `refractive_index`, `Λ_ggx` → `ggx_lambda`, `𝔟` → `target_center`, `ρ_c` → `albedo`. The
+  symbols stay the paper's notation in prose; the manual's notation table is gone with them.
+- **A type argument is positional** (the stack's signature rule: slot 4, never a keyword): `Focus(n, distance, W, H;
+  T)` → `Focus([T = Float64,] n, distance, W, H)`, `Focus(geometric, distance; n, T)` → `Focus([T,] geometric,
+  distance; n)`, `TensorProductVignetting(n, box; degree, T)` → `TensorProductVignetting([T,] n, box; degree)`,
+  `RadialVignetting(n, center, radius; degree, T, chart)` → `RadialVignetting([T,] n, center, radius; degree,
+  chart)`, `TexturedTarget(target, texture; …, T)` → `TexturedTarget([T,] target, texture; …)`.
+- **The radial chart is a type, not a Symbol**: `LinearChart()`, `ProjectiveChart()`, `EquisolidChart()` (new,
+  `public`, under `AbstractRadialChart`; the types the profiles already held privately as their chart parameter).
+  `chart = :projective` → `chart = ProjectiveChart()`; `BinnedRadialProfile(:equisolid, …)` →
+  `BinnedRadialProfile(EquisolidChart(), …)`; `radial_chart(v)` returns the chart value (`ProjectiveChart()`), not
+  a Symbol. `RADIAL_CHARTS` (a tuple of Symbols) is replaced by the `TagRegistry` `RADIAL_CHART_TAGS` (`"linear"`,
+  `"projective"`, `"equisolid"`: the stored spellings, unchanged). A chart that is not one is the keyword's
+  `TypeError`; `EquisolidChart()` for a fitted profile stays an `ArgumentError`.
+
+### Changed
 
 - The part replacers (`with_geometric`, `with_focus`, `with_aperture_radius`, `with_vignetting`) and a textured
   target's `with_state` replace their field with Accessors' `@set`, the stack's one idiom for a value with one part

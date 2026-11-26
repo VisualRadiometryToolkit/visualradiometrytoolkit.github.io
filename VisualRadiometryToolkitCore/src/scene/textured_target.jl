@@ -55,7 +55,7 @@ _plain_pose(pose) = throw(ArgumentError("TexturedTarget: the target's pose is a 
                                         "target is posed exactly: give the pose's value"))
 
 """
-    TexturedTarget(target::PosedTarget, texture; facing = nothing, sdf = nothing, page_mm = nothing)
+    TexturedTarget([T = Float64,] target::PosedTarget, texture; facing = nothing, sdf = nothing, page_mm = nothing)
 
 The textured target of Core's posed planar `target` whose `canvas` is the printed page — e.g. a calibration session's target record
 (VisualGeometryToolkitIO's rig/v6: its canvas and the canvas texture) — with the image's pixels `texture` laid over the canvas
@@ -63,8 +63,9 @@ texture's rectangle (the canvas's when it carries no texture). `facing` (a world
 page's normal the cameras see; `sdf` + `page_mm`: the distance map of the printed layout and the design size it spans in mm
 ([`with_sdf`](@ref); printed_edge.jl).
 """
-function TexturedTarget(target::VgtkCore.PosedTarget, texture::AbstractArray{<:Real, 3}; facing = nothing, sdf = nothing, page_mm = nothing,
-                       T::Type = Float64)
+TexturedTarget(target::VgtkCore.PosedTarget, texture::AbstractArray{<:Real, 3}; kw...) = TexturedTarget(Float64, target, texture; kw...)
+function TexturedTarget(::Type{T}, target::VgtkCore.PosedTarget, texture::AbstractArray{<:Real, 3}; facing = nothing, sdf = nothing,
+                        page_mm = nothing) where {T}
     cv = VgtkCore.canvas(VgtkCore.model(target))
     cv === nothing && throw(ArgumentError("TexturedTarget: the target carries no canvas (the printed page)"))
     r = VgtkCore.Rect(cv.texture === nothing ? cv : cv.texture)            # the page in the design chart (metres, y up)
@@ -103,7 +104,7 @@ function TexturedTarget(𝐨::AbstractVector, 𝐮_B::AbstractVector, 𝐯_B::Ab
     page = VgtkCore.Size2(W, H)
     pose = VgtkCore.EuclideanMap(VgtkCore.Rotations.RotMatrix{3, Float64}(hcat(e_u, -e_v, -n)), o + H * e_v)   # design → world
     target = VgtkCore.PosedTarget(VgtkCore.PlanarTarget(design; board = VgtkCore.Board(page), canvas = VgtkCore.Canvas(page)), pose)
-    return TexturedTarget(target, texture; facing, sdf, page_mm, T)
+    return TexturedTarget(T, target, texture; facing, sdf, page_mm)
 end
 
 """The board with the distance map `sdf` (`H_s × W_s`, signed distance [mm] to the nearest ink edge of the design, + on paper)
@@ -119,10 +120,9 @@ with_sdf(b::TexturedTarget{T}, sdf::AbstractMatrix, page_mm) where {T} =
 """
     target_center(b::TexturedTarget) -> SVector{3}
 
-The target's centre, the page's (world): the paper's `𝔟`, a public alias.
+The target's centre, the page's (world): the paper's `𝔟`.
 """
 target_center(b::TexturedTarget) = world_point(b, SVector(0.5, 0.5))
-const 𝔟 = target_center   # the paper's notation: the same function
 """The page's corners: `𝐨`, `𝐨 + 𝐮_B`, `𝐨 + 𝐮_B + 𝐯_B`, `𝐨 + 𝐯_B`."""
 corners(b::TexturedTarget) = (world_point(b, SVector(0.0, 0.0)), world_point(b, SVector(1.0, 0.0)), world_point(b, SVector(1.0, 1.0)),
                              world_point(b, SVector(0.0, 1.0)))
@@ -165,12 +165,11 @@ end
 """
     albedo(b::TexturedTarget, 𝐛) -> SVector{3}
 
-Albedo (RGB) of the target's texture at the page chart 𝐛, the paper's `ρ_c(𝐛)` (public alias `ρ_c`): VisualGeometryToolkitCore's
+Albedo (RGB) of the target's texture at the page chart 𝐛, the paper's `ρ_c(𝐛)`: VisualGeometryToolkitCore's
 `bilinear_sample` (half-texel convention, clamped to the edge, a non-finite 𝐛 reads the corner texel; dual-safe: the texel is chosen
 on the value part). [`printed_albedo`](@ref) is the albedo of the target as printed (the printed-edge model where it has a distance map).
 """
 @inline albedo(b::TexturedTarget, 𝐛::StaticVector{2}) = VgtkCore.bilinear_sample(b.texture, Val(3), 𝐛)
-const ρ_c = albedo   # the paper's notation: the same function
 
 # --- the target's state: read, replaced by value (the arrays untouched), and its parts replaced on the target
 """
