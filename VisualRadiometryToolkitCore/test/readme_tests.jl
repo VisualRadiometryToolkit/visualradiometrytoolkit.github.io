@@ -12,7 +12,9 @@
 @testitem "README: the install line names what the example loads; the example runs in a fresh environment" begin
     using Test
     import VisualGeometryToolkitCore as VgtkCore
-    VgtkCore.test_readme_example(pkgdir(VisualRadiometryToolkitCore); checks = """
+    VgtkCore.test_readme_example(pkgdir(VisualRadiometryToolkitCore);
+        # TEMPORARY: solve branch; remove when Core 0.14 etc. are registered (no registry has Core 0.14 yet)
+        developed = Dict("VisualGeometryToolkitCore" => pkgdir(VgtkCore)), checks = """
     # What the example's comments claim: no vignetting was stated, the focus
     # point is at the focus distance, and the back-projected direction is unit.
     @test readme.camera isa readme.RadiometricCameraModel

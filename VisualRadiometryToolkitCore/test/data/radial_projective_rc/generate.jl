@@ -1,7 +1,7 @@
 # =============================================================================
 # The projective radial chart's equivalence fixture — RadiometricCamera's
 # `ProjectiveRadialVignetting` (src/camera/vignetting.jl), the implementation
-# VisualGeometryToolkitCore's `RadialVignetting(…; chart = :projective)` ports.
+# VisualGeometryToolkitCore's `RadialVignetting(…; chart = ProjectiveChart())` ports.
 # =============================================================================
 #
 # Written ONCE from RadiometricCamera's file itself: src/camera/vignetting.jl of

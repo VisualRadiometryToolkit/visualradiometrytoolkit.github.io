@@ -6,7 +6,7 @@
     using Test
     using VisualRadiometryToolkitCore: Focus, geometric, focus, aperture_radius, with_geometric, with_focus, with_aperture_radius,
                                        with_vignetting, chief_ray, chief_direction, center_of_projection, focus_point, aperture_direction, world_ray,
-                                       inverse_focus_distance, focus_distance, n_nodes, 𝔭, 𝔣, π̂⁻¹, t̂, 𝔱
+                                       inverse_focus_distance, focus_distance, n_nodes
     using StaticArrays: SVector, SMatrix
     using LinearAlgebra: I, norm, normalize
     import ForwardDiff
@@ -40,9 +40,8 @@
     # the camera-frame maps: one implementation on the parts, the camera forwards
     𝐩 = SVector(16.8, 9.6); 𝐚 = SVector(0.02, -0.01, 0.0)
     @test center_of_projection == SVector(0.0, 0.0, 0.0)
-    # the paper's notation: public aliases of the same objects; π̂⁻¹ is VisualGeometryToolkitCore's `backproject` (its radiometric
-    # methods take the aperture point as a third argument)
-    @test 𝔭 === center_of_projection && 𝔣 === focus_point && t̂ === inverse_focus_distance && 𝔱 === focus_distance && π̂⁻¹ === VgtkCore.backproject
+    # the radiometric back-projection (the paper's π̂⁻¹) is VisualGeometryToolkitCore's `backproject`: its radiometric methods take the
+    # aperture point as a third argument
     @test VgtkCore.backproject(c, 𝐩, 𝐚) === aperture_direction(lens, foc, 𝐩, 𝐚) && VgtkCore.backproject(c, 𝐩) == VgtkCore.backproject(lens, 𝐩)
     # `lens` of a radiometric camera is refused by name: its geometric camera's is `lens(geometric(camera))`
     @test_throws "a radiometric camera's geometric camera is `geometric(camera)`, its lens model `lens(geometric(camera))`" VgtkCore.lens(c)
@@ -51,12 +50,12 @@
     @test chief_direction(c, 𝐩) === chief_direction(lens, 𝐩)
     @test inverse_focus_distance(c, 𝐩) === inverse_focus_distance(lens, foc, 𝐩) === inverse_focus_distance(foc, 𝐩)                                   # the sensor chart: the surface at 𝐩
     @test focus_point(c, 𝐩) === focus_point(lens, foc, 𝐩) && norm(focus_point(c, 𝐩)) ≈ 1.5
-    @test π̂⁻¹(c, 𝐩, 𝔭) ≈ chief_ray(lens, 𝐩)                                           # π̂⁻¹(𝐩, 𝔭) = π⁻¹(𝐩)
-    @test π̂⁻¹(c, 𝐩, 𝐚) ≈ normalize(focus_point(c, 𝐩) - 𝐚)                                       # the (𝔣 − 𝐚)/‖𝔣 − 𝐚‖ form
-    @test π̂⁻¹(c, 𝐩, 𝐚) === aperture_direction(lens, foc, 𝐩, 𝐚) === aperture_direction(chief_direction(lens, 𝐩), 𝐚, inverse_focus_distance(foc, 𝐩)) === π̂⁻¹(c, 𝐩, 𝐚, inverse_focus_distance(c, 𝐩)) === aperture_direction(lens, 𝐩, 𝐚, inverse_focus_distance(c, 𝐩))
+    @test VgtkCore.backproject(c, 𝐩, center_of_projection) ≈ chief_ray(lens, 𝐩)                                           # π̂⁻¹(𝐩, 𝔭) = π⁻¹(𝐩)
+    @test VgtkCore.backproject(c, 𝐩, 𝐚) ≈ normalize(focus_point(c, 𝐩) - 𝐚)                                       # the (𝔣 − 𝐚)/‖𝔣 − 𝐚‖ form
+    @test VgtkCore.backproject(c, 𝐩, 𝐚) === aperture_direction(lens, foc, 𝐩, 𝐚) === aperture_direction(chief_direction(lens, 𝐩), 𝐚, inverse_focus_distance(foc, 𝐩)) === VgtkCore.backproject(c, 𝐩, 𝐚, inverse_focus_distance(c, 𝐩)) === aperture_direction(lens, 𝐩, 𝐚, inverse_focus_distance(c, 𝐩))
     pose = VgtkCore.EuclideanMap(SMatrix{3, 3}(1.0I), SVector(0.0, 0.0, -1.5); check = false)
     o, d = world_ray(c, pose, 𝐩, 𝐚)
-    @test o ≈ pose.t + pose.R * 𝐚 && norm(d) ≈ 1 && (o, d) == world_ray(VgtkCore.unlabel(pose), 𝐚, π̂⁻¹(c, 𝐩, 𝐚))
+    @test o ≈ pose.t + pose.R * 𝐚 && norm(d) ≈ 1 && (o, d) == world_ray(VgtkCore.unlabel(pose), 𝐚, VgtkCore.backproject(c, 𝐩, 𝐚))
     # generic in the element type: a Float32 camera stays Float32, a dual sensor position carries its partials
     l32 = VgtkCore.convert_eltype(Float32, lens); f32 = VgtkCore.convert_eltype(Float32, foc)
     @test aperture_direction(l32, f32, SVector{2, Float32}(𝐩), SVector{3, Float32}(𝐚)) isa SVector{3, Float32}

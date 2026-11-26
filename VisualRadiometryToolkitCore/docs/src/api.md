@@ -24,38 +24,14 @@ argument: `backproject(camera, 𝐩)` is the geometric camera's chief ray,
 parts it is `aperture_direction`.
 
 ```@docs
-VisualRadiometryToolkitCore.π̂⁻¹(::RadiometricCameraModel, ::VisualRadiometryToolkitCore.StaticVector{2}, ::VisualRadiometryToolkitCore.StaticVector{3})
+VisualRadiometryToolkitCore.backproject(::RadiometricCameraModel, ::VisualRadiometryToolkitCore.StaticVector{2}, ::VisualRadiometryToolkitCore.StaticVector{3})
 ```
-
-### The paper's notation
-
-The public names are descriptive. The symbols of the paper are public aliases,
-each bound to the same function or constant as its descriptive name (one
-definition; `VisualRadiometryToolkitCore.𝔣 === VisualRadiometryToolkitCore.focus_point`):
-
-| Paper | Alias | Name |
-|:------|:------|:-----|
-| centre of projection `𝔭` | `𝔭` | `center_of_projection` |
-| focus point `𝔣(𝐩)` | `𝔣` | `focus_point` |
-| radiometric back-projection `π̂⁻¹(𝐩, 𝐚)` | `π̂⁻¹` | `backproject(camera, 𝐩, 𝐚)` (VisualGeometryToolkitCore's) |
-| inverse focus distance `t̂(𝐩)` | `t̂` | `inverse_focus_distance` |
-| focus distance `𝔱(𝐩)` | `𝔱` | `focus_distance` |
-| sensor position of a pixel, its inverse | `𝐩_of_pixel`, `pixel_of_𝐩` | `sensor_position`, `pixel_position` |
-| pixel footprint `ℐ_𝐮` | `ℐ_𝐮` | `pixel_footprint` |
-| sensor sample `𝐩_k` | `𝐩_sample` | `sensor_sample` |
-| aperture sample `𝐚_l`, its weight, a border sample | `𝐚_sample`, `𝐚_weight`, `𝐚_border` | `aperture_sample`, `aperture_weight`, `aperture_border_sample` |
-| `Θ_m ∖ {μ}` | `Θ_m_nonlinear` | `nonlinear_parameters` |
-| diffuse weight `μ` | `with_μ` | `with_diffuse_weight` |
-| roughness `α(𝐛)`, refractive index `η(𝐛)` | `𝛂`, `𝛈` | `roughness`, `refractive_index` |
-| Smith `Λ` | `Λ_ggx` | `ggx_lambda` |
-| target centre `𝔟` | `𝔟` | `centroid` (VisualGeometryToolkitCore's) |
-| texture albedo `ρ_c(𝐛)` | `ρ_c` | `albedo` |
 
 ```@autodocs
 Modules = [VisualRadiometryToolkitCore]
 Private = false
 Pages = ["camera/radiometric_camera.jl", "VisualRadiometryToolkitCore.jl"]
-Filter = t -> t !== VisualRadiometryToolkitCore && t !== VisualRadiometryToolkitCore.π̂⁻¹
+Filter = t -> t !== VisualRadiometryToolkitCore && t !== VisualRadiometryToolkitCore.backproject
 ```
 
 ## Focus
@@ -102,13 +78,14 @@ smooth at their centre. The estimators that fit them are their owners': a
 radiometric calibration's, a panorama's self-calibration.
 
 A radial profile reads its normalized radius on a chart of the distance from
-its centre ([`VisualRadiometryToolkitCore.RADIAL_CHARTS`](@ref)): linear,
-`ρ = d / radius`, constant beyond the radius; or projective, `ρ = d / (radius + d)`,
-½ at the radius and never beyond the knots.
+its centre ([`VisualRadiometryToolkitCore.AbstractRadialChart`](@ref)): `LinearChart()`,
+`ρ = d / radius`, constant beyond the radius; or `ProjectiveChart()`, `ρ = d / (radius + d)`,
+½ at the radius and never beyond the knots. A stored chart is its tag
+([`VisualRadiometryToolkitCore.RADIAL_CHART_TAGS`](@ref)).
 
 ```julia
 v = RadialVignetting(12, SVector(2128.0, 1424.0), 1700.0)   # control points, centre and radius (camera pixels); V ≡ 1
-w = RadialVignetting(15, SVector(2128.0, 1424.0), 2560.0; chart = :projective)   # ρ = ½ at the farthest corner
+w = RadialVignetting(15, SVector(2128.0, 1424.0), 2560.0; chart = ProjectiveChart())   # ρ = ½ at the farthest corner
 v(SVector(2500.0, 1300.0))                                   # V at a sensor point
 ```
 

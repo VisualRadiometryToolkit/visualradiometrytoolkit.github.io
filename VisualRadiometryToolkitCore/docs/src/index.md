@@ -32,8 +32,8 @@ The camera model is that of the paper
   a Cook–Torrance [`VisualRadiometryToolkitCore.Material`](@ref) and a
   [`TexturedTarget`](@ref) with its printed-edge model and its state.
 
-The public names are descriptive; the symbols of the paper are public aliases
-of the same functions ([The paper's notation](@ref)).
+The public names are descriptive: each function is named for what it computes,
+and the paper's symbols stay in the paper.
 
 ## Installation
 
@@ -61,7 +61,7 @@ using LinearAlgebra: norm
 
 # A geometric camera on a 1200 × 800 image: focal length 900 pixels, a pinhole lens.
 K = CameraCalibrationMat(SMatrix{3, 3}(900.0, 0, 0, 0, 900.0, 0, 600.0, 400.0, 1))
-geometric = BoundedCamera(CameraModel(LogicalIntrinsics(K), Pinhole()), Size2(1200, 800))
+geometric = BoundedCamera(CameraModel(LogicalIntrinsics(K), Lens(Perspective())), Size2(1200, 800))
 
 # The radiometric camera: focused at 1.5 m, with an aperture of radius 4 mm.
 camera = RadiometricCameraModel(geometric; focus = 1.5m, aperture_radius = 4mm)

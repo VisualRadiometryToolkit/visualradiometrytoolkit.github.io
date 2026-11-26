@@ -55,7 +55,7 @@ _plain_pose(pose) = throw(ArgumentError("TexturedTarget: the target's pose is a 
                                         "target is posed exactly: give the pose's value"))
 
 """
-    TexturedTarget(target::PosedTarget, texture; sdf = nothing, page_mm = nothing)
+    TexturedTarget([T = Float64,] target::PosedTarget, texture; sdf = nothing, page_mm = nothing)
 
 The textured target of Core's posed planar `target` — e.g. a calibration session's target record (VisualGeometryToolkitIO's rig/v6:
 its canvas and the canvas texture), or a bare board posed in the world, `PosedTarget(Board(Size2(width = 2m, height = 2m)), pose)` —
@@ -64,7 +64,9 @@ with the image's pixels `texture` laid over the canvas texture's rectangle, else
 pose ([`with_facing`](@ref)); until then it faces the design's +z, the printed side of Core's design chart. `sdf` + `page_mm`: the
 distance map of the printed layout and the design size it spans in mm ([`with_sdf`](@ref); printed_edge.jl).
 """
-function TexturedTarget(target::VgtkCore.PosedTarget, texture::AbstractArray{<:Real, 3}; sdf = nothing, page_mm = nothing, T::Type = Float64)
+TexturedTarget(target::VgtkCore.PosedTarget, texture::AbstractArray{<:Real, 3}; kw...) = TexturedTarget(Float64, target, texture; kw...)
+function TexturedTarget(::Type{T}, target::VgtkCore.PosedTarget, texture::AbstractArray{<:Real, 3}; sdf = nothing,
+                        page_mm = nothing) where {T}
     target = VgtkCore.has_units(target) ? VgtkCore.ustrip(VgtkCore.m, target) : target   # metres at the boundary, plain inside
     r = _page_rect(VgtkCore.model(target))                                 # the page in the design chart (metres, y up)
     W, H = Float64(r.widths[1]), Float64(r.widths[2])
@@ -100,7 +102,7 @@ function TexturedTarget(𝐨::AbstractVector, 𝐮_B::AbstractVector, 𝐯_B::Ab
     page = VgtkCore.Size2(W, H)
     pose = VgtkCore.EuclideanMap(VgtkCore.Rotations.RotMatrix{3, Float64}(hcat(e_u, -e_v, -n)), o + H * e_v)   # design → world
     target = VgtkCore.PosedTarget(VgtkCore.PlanarTarget(design; board = VgtkCore.Board(page), canvas = VgtkCore.Canvas(page)), pose)
-    return TexturedTarget(target, texture; sdf, page_mm, T)
+    return TexturedTarget(T, target, texture; sdf, page_mm)
 end
 
 """
@@ -129,10 +131,9 @@ with_sdf(b::TexturedTarget{T}, sdf::AbstractMatrix, page_mm) where {T} =
 """
     centroid(b::TexturedTarget) -> SVector{3}
 
-The target's centre, the page's (world): VisualGeometryToolkitCore's `centroid` of a shape; the paper's `𝔟` is its public alias.
+The target's centre, the page's (world): VisualGeometryToolkitCore's `centroid` of a shape: the paper's `𝔟`.
 """
 centroid(b::TexturedTarget) = world_point(b, SVector(0.5, 0.5))
-const 𝔟 = centroid   # the paper's notation: the same function
 """
     EnvironmentLight(map, board::TexturedTarget, poses)
 
@@ -188,12 +189,11 @@ end
 """
     albedo(b::TexturedTarget, 𝐛) -> SVector{3}
 
-Albedo (RGB) of the target's texture at the page chart 𝐛, the paper's `ρ_c(𝐛)` (public alias `ρ_c`): VisualGeometryToolkitCore's
+Albedo (RGB) of the target's texture at the page chart 𝐛, the paper's `ρ_c(𝐛)`: VisualGeometryToolkitCore's
 `bilinear_sample` (half-texel convention, clamped to the edge, a non-finite 𝐛 reads the corner texel; dual-safe: the texel is chosen
 on the value part). [`printed_albedo`](@ref) is the albedo of the target as printed (the printed-edge model where it has a distance map).
 """
 @inline albedo(b::TexturedTarget, 𝐛::StaticVector{2}) = VgtkCore.bilinear_sample(b.texture, Val(3), 𝐛)
-const ρ_c = albedo   # the paper's notation: the same function
 
 # --- the target's state: read, replaced by value (the arrays untouched), and its parts replaced on the target
 """
@@ -202,8 +202,7 @@ const ρ_c = albedo   # the paper's notation: the same function
 The target with its state replaced, by value: the same page, texture and distance map (no array is copied or converted), the state
 in ITS element type — dual numbers of a Jacobian, Float32 on a device.
 """
-@inline with_state(b::TexturedTarget, state::TargetState) =
-    TexturedTarget(b.target, b.quad, b.size, b.facing, b.texture, b.sdf, b.page_mm, b.warping, state)
+@inline with_state(b::TexturedTarget, state::TargetState) = @set b.state = state
 @inline with_h(b::TexturedTarget, h) = with_state(b, with_h(b.state, h))
 @inline with_edge(b::TexturedTarget, edge) = with_state(b, with_edge(b.state, edge))
 @inline with_inplane(b::TexturedTarget, θ) = with_state(b, with_inplane(b.state, θ))

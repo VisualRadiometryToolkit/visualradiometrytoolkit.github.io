@@ -61,7 +61,7 @@ its own state, a `TargetState`: the nodal heights of its warping, the printed
 edge and the in-plane print error, isbits and replaced by value
 (`with_state`, `with_h`, `with_edge`, `with_inplane`), so a kernel keeps the
 target's arrays on a device and differentiates the state. Its centre is
-VisualGeometryToolkitCore's `centroid`, the paper's `𝔟` (a public alias).
+VisualGeometryToolkitCore's `centroid`, the paper's `𝔟`.
 
 A bare board posed in the world is a target: `TexturedTarget(PosedTarget(Board(Size2(width = 2m, height = 2m), [-1m, -1m]),
 pose), texture)` lays the texture over the board when the target has no canvas. The board faces the side its cameras are on:

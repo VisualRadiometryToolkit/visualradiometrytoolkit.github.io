@@ -28,6 +28,7 @@ follows its conventions; nothing there depends on this.
 module VisualRadiometryToolkitCore
 
 using StaticArrays: SVector, SMatrix, StaticVector
+using Accessors: @set   # a part replaced by value: the camera's `with_*`, a textured target's `with_state` (the stack's one idiom)
 using LinearAlgebra: LinearAlgebra, I, cross, dot, norm, normalize
 using Adapt: Adapt, adapt   # a textured target's arrays move to a device (scene/textured_target.jl)
 using QuadGK: gauss   # the Gauss–Legendre nodes of the sensor rule (sensor/quadrature.jl)
@@ -55,7 +56,7 @@ public log_spline        # a LogVignetting's spline of log V
 public VIGNETTING_TAGS   # the fields' TagRegistry: the `type` of VisualRadiometryToolkitIO's vignetting body
 public coefficient_jacobian, active_coefficients, control_points, with_control_points, n_control_points, knot_vectors, spline_degree,
        field_radius, radial_coordinate, pole_regular_basis   # the fields' basis, accessors and a radial profile's regular subspace
-public RADIAL_CHARTS, BinnedRadialProfile, projective_chart, projective_knots, radial_chart, with_center, center_gradient   # a radial profile's chart and centre; a measured profile
+public AbstractRadialChart, LinearChart, ProjectiveChart, EquisolidChart, RADIAL_CHART_TAGS, BinnedRadialProfile, projective_chart, projective_knots, radial_chart, with_center, center_gradient   # a radial profile's chart and centre; a measured profile
 export EnvironmentLight, SphericalHarmonicMap   # the scene's light: radiance from every direction on a sphere about a centre, in real SH (scene/lights.jl)
 public radiance, exit_direction, radiance_map, coefficients, with_coefficients, max_degree, sh_basis, sh_count, sh_index   # its evaluation, accessors and the SH basis
 
@@ -63,25 +64,19 @@ export RadiometricCameraModel   # the radiometric camera: a geometric camera wit
 export with_vignetting   # a radiometric camera's vignetting replaced: the start of a calibration
 public geometric, focus, aperture_radius, with_geometric, with_focus, with_aperture_radius   # its parts and their replacers
 public chief_ray, chief_direction, center_of_projection, focus_point, aperture_direction, world_ray   # its camera-frame maps: the chief ray, the focus point, the back-projection from the aperture on the camera's parts (a camera's is `backproject(camera, 𝐩, 𝐚)`), a ray in the world
-public 𝔭, 𝔣, π̂⁻¹   # the paper's notation: aliases of center_of_projection, focus_point and VisualGeometryToolkitCore's backproject
 public Focus, FocusSpline, n_nodes, inverse_focus_distance, focus_distance   # the focus surface: the inverse focus distance as a thin plate spline, and its host-side solver (camera/focus.jl)
-public t̂, 𝔱   # the paper's notation: aliases of inverse_focus_distance and focus_distance
 public sensor_position, pixel_position, pixel_footprint, luma, luma_image   # the sensor domain: Julia's pixel indices and sensor positions, a pixel's footprint, luma (sensor/notation.jl)
-public 𝐩_of_pixel, pixel_of_𝐩, ℐ_𝐮   # the paper's notation: aliases of sensor_position, pixel_position and pixel_footprint
 public SensorQuadrature, ApertureQuadrature, sensor_samples, aperture_samples, aperture_border, sensor_sample, aperture_sample,
        aperture_weight, aperture_border_sample, n_disc, n_border   # the rules on a pixel and on the aperture disc and its border (sensor/quadrature.jl)
-public 𝐩_sample, 𝐚_sample, 𝐚_weight, 𝐚_border   # the paper's notation: aliases of sensor_sample, aperture_sample, aperture_weight and aperture_border_sample
 export Material   # a surface's reflectance
 public diffuse_weight, nonlinear_parameters, with_nonlinear, with_diffuse_weight, texture_weight, roughness, refractive_index,
        ggx_distribution, ggx_lambda, ggx_masking, ggx_masking_shadowing, fresnel_dielectric, sample_visible_normal,
        visible_normal_density, reflection_pdf, reflect, cook_torrance_terms, cook_torrance   # a surface's reflectance: the Cook–Torrance BSDF and its GGX pieces (scene/materials.jl)
-public Θ_m_nonlinear, with_μ, 𝛂, 𝛈, Λ_ggx   # the paper's notation: aliases of nonlinear_parameters, with_diffuse_weight, roughness, refractive_index and ggx_lambda
 export TexturedTarget   # a printed planar target: VisualGeometryToolkitCore's posed target with its texture, printed edge and state (scene/textured_target.jl)
 public TargetState, with_state, with_h, with_edge, with_inplane, height_on, inplane_on, ink_spread, print_blur,
        EDGE_NC, HEIGHT_NC, HEIGHT_NODES, INPLANE_NC   # the target's own state: its warping, its printed edge, its in-plane print error (scene/target_state.jl)
 public with_sdf, with_facing, has_sdf, posed_target, board_normal, world_point, corners, texture_size, intersect_board, board_plane_hit,
        inside, albedo, printed_albedo, edge_albedo, physical_albedo, anchored_albedo   # its geometry (the page, its chart, a ray's hit) and its appearance (the texture, the printed edge)
-public 𝔟, ρ_c   # the paper's notation: aliases of VisualGeometryToolkitCore's centroid (a target's centre) and albedo
 public warping_nodes, warping_aspect, warping_field, flat_surface, board_height, board_relief, is_warped, BoardRays,
        inplane_calibration, placed_chart, page_fraction, design_chart, physical_chart, page_points   # its warping and in-plane print error on the state (scene/target_warping.jl)
 public CONTRACT_GENERICS   # the functions another package may add methods to

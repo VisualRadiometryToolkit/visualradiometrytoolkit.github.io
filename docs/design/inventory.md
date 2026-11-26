@@ -56,8 +56,9 @@ VisualGeometryToolkitIO; the vignetting by VisualRadiometryToolkitIO).
 | `Material` and the Cook–Torrance reflectance with its GGX pieces | `src/scene/materials.jl` |
 | `TexturedTarget` (RadiometricCamera's printed target: a posed planar target of VisualGeometryToolkitCore with its texture), its state `TargetState` (warping heights, printed edge, in-plane print error), the printed-edge model, the target's charts and intersection | `src/scene/` |
 
-The public names are descriptive ASCII; the paper's symbols (`𝔣`, `t̂`, `π̂⁻¹`,
-`𝔭`, `ρ_c`, `𝔟`, …) are constants bound to the same functions.
+The public names are descriptive ASCII. Until 0.2.0 the paper's symbols (`𝔣`,
+`t̂`, `π̂⁻¹`, `𝔭`, `ρ_c`, `𝔟`, …) were constants bound to the same functions; they
+are deleted (one name per thing), and the paper's symbol map lives in the paper.
 
 Stays in RadiometricCamera (the paper's calibration method): the kernels'
 `View`, the flux and device kernels, the Monte-Carlo radiance sampler, the

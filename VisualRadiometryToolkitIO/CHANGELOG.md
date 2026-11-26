@@ -2,8 +2,16 @@
 
 ## 0.1.2
 
-On VisualRadiometryToolkitCore 0.2 (`[compat]` `"0.2"`), whose breaking changes (a textured target's facing, its centre's
-name) touch no record of this package. No source changed.
+On VisualGeometryToolkitCore 0.14 and VisualGeometryToolkitIO 0.12 (`[compat]` `"0.14"`, `"0.12"`): the releases
+that move estimation to `solve(problem, algorithm)` and carry a fit record through IO's style codec. This package
+reads and writes no fit record. The pixel frame of the values is spelled `PixelFrame{:colmap}` where it is used, not
+held in a private `const` (VisualGeometryToolkitCore 0.14's naming rule R20: no `const` names one concrete
+instantiation of a stack type).
+
+On VisualRadiometryToolkitCore 0.2 (`[compat]` `"0.2"`). Its breaking changes to a textured target (its facing, its
+centre's name) touch no record of this package. A radial chart is a type there, so the vignetting and radial-profile
+bodies read and write it through VisualRadiometryToolkitCore's `RADIAL_CHART_TAGS`. No public name, schema or file
+changes: the stored `chart` strings and every file are as before.
 
 ## 0.1.1
 

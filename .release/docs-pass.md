@@ -1,3 +1,17 @@
+docs-pass: 73f8075
+landing: this repository's `site/` (its "Get started" lead names the packages' version: 0.1.2)
+
+# VisualRadiometryToolkitCore 0.1.2, VisualRadiometryToolkitIO 0.1.2 docs review (the Core 0.14 solve branch)
+
+On VisualGeometryToolkitCore "0.14" and VisualGeometryToolkitIO "0.12" in both packages and their test/ and docs/
+projects. No public name, signature or docstring changed. The one example (README and manual Home page of
+VisualRadiometryToolkitCore) builds its pinhole lens as `Lens(Perspective())`, the retired alias `Pinhole` gone; the
+README tests run it in a fresh environment. The CHANGELOGs name the release. Searched: the READMEs, the docs pages,
+the guides and the site for `Pinhole`, the setters' bodies and a VisualGeometryToolkit version. Both manuals build
+with checkdocs, doctests and linkcheck, no warning.
+
+---
+
 docs-pass: fa66cb0
 landing: this repository's `site/` (read, not edited: its cards and install lines name no VisualGeometryToolkit version)
 

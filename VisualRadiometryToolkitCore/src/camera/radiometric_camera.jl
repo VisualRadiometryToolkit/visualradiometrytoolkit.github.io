@@ -77,40 +77,41 @@ _focus_surface(geometric, focus::Focus) = focus
 _focus_surface(geometric, distance) = Focus(geometric, distance)
 
 """
-    Focus(geometric, distance; n = 3, T = Float64)
+    Focus([T = Float64,] geometric, distance; n = 3)
 
 The constant focus surface `𝔱 ≡ distance` (a length, or plain metres) on the `n × n` grid of the image of the geometric camera
-`geometric` (its `extent`): `Focus(n, distance, W, H)`.
+`geometric` (its `extent`): `Focus(T, n, distance, W, H)`.
 """
-function Focus(geometric::BoundedCamera, distance; n::Integer = 3, T = Float64)
+function Focus(::Type{T}, geometric::BoundedCamera, distance; n::Integer = 3) where {T}
     W, H = extent(geometric)
-    return Focus(n, strip_or_bare(VgtkCore.m, distance), W, H; T)
+    return Focus(T, n, strip_or_bare(VgtkCore.m, distance), W, H)
 end
+Focus(geometric::BoundedCamera, distance; n::Integer = 3) = Focus(Float64, geometric, distance; n)
 
 """
     with_geometric(camera::RadiometricCameraModel, geometric) -> RadiometricCameraModel
 
 The camera with its geometric camera (the field `geometric`, Θ_d) replaced.
 """
-with_geometric(c::RadiometricCameraModel, geometric) = RadiometricCameraModel(geometric, c.focus, c.aperture_radius, c.vignetting)
+with_geometric(c::RadiometricCameraModel, geometric) = @set c.geometric = geometric
 """
     with_focus(camera::RadiometricCameraModel, focus::Focus) -> RadiometricCameraModel
 
 The camera with its focus surface (Θ_f) replaced.
 """
-with_focus(c::RadiometricCameraModel, f::Focus) = RadiometricCameraModel(c.geometric, f, c.aperture_radius, c.vignetting)
+with_focus(c::RadiometricCameraModel, f::Focus) = @set c.focus = f
 """
     with_aperture_radius(camera::RadiometricCameraModel, r) -> RadiometricCameraModel
 
 The camera with its aperture radius r (metres) replaced.
 """
-with_aperture_radius(c::RadiometricCameraModel, r::Real) = RadiometricCameraModel(c.geometric, c.focus, r, c.vignetting)
+with_aperture_radius(c::RadiometricCameraModel, r::Real) = @set c.aperture_radius = r
 """
     with_vignetting(camera::RadiometricCameraModel, vignetting::AbstractVignetting) -> RadiometricCameraModel
 
 The camera with its vignetting replaced.
 """
-with_vignetting(c::RadiometricCameraModel, v::AbstractVignetting) = RadiometricCameraModel(c.geometric, c.focus, c.aperture_radius, v)
+with_vignetting(c::RadiometricCameraModel, v::AbstractVignetting) = @set c.vignetting = v
 """
     focus(camera::RadiometricCameraModel) -> Focus
 
@@ -137,16 +138,9 @@ backproject(c::RadiometricCameraModel, 𝐩) = backproject(c.geometric, 𝐩)
 """
     center_of_projection
 
-The centre of projection, the origin of the camera frame: the paper's `𝔭` (a public alias, the same constant).
+The centre of projection, the origin of the camera frame: the paper's `𝔭`.
 """
 const center_of_projection = SVector(0.0, 0.0, 0.0)
-"""
-    𝔭
-
-The paper's notation of [`center_of_projection`](@ref): the same constant.
-"""
-const 𝔭 = center_of_projection
-
 """
     chief_ray(geometric, 𝐩) -> SVector{3}
 
@@ -182,7 +176,7 @@ Dual-generic: when `π⁻¹` carries partials the normalisation projects them on
     inverse_focus_distance(geometric, focus::Focus, 𝐩)
     inverse_focus_distance(camera::RadiometricCameraModel, 𝐩)
 
-The camera's inverse focus distance at the sensor position 𝐩 (the paper's `t̂(𝐩)`; public alias `t̂`): the focus
+The camera's inverse focus distance at the sensor position 𝐩 (the paper's `t̂(𝐩)`): the focus
 surface's thin plate spline at 𝐩.
 """
 @inline inverse_focus_distance(geometric, f::Focus, 𝐩::StaticVector{2}) = inverse_focus_distance(f, 𝐩)
@@ -192,12 +186,11 @@ surface's thin plate spline at 𝐩.
     focus_point(geometric, focus::Focus, 𝐩) -> SVector{3}
     focus_point(camera::RadiometricCameraModel, 𝐩) -> SVector{3}
 
-Focus point 𝔣(𝐩) = 𝔱(𝐩) d̂(𝐩) on the Petzval surface (the paper's `𝔣`, a public alias), d̂ the UNIT chief direction (camera frame,
+Focus point 𝔣(𝐩) = 𝔱(𝐩) d̂(𝐩) on the Petzval surface (the paper's `𝔣`), d̂ the UNIT chief direction (camera frame,
 the centre of projection 𝔭 = 0): ‖𝔣(𝐩)‖ = 𝔱(𝐩) = 1/t̂(𝐩) exactly, for every lens class.
 """
 @inline focus_point(geometric, f::Focus, 𝐩::StaticVector{2}) = inv(inverse_focus_distance(geometric, f, 𝐩)) * chief_direction(geometric, 𝐩)
 @inline focus_point(c::RadiometricCameraModel, 𝐩::StaticVector{2}) = focus_point(c.geometric, c.focus, 𝐩)
-const 𝔣 = focus_point   # the paper's notation: the same function
 
 """
     aperture_direction(d̂, 𝐚, t̂) -> SVector{3}
@@ -221,7 +214,7 @@ end
 """
     backproject(camera::RadiometricCameraModel, 𝐩, 𝐚[, t̂]) -> SVector{3}
 
-The radiometric back-projection, the paper's `π̂⁻¹(𝐩, 𝐚)` (public alias `π̂⁻¹`): the unit direction of the ray of the sensor position
+The radiometric back-projection, the paper's `π̂⁻¹(𝐩, 𝐚)`: the unit direction of the ray of the sensor position
 𝐩 from the aperture point 𝐚 (camera frame), towards the focus point 𝔣(𝐩) — a method of VisualGeometryToolkitCore's `backproject`
 with the aperture point as its third argument ([`aperture_direction`](@ref) on the camera's parts). `backproject(camera, 𝐩, 𝔭)` is
 the chief direction; `backproject(camera, 𝐩)` is the geometric camera's back-projection. With a trailing `t̂`, the inverse focus
@@ -230,7 +223,6 @@ distance the caller evaluated (hoisted, once per sensor sample).
 @inline backproject(c::RadiometricCameraModel, 𝐩::StaticVector{2}, 𝐚::StaticVector{3}) = aperture_direction(c.geometric, c.focus, 𝐩, 𝐚)
 @inline backproject(c::RadiometricCameraModel, 𝐩::StaticVector{2}, 𝐚::StaticVector{3}, t̂val) = aperture_direction(c.geometric, 𝐩, 𝐚, t̂val)
 # the paper's notation: VisualGeometryToolkitCore's `backproject` itself (its three-argument methods are the radiometric ones)
-const π̂⁻¹ = backproject
 
 """
     world_ray(pose, 𝐚, d) -> (origin, direction)

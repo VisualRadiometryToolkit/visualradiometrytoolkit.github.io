@@ -1,30 +1,53 @@
 # VisualRadiometryToolkitCore changelog
 
-## 0.2.0
+## 0.2.0 (unreleased)
 
-The physical forms: a board posed in the world, a camera's lengths, the light about its board, a light's terms by `(l, m)` and
-a field fitted to a function.
+One release of three lines: the physical forms (a board posed in the world, a camera's lengths, the light about its
+board, a light's terms by `(l, m)`), the anchored albedo with Smith Λ without cancellation, and the stack's
+conformance on VisualGeometryToolkitCore 0.14 (`[compat]` `"0.14"`, the release that moves estimation to
+`solve(problem, algorithm)`; this package calls no estimator): one name per thing, type arguments positional, the
+radial chart a type. Float64 values move only by the Λ rewrite's rounding.
 
 ### Breaking
 
 - `TexturedTarget` takes no `facing` keyword (both constructors). The board faces the side its cameras are on:
   `with_facing(board, viewpoint)` orients it, and a camera's state or render does so by its pose; until then it faces the
   design's +z, the printed side of the design chart (the former default without `facing` was the other side).
-- `target_center` is removed: a target's centre is VisualGeometryToolkitCore's `centroid(board)`; `𝔟` is its alias.
+- `target_center` is removed: a target's centre is VisualGeometryToolkitCore's `centroid(board)`.
+- **The paper's notation aliases are deleted** (one name per thing: no alias, no `const` rebinding). Each name is its
+  function's: `𝔭` → `center_of_projection`, `𝔣` → `focus_point`, `π̂⁻¹` → VisualGeometryToolkitCore's `backproject`
+  (its radiometric method, `backproject(camera, 𝐩, 𝐚)`), `t̂` → `inverse_focus_distance`, `𝔱` → `focus_distance`,
+  `𝐩_of_pixel` → `sensor_position`, `pixel_of_𝐩` → `pixel_position`, `ℐ_𝐮` → `pixel_footprint`, `𝐩_sample` →
+  `sensor_sample`, `𝐚_sample` → `aperture_sample`, `𝐚_weight` → `aperture_weight`, `𝐚_border` →
+  `aperture_border_sample`, `Θ_m_nonlinear` → `nonlinear_parameters`, `with_μ` → `with_diffuse_weight`, `𝛂` →
+  `roughness`, `𝛈` → `refractive_index`, `Λ_ggx` → `ggx_lambda`, `𝔟` → VisualGeometryToolkitCore's `centroid`, `ρ_c` → `albedo`. The
+  symbols stay the paper's notation in prose; the manual's notation table is gone with them.
+- **A type argument is positional** (the stack's signature rule: slot 4, never a keyword): `Focus(n, distance, W, H;
+  T)` → `Focus([T = Float64,] n, distance, W, H)`, `Focus(geometric, distance; n, T)` → `Focus([T,] geometric,
+  distance; n)`, `TensorProductVignetting(n, box; degree, T)` → `TensorProductVignetting([T,] n, box; degree)`,
+  `RadialVignetting(n, center, radius; degree, T, chart)` → `RadialVignetting([T,] n, center, radius; degree,
+  chart)`, `TexturedTarget(target, texture; …, T)` → `TexturedTarget([T,] target, texture; …)`.
+- **The radial chart is a type, not a Symbol**: `LinearChart()`, `ProjectiveChart()`, `EquisolidChart()` (new,
+  `public`, under `AbstractRadialChart`; the types the profiles already held privately as their chart parameter).
+  `chart = :projective` → `chart = ProjectiveChart()`; `BinnedRadialProfile(:equisolid, …)` →
+  `BinnedRadialProfile(EquisolidChart(), …)`; `radial_chart(v)` returns the chart value (`ProjectiveChart()`), not
+  a Symbol. `RADIAL_CHARTS` (a tuple of Symbols) is replaced by the `TagRegistry` `RADIAL_CHART_TAGS` (`"linear"`,
+  `"projective"`, `"equisolid"`: the stored spellings, unchanged). A chart that is not one is the keyword's
+  `TypeError`; `EquisolidChart()` for a fitted profile stays an `ArgumentError`.
 
 ### Added
 
 - `TexturedTarget(target::PosedTarget, texture)` of a target with no canvas: the texture covers its board (a bare board posed
   in the world). A physical (unitful) posed target is taken in metres at entry.
 - `with_facing(board, viewpoint)`.
-- `RadiometricCameraModel(geometric; focus, aperture_radius)` and `Focus(geometric, distance)` take lengths (`1.5m`, `2mm`);
+- `RadiometricCameraModel(geometric; focus, aperture_radius)` and `Focus([T,] geometric, distance; n)` take lengths (`1.5m`, `2mm`);
   plain numbers stay metres. `f_number = N` states the aperture as the photographer's stop instead: r = f / 2N, f the camera's
   focal length as a length (VisualGeometryToolkitCore 0.13.3's `metric_focal_length`, a camera bounded by its sensor).
   VisualGeometryToolkitCore compat `"0.13.3"`.
 - `EnvironmentLight(map, board::TexturedTarget, poses)`: the light on the sphere about the board's centre that holds every
   camera centre and every corner of the page.
 - `SphericalHarmonicMap(l_max, (l, m) => values, …)` and `coefficients(map_or_light, l, m)`.
-- `RadialVignetting(n, geometric)`: the flat radial profile about a camera's principal point out to the farthest point it
+- `RadialVignetting([T,] n, geometric; degree, chart)`: the flat radial profile about a camera's principal point out to the farthest point it
   images.
 - `diffuse_weight(material)`. `Material` and `with_vignetting` are exported.
 - `physical_albedo(target, 𝐛)`: the albedo of the target as printed at the
@@ -48,6 +71,12 @@ a field fitted to a function.
   θ = 0.005) and `x / (2(1 + √(1 + x)))` for `√(1 + x) − 1`.
   `visible_normal_density` and `cook_torrance_terms` take Λ of their
   directions. Float64 values move by rounding only.
+- The part replacers (`with_geometric`, `with_focus`, `with_aperture_radius`, `with_vignetting`) and a textured
+  target's `with_state` replace their field with Accessors' `@set`, the stack's one idiom for a value with one part
+  replaced, instead of each restating its type's constructor (VisualGeometryToolkitCore 0.14's duplication gate
+  found `with_vignetting` and `with_state` to be one body). New dependency: Accessors.
+- The README's and the manual's example builds its pinhole camera as `Lens(Perspective())`: VisualGeometryToolkitCore
+  0.14 removed the alias `Pinhole`.
 
 ## 0.1.1
 

@@ -20,6 +20,8 @@ VisualRadiometryToolkitIO = "c447a127-8502-41e7-ac3e-ce2a12d00bd3"
 [sources]
 VisualRadiometryToolkitCore = {path = "VisualRadiometryToolkitCore"}
 VisualRadiometryToolkitIO = {path = "VisualRadiometryToolkitIO"}
+# TEMPORARY: solve branch; remove when Core 0.14 etc. are registered
+VisualGeometryToolkitCore = {path = "/home/jbpritts/src/_wt-solve-core014/VisualGeometryToolkitCore"}
 
 [compat]
 julia = "1.13"

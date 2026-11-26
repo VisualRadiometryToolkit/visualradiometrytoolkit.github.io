@@ -43,7 +43,7 @@ Material(; roughness_ink = 0.15, roughness_paper = 0.4, refractive_index_ink = 1
 """
     nonlinear_parameters(m::Material) -> SVector{8}
 
-The material's nonlinear parameters, the paper's `Θ_m ∖ {μ}` (public alias `Θ_m_nonlinear`), in the order `roughness_ink,
+The material's nonlinear parameters, the paper's `Θ_m ∖ {μ}`, in the order `roughness_ink,
 roughness_paper, refractive_index_ink[1:3], refractive_index_paper[1:3]`.
 """
 nonlinear_parameters(m::Material{T}) where {T} = SVector{8, T}(m.roughness_ink, m.roughness_paper, m.refractive_index_ink..., m.refractive_index_paper...)
@@ -58,7 +58,7 @@ with_nonlinear(m::Material, θ::StaticVector{8}) = Material(θ[1], θ[2], SVecto
 """
     with_diffuse_weight(m::Material, μ) -> Material
 
-The material `m` with the diffuse weight `μ` (the field `diffuse_weight`; public alias `with_μ`; dimensionless, `f_c^CT = μ ρ_c/π + (1 − μ)` × the specular term); the roughnesses and
+The material `m` with the diffuse weight `μ` (the field `diffuse_weight`; dimensionless, `f_c^CT = μ ρ_c/π + (1 − μ)` × the specular term); the roughnesses and
 the indices of refraction are kept.
 """
 with_diffuse_weight(m::Material, μ) = Material(m.roughness_ink, m.roughness_paper, m.refractive_index_ink, m.refractive_index_paper, μ)
@@ -72,9 +72,9 @@ convert_eltype(::Type{T}, m::Material) where {T} = Material(T(m.roughness_ink), 
 
 """Ink ↔ no-ink blend weight of a board point: the texture value `w = luma(ρ(𝐛))` clamped to [0, 1] (1 = no ink, 0 = ink)."""
 @inline texture_weight(ρ::StaticVector{3}) = clamp(luma(ρ), 0, 1)
-"""Spatially varying roughness `α(𝐛) = w α_¬ink + (1−w) α_ink` at the blend weight `w = texture_weight(ρ)` (the paper's `α`; public alias `𝛂`)."""
+"""Spatially varying roughness `α(𝐛) = w α_¬ink + (1−w) α_ink` at the blend weight `w = texture_weight(ρ)` (the paper's `α`)."""
 @inline roughness(m::Material, w) = w * m.roughness_paper + (1 - w) * m.roughness_ink
-"""Spatially varying refractive indices `η_c(𝐛) = w η_¬ink + (1−w) η_ink` at the blend weight `w` (the paper's `η`; public alias `𝛈`)."""
+"""Spatially varying refractive indices `η_c(𝐛) = w η_¬ink + (1−w) η_ink` at the blend weight `w` (the paper's `η`)."""
 @inline refractive_index(m::Material, w) = w * m.refractive_index_paper + (1 - w) * m.refractive_index_ink
 
 """GGX normal distribution, the paper's `D(ω_h; α)` (`cosθ_h = ω_h ⋅ 𝐧`)."""
@@ -88,7 +88,7 @@ end
     ggx_lambda(α, ω::StaticVector{3})
     ggx_lambda(α, cosθ)
 
-Smith Λ for GGX, `Λ = (√(1 + α² tan²θ) − 1) / 2` (public alias `Λ_ggx`), of the direction `ω` (local frame, any length) or of
+Smith Λ for GGX, `Λ = (√(1 + α² tan²θ) − 1) / 2`, of the direction `ω` (local frame, any length) or of
 `cosθ = ω ⋅ 𝐧`. Evaluated as `x / (2 (1 + √(1 + x)))` with `x = α² tan²θ` (the same number, without the cancellation of `√(1 + x) − 1`
 at small x) and, from the direction, `tan²θ = (ω_x² + ω_y²) / ω_z²` (from `cosθ`, `(1 − cos²θ) / cos²θ` loses the small angles to the
 rounding of `cosθ`: in Float32 near the normal, at θ = 0.005, 0.2 % of tan²θ). The direction is a `StaticVector{3}`, not zero; a
@@ -175,9 +175,3 @@ end
     return m.diffuse_weight * d + (1 - m.diffuse_weight) * s
 end
 
-# The paper's notation, as public aliases: each is the SAME function as the descriptive name (one definition, no second method table).
-const Θ_m_nonlinear = nonlinear_parameters
-const with_μ = with_diffuse_weight
-const 𝛂 = roughness
-const 𝛈 = refractive_index
-const Λ_ggx = ggx_lambda

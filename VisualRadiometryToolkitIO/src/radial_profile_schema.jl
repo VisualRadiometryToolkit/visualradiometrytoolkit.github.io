@@ -11,7 +11,7 @@
 #              "counts": [n1, …, nB]}}             (pixels per bin; bin b, 1-based, is [edges[b], edges[b+1]))
 #
 # A MEASURED profile, binned rather than fitted: the vignetting bodies are fitted fields (splines), so this is its own
-# body; its CHART is the one radial-chart vocabulary (`RADIAL_CHARTS`: linear, projective, equisolid), the equisolid
+# body; its CHART is the one radial-chart vocabulary (a tag of `RADIAL_CHART_TAGS`: linear, projective, equisolid), the equisolid
 # chart alone stating its focal length. The profile's centre and radius are COLMAP pixels in the value and written in
 # the file's pixel frame (moved by the style, as the vignetting body's positions). The body is embeddable
 # (`JSON.lower(::VgioStyle, ::BinnedRadialProfile)`, `JSON.lift(style, BinnedRadialProfile, body)`; its table
@@ -21,7 +21,7 @@
 
 const _RADIAL_PROFILE_SCHEMA = "vgio/radial_profile/v1.0"
 
-const _RADIAL_CHART = VgtkIO.named_spec(in(String.(RADIAL_CHARTS)), "a radial chart ($(join(RADIAL_CHARTS, ", ")))")
+const _RADIAL_CHART = VgtkIO.named_spec(in(keys(RADIAL_CHART_TAGS)), "a radial chart ($(join(keys(RADIAL_CHART_TAGS), ", ")))")
 const _PROFILE_CHART = VgtkIO.if_key_spec(:focal_length,
     VgtkIO.object_spec(:type => VgtkIO.named_spec(==("equisolid"), "the equisolid chart (the one that states a focal length)"),
                        :center => VgtkIO.body_spec(PixelFrame), :radius => VgtkIO.real_spec(), :focal_length => VgtkIO.real_spec()),
@@ -73,14 +73,14 @@ const RADIAL_PROFILE_KIND = KindSpec(_RADIAL_PROFILE_SCHEMA, [:profile => RADIAL
 
 function JSON.lower(s::VgioStyle, p::BinnedRadialProfile)
     c = VgtkCore.center(p) + _to_file(s)
-    chart = merge((type = String(radial_chart(p)), center = Float64[c[1], c[2]], radius = field_radius(p)),
+    chart = merge((type = tag_of(RADIAL_CHART_TAGS, radial_chart(p)), center = Float64[c[1], c[2]], radius = field_radius(p)),
                   p.focal_length === nothing ? (;) : (focal_length = p.focal_length,))
     return (type = "binned_radial_profile", chart = chart, edges = p.edges, values = VgtkIO.matrix_rows(p.values), counts = p.counts)
 end
 function JSON.lift(s::VgioStyle, ::Type{BinnedRadialProfile}, b::Record)
     ch = b.chart
     c = SVector(Float64(ch.center[1]::Real), Float64(ch.center[2]::Real)) + _from_file(s)
-    return BinnedRadialProfile(Symbol(ch.type::String), c, Float64(ch.radius::Real), Float64[Float64(e::Real) for e in b.edges],
+    return BinnedRadialProfile(RADIAL_CHART_TAGS[ch.type::String](), c, Float64(ch.radius::Real), Float64[Float64(e::Real) for e in b.edges],
                                VgtkIO.rows_matrix(b.values::Vector{Any}), Int[Int(n::Integer) for n in b.counts];
                                focal_length = haskey(ch, :focal_length) ? Float64(ch.focal_length::Real) : nothing)
 end
@@ -89,8 +89,8 @@ const _RADIAL_PROFILE_SAVE_DOC = """
     VisualGeometryToolkitIO.save(path, value::BinnedRadialProfile; provenance = (;))
 
 Write a `BinnedRadialProfile` — a measured radial profile (a flat field binned
-by field angle) — as a `vgio/radial_profile/v1.0` file: its chart (one of
-`RADIAL_CHARTS`: its centre and image-circle radius in pixels, the equisolid
+by field angle) — as a `vgio/radial_profile/v1.0` file: its chart (a tag of
+`RADIAL_CHART_TAGS`: its centre and image-circle radius in pixels, the equisolid
 chart's focal length), the `B + 1` bin edges in the chart's coordinate (radians
 for equisolid), the `channels × B` values (one row per channel) and the `B`
 pixel counts.

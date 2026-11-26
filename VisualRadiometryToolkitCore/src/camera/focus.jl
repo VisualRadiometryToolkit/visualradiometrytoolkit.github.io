@@ -50,12 +50,14 @@ function Focus(tps::FocusSpline{N}, t̂_i::AbstractVector{T}) where {N, T}
 end
 
 """
-    Focus(n, distance, W, H; T = Float64)
+    Focus([T = Float64,] n, distance, W, H)
 
-Constant focus surface `𝔱 ≡ distance` on the `n × n` grid of the sensor `[0, W] × [0, H]` (`t̂_i ≡ 1/distance`).
+Constant focus surface `𝔱 ≡ distance` on the `n × n` grid of the sensor `[0, W] × [0, H]` (`t̂_i ≡ 1/distance`), its nodal
+values of element type `T`.
 """
-Focus(n::Integer, distance::Real, W::Real, H::Real; T = Float64) =
+Focus(::Type{T}, n::Integer, distance::Real, W::Real, H::Real) where {T} =
     Focus(FocusSpline(grid_nodes(n, Rect(0, 0, W, H))), fill(T(1 / distance), n * n))
+Focus(n::Integer, distance::Real, W::Real, H::Real) = Focus(Float64, n, distance, W, H)
 
 """
     n_nodes(f::Focus) -> Int
@@ -68,7 +70,7 @@ Base.values(f::Focus) = f.t̂_i                                 # its nodal valu
 """
     inverse_focus_distance(f::Focus, 𝐩::StaticVector{2})
 
-The inverse focus distance of the focus surface `f`, the paper's `t̂ = 1/𝔱` (public alias `t̂`), at the sensor position 𝐩 (COLMAP
+The inverse focus distance of the focus surface `f`, the paper's `t̂ = 1/𝔱`, at the sensor position 𝐩 (COLMAP
 pixels): the thin plate spline's value there.
 """
 @inline inverse_focus_distance(f::Focus, 𝐩::StaticVector{2}) = VgtkCore.tps_evaluate(f.nodes, f.w, f.a, 𝐩)
@@ -76,7 +78,7 @@ pixels): the thin plate spline's value there.
 """
     focus_distance(f::Focus, 𝐩::StaticVector{2})
 
-The focus distance along the chief ray of the sensor position 𝐩, the paper's `𝔱(𝐩) = 1/t̂(𝐩)` (public alias `𝔱`).
+The focus distance along the chief ray of the sensor position 𝐩, the paper's `𝔱(𝐩) = 1/t̂(𝐩)`.
 """
 @inline focus_distance(f::Focus, 𝐩::StaticVector{2}) = 1 / inverse_focus_distance(f, 𝐩)
 
@@ -91,9 +93,6 @@ function convert_eltype(::Type{T}, f::Focus{S, N}) where {T, S, N}
     return Focus{T, N}(nodes, map(T, f.t̂_i), map(T, f.w), map(T, f.a))
 end
 
-# The paper's notation, as public aliases of the same functions (one definition each)
-const t̂ = inverse_focus_distance
-const 𝔱 = focus_distance
 
 # ---- removed: the focus surfaces on the chief directions (a thin plate spline in the azimuthal-equidistant chart, a spherical
 # spline). The focus surface is the thin plate spline over the sensor; the removed call forms and names are refused by name.

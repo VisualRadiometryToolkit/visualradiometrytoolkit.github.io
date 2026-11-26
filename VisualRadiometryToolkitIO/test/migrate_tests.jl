@@ -25,13 +25,14 @@
 end
 
 @testitem "migrate: vignetting v1 with and without its chart; environment light v1" setup = [VRIoFixtures] begin
+    using VisualRadiometryToolkitCore: LinearChart, ProjectiveChart
     using VisualRadiometryToolkitCore: AbstractVignetting, RadialVignetting, LogVignetting, radial_chart, log_spline,
         EnvironmentLight, max_degree
     import VisualRadiometryToolkitIO
     v = load(AbstractVignetting, old_fixture("vignetting_v1_linear.json"))
-    @test v isa RadialVignetting && radial_chart(v) === :linear
+    @test v isa RadialVignetting && radial_chart(v) === LinearChart()
     w = load(AbstractVignetting, old_fixture("vignetting_v1_chart.json"))
-    @test w isa LogVignetting && radial_chart(log_spline(w)) === :projective
+    @test w isa LogVignetting && radial_chart(log_spline(w)) === ProjectiveChart()
     t = VgtkIO.migrate_record(old_tree(old_fixture("vignetting_v1_linear.json")))
     @test t["schema"] == "vgio/vignetting/v2.0" && t["vignetting"]["chart"] == "linear" && t["units"]["pixel"] == "colmap"
     @test max_degree(load(EnvironmentLight, old_fixture("environment_light_v1.json"))) == 1

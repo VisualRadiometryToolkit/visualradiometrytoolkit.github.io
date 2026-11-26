@@ -42,9 +42,6 @@
 
     # the material: Θ_m, its nonlinear part and μ replaced, the ink ↔ no-ink blend by the texture value
     m = Material(; roughness_ink = 0.12, roughness_paper = 0.35, refractive_index_ink = 1.65, refractive_index_paper = 1.33, diffuse_weight = 0.6)
-    # the paper's notation: public aliases, the same functions
-    @test VrtkCore.Θ_m_nonlinear === nonlinear_parameters && VrtkCore.with_μ === with_diffuse_weight && VrtkCore.𝛂 === roughness &&
-          VrtkCore.𝛈 === refractive_index && VrtkCore.Λ_ggx === ggx_lambda
     θ = nonlinear_parameters(m)
     @test θ == SVector(0.12, 0.35, 1.65, 1.65, 1.65, 1.33, 1.33, 1.33) && with_nonlinear(m, θ) == m && isbits(m)
     @test with_diffuse_weight(m, 0.25).diffuse_weight == 0.25 && with_diffuse_weight(m, 0.25).roughness_ink == m.roughness_ink
