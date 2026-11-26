@@ -22,8 +22,8 @@ of the scene it sees (an environment light, a material, a textured target).
 - **One implementation of each camera-frame map, on the parts it reads.**
   `RadiometricCameraModel` and any record holding the same parts forward to it
   (`CONTRACT_GENERICS`).
-- **Public names are descriptive ASCII**; a symbol of the paper is a `const`
-  alias of the same function, never a second definition.
+- **Public names are descriptive ASCII**; the paper's symbols appear in
+  docstrings and comments only, never as a binding (no aliases).
 - **Methods on VisualGeometryToolkitCore's functions land on its contract
   generics only** (`VisualGeometryToolkitCore.CONTRACT_GENERICS`; the quality
   gate enforces it). A protocol that is not a contract there is not extended
