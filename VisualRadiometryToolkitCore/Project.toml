@@ -1,6 +1,6 @@
 name = "VisualRadiometryToolkitCore"
 uuid = "544ea8c7-2427-4873-ab3e-33acc9dfb29a"
-version = "0.1.2"
+version = "0.2.0"
 authors = ["Ties Harder", "Felix Seegräber", "James Pritts <jbpritts@gmail.com>"]
 
 [deps]
@@ -23,7 +23,7 @@ GeometryBasics = "0.5.13"
 LinearAlgebra = "1"
 QuadGK = "2.11.3"
 StaticArrays = "1.9.24"
-VisualGeometryToolkitCore = "0.13"
+VisualGeometryToolkitCore = "0.13.3"
 julia = "1.13"
 
 [workspace]

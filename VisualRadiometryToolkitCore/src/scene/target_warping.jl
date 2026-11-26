@@ -65,8 +65,15 @@ warping_placement(origin::StaticVector{2}, side::Real) =
 """The placement of the page chart on the design for the page's rectangle `r` (design chart, metres, y up): `warping_placement` at
 its top-left corner, scaled by its width."""
 page_placement(r) = warping_placement(SVector(Float64(r.origin[1]), Float64(r.origin[2]) + Float64(r.widths[2])), Float64(r.widths[1]))
-"""The page's rectangle in the design chart (metres, y up): the canvas texture's, the canvas's without one."""
-_page_rect(t) = (cv = VgtkCore.canvas(t); VgtkCore.Rect(cv.texture === nothing ? cv : cv.texture))
+"""The page's rectangle in the design chart (metres, y up): the canvas texture's, the canvas's without one, the board's without a
+canvas (a bare board posed in the world)."""
+function _page_rect(t)
+    cv = VgtkCore.canvas(t)
+    cv === nothing || return VgtkCore.Rect(cv.texture === nothing ? cv : cv.texture)
+    bd = VgtkCore.board(t)
+    bd === nothing && throw(ArgumentError("TexturedTarget: the target carries neither a canvas (the printed page) nor a board"))
+    return VgtkCore.Rect(bd)
+end
 """
     flat_surface(target) -> VgtkCore.MappedSurface
 

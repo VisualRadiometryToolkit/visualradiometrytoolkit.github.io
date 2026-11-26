@@ -23,7 +23,7 @@
     @test RadiometricCameraModel(lens; focus = foc, aperture_radius = 0.0386, vignetting = vig) === c
     @test RadiometricCameraModel(lens; focus = 1.5, aperture_radius = 0.0386, vignetting = vig) === c
     @test Focus(lens, 1.5) == foc && n_nodes(Focus(lens, 2.0; n = 4)) == 16 && focus_distance(Focus(lens, 2.0; n = 4), SVector(5.0, 7.0)) ≈ 2.0
-    @test_throws UndefKeywordError RadiometricCameraModel(lens; focus = 1.5)          # no default aperture: r is a physical statement
+    @test_throws ArgumentError RadiometricCameraModel(lens; focus = 1.5)              # no default aperture: r is a physical statement
     @test isbits(c)                                                                     # the camera travels into a device kernel as it is
     # its parts read and replaced one at a time: the others are kept
     @test geometric(c) === lens && focus(c) === foc && aperture_radius(c) == 0.0386

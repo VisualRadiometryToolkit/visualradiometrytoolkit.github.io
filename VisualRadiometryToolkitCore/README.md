@@ -42,7 +42,7 @@ K = CameraCalibrationMat(SMatrix{3, 3}(900.0, 0, 0, 0, 900.0, 0, 600.0, 400.0, 1
 geometric = BoundedCamera(CameraModel(LogicalIntrinsics(K), Pinhole()), Size2(1200, 800))
 
 # The radiometric camera: focused at 1.5 m, with an aperture of radius 4 mm.
-camera = RadiometricCameraModel(geometric; focus = 1.5, aperture_radius = 0.004)
+camera = RadiometricCameraModel(geometric; focus = 1.5m, aperture_radius = 4mm)
 camera.vignetting === NoVignetting()                   # true
 
 𝐩 = SVector(700.0, 300.0)                              # a sensor position (pixels)

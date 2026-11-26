@@ -62,6 +62,12 @@ The material `m` with the diffuse weight `μ` (the field `diffuse_weight`; publi
 the indices of refraction are kept.
 """
 with_diffuse_weight(m::Material, μ) = Material(m.roughness_ink, m.roughness_paper, m.refractive_index_ink, m.refractive_index_paper, μ)
+"""
+    diffuse_weight(m::Material) -> Real
+
+The material's diffuse weight μ (the share of the diffuse lobe; `1 − μ` is the specular share).
+"""
+diffuse_weight(m::Material) = m.diffuse_weight
 convert_eltype(::Type{T}, m::Material) where {T} = Material(T(m.roughness_ink), T(m.roughness_paper), SVector{3, T}(m.refractive_index_ink), SVector{3, T}(m.refractive_index_paper), T(m.diffuse_weight))
 
 """Ink ↔ no-ink blend weight of a board point: the texture value `w = luma(ρ(𝐛))` clamped to [0, 1] (1 = no ink, 0 = ink)."""

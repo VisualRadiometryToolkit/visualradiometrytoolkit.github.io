@@ -1,5 +1,10 @@
 # VisualRadiometryToolkitIO changelog
 
+## 0.1.2
+
+On VisualRadiometryToolkitCore 0.2 (`[compat]` `"0.2"`), whose breaking changes (a textured target's facing, its centre's
+name) touch no record of this package. No source changed.
+
 ## 0.1.1
 
 On VisualGeometryToolkitCore 0.13 and VisualGeometryToolkitIO 0.11.2 (`[compat]` `"0.13"`, `"0.11.2"`): Core's

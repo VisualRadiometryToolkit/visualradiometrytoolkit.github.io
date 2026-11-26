@@ -12,7 +12,7 @@
 #              misses (NaN)
 #   chart      𝐛 = chart(quad, 𝐱) ./ size ∈ [0, 1]² — the image fraction: 𝐛₁ → columns, 𝐛₂ → rows from the top
 #   size       the page's (width, height) [m] (the rectangle of the canvas texture; the kernels' isbits copy)
-#   facing     +1 or −1: the side of the quad's normal the cameras look at (`facing` at construction); the target's normal for the
+#   facing     +1 or −1: the side of the quad's normal the cameras look at (`with_facing`; the design's +z until then); the target's normal for the
 #              shading and the warping is facing · n
 #   texture    albedo ρ_c(𝐛), (H_t, W_t, 3) array: the printed image's pixels (linear)
 #   sdf        optional distance map of the printed layout (H_s × W_s): the signed distance [mm] from every texel centre to the
@@ -20,7 +20,7 @@
 #              (printed_edge.jl)
 #   page_mm    the design size [mm] the distance map spans along e_u and e_v (the scale of `sdf` and of the edge parameters; 0 without one)
 #   state      the target's own state (`TargetState`: warping h, printed edge, in-plane print error), by value
-#   𝔟          the target's centre (`target_center`)
+#   𝔟          the target's centre (`centroid`)
 # ---------------------------------------------------------------------------
 
 """
@@ -55,44 +55,41 @@ _plain_pose(pose) = throw(ArgumentError("TexturedTarget: the target's pose is a 
                                         "target is posed exactly: give the pose's value"))
 
 """
-    TexturedTarget(target::PosedTarget, texture; facing = nothing, sdf = nothing, page_mm = nothing)
+    TexturedTarget(target::PosedTarget, texture; sdf = nothing, page_mm = nothing)
 
-The textured target of Core's posed planar `target` whose `canvas` is the printed page — e.g. a calibration session's target record
-(VisualGeometryToolkitIO's rig/v6: its canvas and the canvas texture) — with the image's pixels `texture` laid over the canvas
-texture's rectangle (the canvas's when it carries no texture). `facing` (a world point, e.g. a camera centre) chooses the side of the
-page's normal the cameras see; `sdf` + `page_mm`: the distance map of the printed layout and the design size it spans in mm
-([`with_sdf`](@ref); printed_edge.jl).
+The textured target of Core's posed planar `target` — e.g. a calibration session's target record (VisualGeometryToolkitIO's rig/v6:
+its canvas and the canvas texture), or a bare board posed in the world, `PosedTarget(Board(Size2(width = 2m, height = 2m)), pose)` —
+with the image's pixels `texture` laid over the canvas texture's rectangle, else the canvas's, else the board's. A physical target
+(lengths) is taken in metres at entry. The board faces the side its cameras are on: a camera's state or render orients it by its
+pose ([`with_facing`](@ref)); until then it faces the design's +z, the printed side of Core's design chart. `sdf` + `page_mm`: the
+distance map of the printed layout and the design size it spans in mm ([`with_sdf`](@ref); printed_edge.jl).
 """
-function TexturedTarget(target::VgtkCore.PosedTarget, texture::AbstractArray{<:Real, 3}; facing = nothing, sdf = nothing, page_mm = nothing,
-                       T::Type = Float64)
-    cv = VgtkCore.canvas(VgtkCore.model(target))
-    cv === nothing && throw(ArgumentError("TexturedTarget: the target carries no canvas (the printed page)"))
-    r = VgtkCore.Rect(cv.texture === nothing ? cv : cv.texture)            # the page in the design chart (metres, y up)
+function TexturedTarget(target::VgtkCore.PosedTarget, texture::AbstractArray{<:Real, 3}; sdf = nothing, page_mm = nothing, T::Type = Float64)
+    target = VgtkCore.has_units(target) ? VgtkCore.ustrip(VgtkCore.m, target) : target   # metres at the boundary, plain inside
+    r = _page_rect(VgtkCore.model(target))                                 # the page in the design chart (metres, y up)
     W, H = Float64(r.widths[1]), Float64(r.widths[2])
     pose = _plain_pose(target)
     R = SMatrix{3, 3, Float64}(VgtkCore.rotation(pose))
     o = SVector{3, Float64}(pose(SVector(Float64(r.origin[1]), Float64(r.origin[2]) + H, 0.0)))    # the image's top-left corner
     frame = hcat(R[:, 1], -R[:, 2], -R[:, 3])                                                       # e_u = +x, e_v = −y, n = e_u × e_v
     quad = VgtkCore.Quad{T}(VgtkCore.Quad(o, frame, VgtkCore.Rect2{Float64}(0.0, 0.0, W, H)))
-    n = frame[:, 3]
-    side = facing !== nothing && dot(SVector{3, Float64}(facing) - o, n) < 0 ? -one(T) : one(T)
     (sdf === nothing) == (page_mm === nothing) || throw(ArgumentError("TexturedTarget: `sdf` needs `page_mm` (and vice versa)"))
     sd = sdf === nothing ? nothing : Matrix{T}(sdf)
     pm = page_mm === nothing ? zero(SVector{2, T}) : SVector{2, T}(page_mm)
-    return TexturedTarget(target, quad, SVector{2, T}(W, H), T(side), Array{T, 3}(texture), sd, pm, convert_eltype(T, flat_surface(target)), TargetState{T}())
+    # the design's +z (the printed side, seen from the front with x right and y up) is −n: facing −1
+    return TexturedTarget(target, quad, SVector{2, T}(W, H), -one(T), Array{T, 3}(texture), sd, pm, convert_eltype(T, flat_surface(target)), TargetState{T}())
 end
-
 """
-    TexturedTarget(𝐨, 𝐮_B, 𝐯_B, texture; sdf = nothing, page_mm = nothing, facing = nothing, design = :printed_page)
+    TexturedTarget(𝐨, 𝐮_B, 𝐯_B, texture; sdf = nothing, page_mm = nothing, design = :printed_page)
 
 The page with its image's top-left corner `𝐨` and edges `𝐮_B` (along the image's columns), `𝐯_B` (along its rows) (world, metres;
 orthogonal — `𝐯_B` is orthogonalised to rounding): Core's planar target `design` whose board and canvas are the page (design chart
 x along `𝐮_B`, y against `𝐯_B`, the origin at the page's lower-left corner `𝐨 + 𝐯_B`), posed into the world, with the `texture` laid
-over it. `facing` (a world point, e.g. a camera centre) chooses the side of the normal the cameras see. `sdf` + `page_mm`: the distance
-map of the printed layout and the page size in mm ([`with_sdf`](@ref); printed_edge.jl).
+over it; the form of a page measured in the world. Its facing is the posed target's ([`with_facing`](@ref)). `sdf` + `page_mm`: the
+distance map of the printed layout and the page size in mm ([`with_sdf`](@ref); printed_edge.jl).
 """
 function TexturedTarget(𝐨::AbstractVector, 𝐮_B::AbstractVector, 𝐯_B::AbstractVector, texture::AbstractArray{<:Real, 3};
-                       sdf = nothing, page_mm = nothing, facing = nothing, design::Symbol = :printed_page)
+                       sdf = nothing, page_mm = nothing, design::Symbol = :printed_page)
     T = float(promote_type(eltype(𝐨), eltype(𝐮_B), eltype(𝐯_B)))
     o = SVector{3, Float64}(𝐨); u = SVector{3, Float64}(𝐮_B); v = SVector{3, Float64}(𝐯_B)
     W = norm(u); e_u = u / W
@@ -103,7 +100,20 @@ function TexturedTarget(𝐨::AbstractVector, 𝐮_B::AbstractVector, 𝐯_B::Ab
     page = VgtkCore.Size2(W, H)
     pose = VgtkCore.EuclideanMap(VgtkCore.Rotations.RotMatrix{3, Float64}(hcat(e_u, -e_v, -n)), o + H * e_v)   # design → world
     target = VgtkCore.PosedTarget(VgtkCore.PlanarTarget(design; board = VgtkCore.Board(page), canvas = VgtkCore.Canvas(page)), pose)
-    return TexturedTarget(target, texture; facing, sdf, page_mm, T)
+    return TexturedTarget(target, texture; sdf, page_mm, T)
+end
+
+"""
+    with_facing(board::TexturedTarget, viewpoint) -> TexturedTarget
+
+The board facing the side of its page that the world point `viewpoint` (a camera centre) is on: its normal for the shading and the
+warping ([`board_normal`](@ref)) points towards it. A camera's calibration state and its render orient the board by the camera's
+pose; a caller that builds a board's geometry before the poses exist orients it with them.
+"""
+function with_facing(b::TexturedTarget{T}, viewpoint::AbstractVector) where {T}
+    o = world_point(b, SVector(0.0, 0.0))
+    side = dot(SVector{3, Float64}(viewpoint) - SVector{3, Float64}(o), SVector{3, Float64}(VgtkCore.normal(b.quad))) < 0 ? -one(T) : one(T)
+    return TexturedTarget(b.target, b.quad, b.size, side, b.texture, b.sdf, b.page_mm, b.warping, b.state)
 end
 
 """The board with the distance map `sdf` (`H_s × W_s`, signed distance [mm] to the nearest ink edge of the design, + on paper)
@@ -117,12 +127,25 @@ with_sdf(b::TexturedTarget{T}, sdf::AbstractMatrix, page_mm) where {T} =
 """World point of chart coordinates 𝐛 (Core's `surface_point` of the quad at the design point 𝐛 ⊙ size)."""
 @inline world_point(b::TexturedTarget, 𝐛::StaticVector{2}) = VgtkCore.surface_point(b.quad, SVector(𝐛[1] * b.size[1], 𝐛[2] * b.size[2]))
 """
-    target_center(b::TexturedTarget) -> SVector{3}
+    centroid(b::TexturedTarget) -> SVector{3}
 
-The target's centre, the page's (world): the paper's `𝔟`, a public alias.
+The target's centre, the page's (world): VisualGeometryToolkitCore's `centroid` of a shape; the paper's `𝔟` is its public alias.
 """
-target_center(b::TexturedTarget) = world_point(b, SVector(0.5, 0.5))
-const 𝔟 = target_center   # the paper's notation: the same function
+centroid(b::TexturedTarget) = world_point(b, SVector(0.5, 0.5))
+const 𝔟 = centroid   # the paper's notation: the same function
+"""
+    EnvironmentLight(map, board::TexturedTarget, poses)
+
+The light of the radiance `map` (a [`SphericalHarmonicMap`](@ref)) on the sphere about the board's centre (VisualGeometryToolkitCore's `centroid`)
+that holds every camera centre of `poses` (camera → world) and every corner of the page, so that every light ray from the page
+leaves the sphere (no ray of a board point falls back to its closest point, [`exit_direction`](@ref)).
+"""
+function EnvironmentLight(map, b::TexturedTarget, poses::AbstractVector)
+    𝐛 = centroid(b)
+    cameras = maximum(norm(SVector{3}(p.t) - SVector{3}(𝐛)) for p in poses)
+    return EnvironmentLight(map, 𝐛, max(cameras, maximum(norm(c - 𝐛) for c in corners(b))))
+end
+
 """The page's corners: `𝐨`, `𝐨 + 𝐮_B`, `𝐨 + 𝐮_B + 𝐯_B`, `𝐨 + 𝐯_B`."""
 corners(b::TexturedTarget) = (world_point(b, SVector(0.0, 0.0)), world_point(b, SVector(1.0, 0.0)), world_point(b, SVector(1.0, 1.0)),
                              world_point(b, SVector(0.0, 1.0)))

@@ -116,7 +116,14 @@ spherical-harmonic coefficients up to degree `l_max` (columns, in
 
     SphericalHarmonicMap(radiance, l_max; channels = 3)
 
-The constant map `M ≡ radiance` in every channel (only the `l = 0` term).
+The constant map `M ≡ radiance` in every channel (only the `l = 0` term; a radiance, so its coefficient is `radiance / y_0^0`).
+
+    SphericalHarmonicMap(l_max, (l, m) => values, …)
+
+The map of degree `l_max` whose terms `y_l^m` named by their degree and order `(l, m)` (`|m| ≤ l ≤ l_max`) have the coefficients
+`values`, one per channel (the channels: their count); every other term is zero. The values are coefficients `a_{c,lm}`, as the
+matrix form's columns: `SphericalHarmonicMap(2, (0, 0) => (2.0, 1.9, 1.8), (1, 0) => (0.4, 0.3, 0.2))` is a coloured light,
+brighter towards +z. [`coefficients`](@ref)`(M, l, m)` reads a term back.
 """
 struct SphericalHarmonicMap{L, C, J, CJ, T}
     coefficients::SMatrix{C, J, T, CJ}
@@ -132,6 +139,19 @@ function SphericalHarmonicMap(radiance::Real, l_max::Integer; channels::Integer 
     return SphericalHarmonicMap(a, l_max)
 end
 
+function SphericalHarmonicMap(l_max::Integer, term::Pair{<:Tuple{Integer, Integer}}, terms::Pair{<:Tuple{Integer, Integer}}...)
+    all_terms = (term, terms...)
+    C = length(last(term))
+    a = zeros(float(promote_type(map(t -> eltype(collect(last(t))), all_terms)...)), C, sh_count(l_max))
+    for ((l, m), values) in all_terms
+        0 <= l <= l_max && abs(m) <= l || throw(ArgumentError("SphericalHarmonicMap: the term (l, m) = ($l, $m) is not one of degree ≤ $l_max (|m| ≤ l)"))
+        length(values) == C || throw(DimensionMismatch("SphericalHarmonicMap: the term ($l, $m) has $(length(values)) channels, the first $C"))
+        iszero(a[:, sh_index(l, m)]) || throw(ArgumentError("SphericalHarmonicMap: the term ($l, $m) is given twice"))
+        a[:, sh_index(l, m)] .= values
+    end
+    return SphericalHarmonicMap(a, l_max)
+end
+
 @inline (M::SphericalHarmonicMap{L})(ω::StaticVector{3}) where {L} = M.coefficients * sh_basis(Val(L), ω)
 
 """
@@ -141,6 +161,17 @@ end
 The spherical-harmonic coefficients, one row per channel.
 """
 coefficients(M::SphericalHarmonicMap) = M.coefficients
+
+"""
+    coefficients(M::SphericalHarmonicMap, l, m) -> SVector{C}
+    coefficients(light::EnvironmentLight, l, m)
+
+The coefficients of the term `y_l^m`, one per channel (the column [`sh_index`](@ref)`(l, m)`).
+"""
+function coefficients(M::SphericalHarmonicMap{L}, l::Integer, m::Integer) where {L}
+    0 <= l <= L && abs(m) <= l || throw(ArgumentError("coefficients: (l, m) = ($l, $m) is not a term of degree ≤ $L (|m| ≤ l)"))
+    return M.coefficients[:, sh_index(l, m)]
+end
 
 """
     max_degree(M::SphericalHarmonicMap) -> Int
@@ -196,6 +227,7 @@ The light's directional map ([`SphericalHarmonicMap`](@ref)).
 """
 radiance_map(light::EnvironmentLight) = light.map
 coefficients(light::EnvironmentLight) = coefficients(light.map)
+coefficients(light::EnvironmentLight, l::Integer, m::Integer) = coefficients(light.map, l, m)
 max_degree(light::EnvironmentLight) = max_degree(light.map)
 with_coefficients(light::EnvironmentLight, a::AbstractMatrix) = EnvironmentLight(with_coefficients(light.map, a), light.center, light.radius)
 

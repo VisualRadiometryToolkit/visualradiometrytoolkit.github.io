@@ -1,9 +1,32 @@
 # VisualRadiometryToolkitCore changelog
 
-## 0.1.2
+## 0.2.0
+
+The physical forms: a board posed in the world, a camera's lengths, the light about its board, a light's terms by `(l, m)` and
+a field fitted to a function.
+
+### Breaking
+
+- `TexturedTarget` takes no `facing` keyword (both constructors). The board faces the side its cameras are on:
+  `with_facing(board, viewpoint)` orients it, and a camera's state or render does so by its pose; until then it faces the
+  design's +z, the printed side of the design chart (the former default without `facing` was the other side).
+- `target_center` is removed: a target's centre is VisualGeometryToolkitCore's `centroid(board)`; `𝔟` is its alias.
 
 ### Added
 
+- `TexturedTarget(target::PosedTarget, texture)` of a target with no canvas: the texture covers its board (a bare board posed
+  in the world). A physical (unitful) posed target is taken in metres at entry.
+- `with_facing(board, viewpoint)`.
+- `RadiometricCameraModel(geometric; focus, aperture_radius)` and `Focus(geometric, distance)` take lengths (`1.5m`, `2mm`);
+  plain numbers stay metres. `f_number = N` states the aperture as the photographer's stop instead: r = f / 2N, f the camera's
+  focal length as a length (VisualGeometryToolkitCore 0.13.3's `metric_focal_length`, a camera bounded by its sensor).
+  VisualGeometryToolkitCore compat `"0.13.3"`.
+- `EnvironmentLight(map, board::TexturedTarget, poses)`: the light on the sphere about the board's centre that holds every
+  camera centre and every corner of the page.
+- `SphericalHarmonicMap(l_max, (l, m) => values, …)` and `coefficients(map_or_light, l, m)`.
+- `RadialVignetting(n, geometric)`: the flat radial profile about a camera's principal point out to the farthest point it
+  images.
+- `diffuse_weight(material)`. `Material` and `with_vignetting` are exported.
 - `physical_albedo(target, 𝐛)`: the albedo of the target as printed at the
   physical page chart 𝐛, `printed_albedo` at the design point that 𝐛 shows
   under the in-plane print error (`design_chart`). It is what a renderer reads
