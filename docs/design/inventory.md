@@ -14,7 +14,7 @@ calibration method of *Real Cameras are Radiometric* → RadiometricCamera.
 
 | item | here |
 |---|---|
-| `AbstractVignetting`, `TensorProductVignetting`, `RadialVignetting`, `LogVignetting`, `log_spline`, `VIGNETTING_TAGS`, the fields' verbs (`coefficient_jacobian`, `active_coefficients`, `control_points`, `with_control_points`, `n_control_points`, `knot_vectors`, `spline_degree`, `field_radius`, `radial_coordinate`, `pole_regular_basis`, `with_center`, `center_gradient`), the radial charts (`RADIAL_CHARTS`, `radial_chart`, `projective_chart`, `projective_knots`) | `src/camera/vignetting.jl` |
+| `AbstractVignetting`, `TensorProductVignetting`, `RadialVignetting`, `LogVignetting`, `log_spline`, `VIGNETTING_TAGS`, the fields' verbs (`coefficient_jacobian`, `active_coefficients`, `control_points`, `with_control_points`, `n_control_points`, `knot_vectors`, `spline_degree`, `field_radius`, `radial_coordinate`, `pole_regular_basis`, `with_center`, `center_gradient`), the radial charts (`RADIAL_CHART_TAGS`, `radial_chart`, `projective_chart`, `projective_knots`) | `src/camera/vignetting.jl` |
 | `BinnedRadialProfile` (a measured radial profile; it shares the charts) | `src/camera/vignetting.jl` |
 | `EnvironmentLight`, `SphericalHarmonicMap`, `radiance`, `exit_direction`, `radiance_map`, `coefficients`, `with_coefficients`, `max_degree`, `sh_basis`, `sh_count`, `sh_index` | `src/scene/lights.jl` |
 

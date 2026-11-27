@@ -66,6 +66,8 @@ radial chart a type. Float64 values move only by the Λ rewrite's rounding.
 
 ### Changed
 
+- The sensor notation's footprint comment names `sensor_position(u, v)`, not the retired alias `𝐩_of_pixel` (Core 0.14's
+  RETIRED_NAMES); docs/design/inventory.md names `RADIAL_CHART_TAGS`. No code change.
 - Smith Λ without cancellation: `tan²θ` from the direction's components (from
   a Float32 cosine, `1 − cos²θ` loses the small angles: 0.2 % of tan²θ at
   θ = 0.005) and `x / (2(1 + √(1 + x)))` for `√(1 + x) − 1`.

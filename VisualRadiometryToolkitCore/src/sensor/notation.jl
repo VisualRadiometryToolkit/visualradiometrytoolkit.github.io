@@ -5,7 +5,7 @@
 #                                VisualGeometryToolkitCore's `Rect(sensor)`, the frame of the cameras' calibration matrices K
 #   𝐩 ∈ ℐ                        a sensor position, in those pixels
 #   ℐ_𝐮 ⊂ ℐ                     footprint of pixel 𝐮 = (u, v), u ∈ 1:W, v ∈ 1:H (Julia's 1-based pixel indices): the unit square about
-#                                its centre `𝐩_of_pixel(u, v)`
+#                                its centre `sensor_position(u, v)`
 #   𝐮, W, H                     pixel index (column u, row v), image size
 #
 # Julia's pixel convention (the centre of pixel (u, v) at (u, v)) reaches COLMAP's through VisualGeometryToolkitCore's origin map
