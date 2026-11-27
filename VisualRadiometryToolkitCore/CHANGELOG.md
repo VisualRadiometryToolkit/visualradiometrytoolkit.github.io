@@ -83,6 +83,8 @@ radial chart a type. Float64 values move only by the Λ rewrite's rounding.
   target's `with_state` replace their field with Accessors' `@set`, the stack's one idiom for a value with one part
   replaced, instead of each restating its type's constructor (VisualGeometryToolkitCore 0.14's duplication gate
   found `with_vignetting` and `with_state` to be one body), and so does the new `with_facing`. New dependency: Accessors.
+  `with_facing` returns the board's own type, asserted: Accessors' rebuild of a board whose type a caller infers only in
+  part (RadiometricCamera's session board) inferred as `Any`, which widened the caller's result.
   `with_aperture_radius` takes a length too (`2mm`; plain numbers stay metres), as the constructor's `aperture_radius`.
 - The README's and the manual's example builds its pinhole camera as `Lens(Perspective())`: VisualGeometryToolkitCore
   0.14 removed the alias `Pinhole`.

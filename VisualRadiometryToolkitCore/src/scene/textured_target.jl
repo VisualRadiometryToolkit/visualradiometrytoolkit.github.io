@@ -115,7 +115,9 @@ pose; a caller that builds a board's geometry before the poses exist orients it 
 function with_facing(b::TexturedTarget{T}, viewpoint::AbstractVector) where {T}
     o = world_point(b, SVector(0.0, 0.0))
     side = dot(SVector{3, Float64}(viewpoint) - SVector{3, Float64}(o), SVector{3, Float64}(VgtkCore.normal(b.quad))) < 0 ? -one(T) : one(T)
-    return @set b.facing = side
+    # the same type: `facing` keeps its type `T`. Asserted, because Accessors' rebuild of a board whose type the caller's
+    # inference holds only in part (a session's board) infers as `Any`, which spread to the caller's result.
+    return (@set b.facing = side)::typeof(b)
 end
 
 """The board with the distance map `sdf` (`H_s × W_s`, signed distance [mm] to the nearest ink edge of the design, + on paper)

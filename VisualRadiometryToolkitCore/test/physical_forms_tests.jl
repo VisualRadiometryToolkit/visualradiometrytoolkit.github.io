@@ -20,6 +20,12 @@
     @test board_normal(with_facing(b, SVector(0.3, 0.1, 1.5))) ≈ SVector(0.0, 0.0, 1.0)
     @test board_normal(with_facing(b, SVector(0.0, 0.0, -1.5))) ≈ SVector(0.0, 0.0, -1.0)
     @test with_facing(b, SVector(0.0, 0.0, 1.5)).texture === b.texture
+    # the board's own type, inferred: concretely for a concrete board, and as a `TexturedTarget` (never `Any`) for a board whose
+    # type the caller's inference holds only in part (a session's, RadiometricCamera's `load_session`)
+    @test @inferred(with_facing(b, SVector(0.0, 0.0, 1.5))) isa typeof(b)
+    @test @inferred(with_facing(b, [0.0, 0.0, 1.5])) isa typeof(b)
+    @test only(Base.return_types(with_facing, (TexturedTarget, SVector{3, Float64}))) <: TexturedTarget
+    @test only(Base.return_types(with_facing, (TexturedTarget{Float64}, SVector{3, Float64}))) <: TexturedTarget{Float64}
     # the edge-vector form of the same page agrees with the posed form, once both face the same camera
     e = TexturedTarget(SVector(-1.0, 1.0, 0.0), SVector(2.0, 0.0, 0.0), SVector(0.0, -2.0, 0.0), tex)
     @test world_point(e, SVector(0.2, 0.7)) ≈ world_point(b, SVector(0.2, 0.7))
