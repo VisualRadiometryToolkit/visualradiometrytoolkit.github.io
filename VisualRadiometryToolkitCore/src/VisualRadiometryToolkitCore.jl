@@ -9,7 +9,8 @@ follows its conventions; nothing there depends on this.
 
 - A camera's vignetting: [`NoVignetting`](@ref) (absent, `V ≡ 1`), the B-spline
   fields [`TensorProductVignetting`](@ref) and [`RadialVignetting`](@ref), the
-  log-domain [`LogVignetting`](@ref), and a measured [`BinnedRadialProfile`](@ref).
+  log-domain [`LogVignetting`](@ref), and a measured [`BinnedRadialProfile`](@ref);
+  a field fitted to a function of the sensor position, [`VignettingLeastSquares`](@ref).
 - A camera's focus surface: [`Focus`](@ref), the inverse focus distance along each
   chief ray as a thin plate spline.
 - The radiometric camera, one object: [`RadiometricCameraModel`](@ref), a geometric
@@ -52,6 +53,7 @@ import VisualGeometryToolkitCore: center, centroid, convert_eltype, support_trai
     lens                    # refused by name on a radiometric camera (its geometric camera's lens model is `lens(geometric(camera))`)
 
 export AbstractVignetting, NoVignetting, TensorProductVignetting, RadialVignetting, LogVignetting   # a camera's vignetting (camera/vignetting.jl)
+export VignettingLeastSquares   # a field fitted to a function of the sensor position: a closed form, solve(EstimationProblem(typeof(field), (f, field)), VignettingLeastSquares()) (camera/vignetting.jl)
 public log_spline        # a LogVignetting's spline of log V
 public VIGNETTING_TAGS   # the fields' TagRegistry: the `type` of VisualRadiometryToolkitIO's vignetting body
 public coefficient_jacobian, active_coefficients, control_points, with_control_points, n_control_points, knot_vectors, spline_degree,

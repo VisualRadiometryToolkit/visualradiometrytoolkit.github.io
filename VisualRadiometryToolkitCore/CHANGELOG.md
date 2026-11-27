@@ -5,7 +5,7 @@
 One release of three lines: the physical forms (a board posed in the world, a camera's lengths, the light about its
 board, a light's terms by `(l, m)`), the anchored albedo with Smith Λ without cancellation, and the stack's
 conformance on VisualGeometryToolkitCore 0.14 (`[compat]` `"0.14"`, the release that moves estimation to
-`solve(problem, algorithm)`; this package calls no estimator): one name per thing, type arguments positional, the
+`solve(problem, algorithm)`; this package's one estimator is the closed form `VignettingLeastSquares`): one name per thing, type arguments positional, the
 radial chart a type. Float64 values move only by the Λ rewrite's rounding.
 
 ### Breaking
@@ -50,6 +50,10 @@ radial chart a type. Float64 values move only by the Λ rewrite's rounding.
 - `RadialVignetting([T,] n, geometric; degree, chart)`: the flat radial profile about a camera's principal point out to the farthest point it
   images.
 - `diffuse_weight(material)`. `Material` and `with_vignetting` are exported.
+- `VignettingLeastSquares(; samples = 33)`, exported: the closed form (VisualGeometryToolkitCore's `ClosedFormKind`) that
+  fits a field's control points to a function of the sensor position, `solve(EstimationProblem(typeof(field), (f,
+  field)), VignettingLeastSquares(; samples))`, its `u` the fitted field and `n` the samples. It replaces the internal
+  least squares of the same numerics that tests reached by its private name.
 - `physical_albedo(target, 𝐛)`: the albedo of the target as printed at the
   physical page chart 𝐛, `printed_albedo` at the design point that 𝐛 shows
   under the in-plane print error (`design_chart`). It is what a renderer reads
