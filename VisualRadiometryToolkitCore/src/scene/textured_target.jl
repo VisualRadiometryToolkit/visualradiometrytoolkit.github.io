@@ -115,7 +115,7 @@ pose; a caller that builds a board's geometry before the poses exist orients it 
 function with_facing(b::TexturedTarget{T}, viewpoint::AbstractVector) where {T}
     o = world_point(b, SVector(0.0, 0.0))
     side = dot(SVector{3, Float64}(viewpoint) - SVector{3, Float64}(o), SVector{3, Float64}(VgtkCore.normal(b.quad))) < 0 ? -one(T) : one(T)
-    return TexturedTarget(b.target, b.quad, b.size, side, b.texture, b.sdf, b.page_mm, b.warping, b.state)
+    return @set b.facing = side
 end
 
 """The board with the distance map `sdf` (`H_s × W_s`, signed distance [mm] to the nearest ink edge of the design, + on paper)
@@ -143,7 +143,7 @@ leaves the sphere (no ray of a board point falls back to its closest point, [`ex
 """
 function EnvironmentLight(map, b::TexturedTarget, poses::AbstractVector)
     𝐛 = centroid(b)
-    cameras = maximum(norm(SVector{3}(p.t) - SVector{3}(𝐛)) for p in poses)
+    cameras = maximum(norm(SVector{3}(VgtkCore.translation(p)) - SVector{3}(𝐛)) for p in poses)
     return EnvironmentLight(map, 𝐛, max(cameras, maximum(norm(c - 𝐛) for c in corners(b))))
 end
 

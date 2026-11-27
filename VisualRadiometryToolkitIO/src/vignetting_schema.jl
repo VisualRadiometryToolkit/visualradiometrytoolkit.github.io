@@ -24,6 +24,9 @@
 
 const _VIGNETTING_SCHEMA = "vgio/vignetting/v2.0"
 
+# A radial chart's tag (`RADIAL_CHART_TAGS`): a radial vignetting's `chart`, and a radial profile's (radial_profile_schema.jl).
+const _RADIAL_CHART = VgtkIO.named_spec(in(keys(RADIAL_CHART_TAGS)), "a radial chart ($(join(keys(RADIAL_CHART_TAGS), ", ")))")
+
 # A body is told by its `type`, the field's tag in `VIGNETTING_TAGS`; a log field holds a spline body.
 _vignetting_type(T::Type{<:AbstractVignetting}) = VgtkIO.token_spec(tag_of(VIGNETTING_TAGS, T))
 _vignetting_body(T::Type{<:TensorProductVignetting}, self) = VgtkIO.object_spec(
@@ -33,7 +36,7 @@ _vignetting_body(T::Type{<:TensorProductVignetting}, self) = VgtkIO.object_spec(
 _vignetting_body(T::Type{<:RadialVignetting}, self) = VgtkIO.object_spec(
     :type => _vignetting_type(T), :degree => VgtkIO.integer_spec(; positive = true),
     :center => VgtkIO.array_spec(VgtkIO.real_spec(); length = 2), :radius => VgtkIO.real_spec(),
-    :chart => VgtkIO.named_spec(in(keys(RADIAL_CHART_TAGS)), "a radial chart ($(join(keys(RADIAL_CHART_TAGS), ", ")))"),
+    :chart => _RADIAL_CHART,
     :control_points => VgtkIO.array_spec(VgtkIO.real_spec()))
 _vignetting_body(T::Type{<:LogVignetting}, self) = VgtkIO.object_spec(:type => _vignetting_type(T), :spline => self)
 _vignetting_tags() = join(keys(VIGNETTING_TAGS), ", ")

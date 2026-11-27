@@ -46,14 +46,16 @@ radial chart a type. Float64 values move only by the Λ rewrite's rounding.
   VisualGeometryToolkitCore compat `"0.13.3"`.
 - `EnvironmentLight(map, board::TexturedTarget, poses)`: the light on the sphere about the board's centre that holds every
   camera centre and every corner of the page.
-- `SphericalHarmonicMap(l_max, (l, m) => values, …)` and `coefficients(map_or_light, l, m)`.
+- `SphericalHarmonicMap(l_max, (l, m) => values, …)` and `coefficients(map_or_light, l, m)`. A term given twice is an
+  `ArgumentError`, whatever its values.
 - `RadialVignetting([T,] n, geometric; degree, chart)`: the flat radial profile about a camera's principal point out to the farthest point it
-  images.
+  images (VisualGeometryToolkitCore's `farthest_radius` of the camera's `imaged_region`).
 - `diffuse_weight(material)`. `Material` and `with_vignetting` are exported.
 - `VignettingLeastSquares(; samples = 33)`, exported: the closed form (VisualGeometryToolkitCore's `ClosedFormKind`) that
   fits a field's control points to a function of the sensor position, `solve(EstimationProblem(typeof(field), (f,
-  field)), VignettingLeastSquares(; samples))`, its `u` the fitted field and `n` the samples. It replaces the internal
-  least squares of the same numerics that tests reached by its private name.
+  field)), VignettingLeastSquares(; samples))`, its `u` the fitted field and `n` the samples (`samples ≥ 2`, an
+  `ArgumentError` otherwise). It replaces the internal least squares of the same numerics that tests reached by its
+  private name.
 - `physical_albedo(target, 𝐛)`: the albedo of the target as printed at the
   physical page chart 𝐛, `printed_albedo` at the design point that 𝐛 shows
   under the in-plane print error (`design_chart`). It is what a renderer reads
@@ -80,7 +82,8 @@ radial chart a type. Float64 values move only by the Λ rewrite's rounding.
 - The part replacers (`with_geometric`, `with_focus`, `with_aperture_radius`, `with_vignetting`) and a textured
   target's `with_state` replace their field with Accessors' `@set`, the stack's one idiom for a value with one part
   replaced, instead of each restating its type's constructor (VisualGeometryToolkitCore 0.14's duplication gate
-  found `with_vignetting` and `with_state` to be one body). New dependency: Accessors.
+  found `with_vignetting` and `with_state` to be one body), and so does the new `with_facing`. New dependency: Accessors.
+  `with_aperture_radius` takes a length too (`2mm`; plain numbers stay metres), as the constructor's `aperture_radius`.
 - The README's and the manual's example builds its pinhole camera as `Lens(Perspective())`: VisualGeometryToolkitCore
   0.14 removed the alias `Pinhole`.
 

@@ -103,9 +103,9 @@ with_focus(c::RadiometricCameraModel, f::Focus) = @set c.focus = f
 """
     with_aperture_radius(camera::RadiometricCameraModel, r) -> RadiometricCameraModel
 
-The camera with its aperture radius r (metres) replaced.
+The camera with its aperture radius r (a length, or plain metres, as the constructor's `aperture_radius`) replaced.
 """
-with_aperture_radius(c::RadiometricCameraModel, r::Real) = @set c.aperture_radius = r
+with_aperture_radius(c::RadiometricCameraModel, r) = @set c.aperture_radius = strip_or_bare(VgtkCore.m, r)
 """
     with_vignetting(camera::RadiometricCameraModel, vignetting::AbstractVignetting) -> RadiometricCameraModel
 

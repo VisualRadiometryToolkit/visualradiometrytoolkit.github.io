@@ -21,7 +21,6 @@
 
 const _RADIAL_PROFILE_SCHEMA = "vgio/radial_profile/v1.0"
 
-const _RADIAL_CHART = VgtkIO.named_spec(in(keys(RADIAL_CHART_TAGS)), "a radial chart ($(join(keys(RADIAL_CHART_TAGS), ", ")))")
 const _PROFILE_CHART = VgtkIO.if_key_spec(:focal_length,
     VgtkIO.object_spec(:type => VgtkIO.named_spec(==("equisolid"), "the equisolid chart (the one that states a focal length)"),
                        :center => VgtkIO.body_spec(PixelFrame), :radius => VgtkIO.real_spec(), :focal_length => VgtkIO.real_spec()),

@@ -11,7 +11,8 @@ instantiation of a stack type).
 On VisualRadiometryToolkitCore 0.2 (`[compat]` `"0.2"`). Its breaking changes to a textured target (its facing, its
 centre's name) touch no record of this package. A radial chart is a type there, so the vignetting and radial-profile
 bodies read and write it through VisualRadiometryToolkitCore's `RADIAL_CHART_TAGS`. No public name, schema or file
-changes: the stored `chart` strings and every file are as before.
+changes: the stored `chart` strings and every file are as before. The chart's tag is one spec, shared by the two
+bodies.
 
 ## 0.1.1
 

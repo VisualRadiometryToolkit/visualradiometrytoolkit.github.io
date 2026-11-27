@@ -143,10 +143,12 @@ function SphericalHarmonicMap(l_max::Integer, term::Pair{<:Tuple{Integer, Intege
     all_terms = (term, terms...)
     C = length(last(term))
     a = zeros(float(promote_type(map(t -> eltype(collect(last(t))), all_terms)...)), C, sh_count(l_max))
+    seen = falses(sh_count(l_max))
     for ((l, m), values) in all_terms
-        0 <= l <= l_max && abs(m) <= l || throw(ArgumentError("SphericalHarmonicMap: the term (l, m) = ($l, $m) is not one of degree ≤ $l_max (|m| ≤ l)"))
+        _check_sh_term("SphericalHarmonicMap", l, m, l_max)
         length(values) == C || throw(DimensionMismatch("SphericalHarmonicMap: the term ($l, $m) has $(length(values)) channels, the first $C"))
-        iszero(a[:, sh_index(l, m)]) || throw(ArgumentError("SphericalHarmonicMap: the term ($l, $m) is given twice"))
+        seen[sh_index(l, m)] && throw(ArgumentError("SphericalHarmonicMap: the term ($l, $m) is given twice"))
+        seen[sh_index(l, m)] = true
         a[:, sh_index(l, m)] .= values
     end
     return SphericalHarmonicMap(a, l_max)
@@ -169,9 +171,13 @@ coefficients(M::SphericalHarmonicMap) = M.coefficients
 The coefficients of the term `y_l^m`, one per channel (the column [`sh_index`](@ref)`(l, m)`).
 """
 function coefficients(M::SphericalHarmonicMap{L}, l::Integer, m::Integer) where {L}
-    0 <= l <= L && abs(m) <= l || throw(ArgumentError("coefficients: (l, m) = ($l, $m) is not a term of degree ≤ $L (|m| ≤ l)"))
+    _check_sh_term("coefficients", l, m, L)
     return M.coefficients[:, sh_index(l, m)]
 end
+
+# The one check that `(l, m)` is a term of an expansion of degree ≤ `l_max`.
+_check_sh_term(what, l::Integer, m::Integer, l_max::Integer) = 0 <= l <= l_max && abs(m) <= l ||
+    throw(ArgumentError("$what: (l, m) = ($l, $m) is not a term of degree ≤ $l_max (|m| ≤ l)"))
 
 """
     max_degree(M::SphericalHarmonicMap) -> Int

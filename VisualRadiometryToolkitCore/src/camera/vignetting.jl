@@ -339,18 +339,15 @@ end
 
 The flat radial profile (`V ≡ 1`) of `n` control points about the principal point of the geometric camera `geometric` (its `K`'s,
 COLMAP pixels: VisualGeometryToolkitCore's `principal_point`), its radius VisualGeometryToolkitCore's `farthest_radius` from there of
-the camera's image ∩ its lens coverage (the image circle's radius seen from the principal point, or the image's farthest corner): the
-profile a calibration estimates, about the point where it holds V = 1.
+the camera's `imaged_region` (its image ∩ its lens coverage ∩ its model's valid domain: the image circle's radius seen from the
+principal point, or the image's farthest corner): the profile a calibration estimates, about the point where it holds V = 1.
 """
 RadialVignetting(n::Integer, geometric::BoundedCamera; kw...) = RadialVignetting(Float64, n, geometric; kw...)
 function RadialVignetting(::Type{T}, n::Integer, geometric::BoundedCamera; degree::Integer = 3,
                           chart::AbstractRadialChart = LinearChart()) where {T}
-    c = VgtkCore.principal_point(model(geometric).intrinsics)
-    W, H = extent(geometric)
-    image = Rect(0, 0, W, H)
-    coverage = VgtkCore.lens_coverage(geometric)
-    region = coverage isa GeometryBasics.HyperRectangle ? image : image ∩ coverage
-    return RadialVignetting(T, n, SVector{2, Float64}(c[1], c[2]), VgtkCore.farthest_radius(region, SVector{2, Float64}(c[1], c[2])); degree, chart)
+    pp = VgtkCore.principal_point(model(geometric).intrinsics)
+    c = SVector{2, Float64}(pp[1], pp[2])
+    return RadialVignetting(T, n, c, VgtkCore.farthest_radius(VgtkCore.imaged_region(geometric), c); degree, chart)
 end
 function RadialVignetting(knots::AbstractVector, center, radius, P::AbstractVector; degree::Integer,
                           chart::AbstractRadialChart = LinearChart())
@@ -703,8 +700,8 @@ degree whose control points fit a function `f(𝐩)` of the sensor position (COL
 [`RadialVignetting`](@ref)'s radius out to its field radius along +x), and the control points are one linear solve on
 the field's own basis ([`VisualRadiometryToolkitCore.coefficient_jacobian`](@ref)) with fixed, equal weights. The
 result's `u` is the fitted field, `n` the samples, `rms` NaN (a closed form). A domain whose samples do not determine
-every control point, a [`LogVignetting`](@ref) (not linear in its control points: fit its spline) and a field with no
-sampled domain are each an `ArgumentError`.
+every control point, a [`LogVignetting`](@ref) (not linear in its control points: fit its spline), a field with no
+sampled domain and fewer than 2 `samples` are each an `ArgumentError`.
 
 ```julia
 t = TensorProductVignetting((4, 4), Rect(0, 0, 320, 240); degree = 2)
@@ -715,14 +712,19 @@ v = solve(EstimationProblem(typeof(t), (plane, t)), VignettingLeastSquares()).u 
 struct VignettingLeastSquares <: VgtkCore.AbstractEstimationAlgorithm
     samples::Int
 end
-VignettingLeastSquares(; samples::Integer = 33) = VignettingLeastSquares(Int(samples))
+VignettingLeastSquares(; samples::Integer = 33) =
+    samples >= 2 ? VignettingLeastSquares(Int(samples)) :
+    throw(ArgumentError("VignettingLeastSquares: `samples` must be at least 2 per axis, got $samples"))
 VgtkCore.estimator_kind(::VignettingLeastSquares) = VgtkCore.ClosedFormKind()
 
 function VgtkCore.__solve(prob::VgtkCore.EstimationProblem{V, <:Tuple{Any, V}, VgtkCore.NullParameters},
                           alg::VignettingLeastSquares) where {V <: AbstractVignetting}
     (f, field) = prob.f
     us = _fit_samples(field, alg.samples)
-    A = reduce(vcat, (transpose(Vector{Float64}(coefficient_jacobian(field, 𝐩))) for 𝐩 in us))
+    A = Matrix{Float64}(undef, length(us), length(control_points(field)))   # the design matrix, one sample per row
+    for (i, 𝐩) in enumerate(us)
+        A[i, :] .= coefficient_jacobian(field, 𝐩)
+    end
     b = Float64[f(𝐩) for 𝐩 in us]
     LinearAlgebra.rank(A) == size(A, 2) || throw(ArgumentError(
         "VignettingLeastSquares: the $(length(us)) samples of the field's domain determine $(LinearAlgebra.rank(A)) of its $(size(A, 2)) control points"))
