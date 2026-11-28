@@ -59,13 +59,16 @@ end
 
 @testitem "physical forms: a field fitted to a function, a radial profile about the camera" begin
     using Test
-    using VisualRadiometryToolkitCore: RadialVignetting, TensorProductVignetting, LogVignetting, control_points, field_radius
+    using VisualRadiometryToolkitCore: RadialVignetting, TensorProductVignetting, LogVignetting, control_points, field_radius,
+                                       ProjectiveChart
     using VisualRadiometryToolkitCore: VignettingLeastSquares
+    using VisualGeometryToolkitCore: imaged_region
+    using LinearAlgebra: norm
     using VisualGeometryToolkitCore: BoundedCamera, CameraModel, CameraCalibrationMat, Lens, DoubleSphere, Size2, Rect,
                                      EstimationProblem, ClosedFormKind, estimator_kind, solve
     import VisualGeometryToolkitCore as VgtkCore
     using StaticArrays: SVector
-    least_squares(f, field; kw...) = solve(EstimationProblem(typeof(field), (f, field)), VignettingLeastSquares(; kw...))
+    least_squares(f, field, camera; kw...) = solve(EstimationProblem(typeof(field), (f, field, camera)), VignettingLeastSquares(; kw...))
 
     K = CameraCalibrationMat(412.0, 0.0, 0.0, 0.0, 412.0, 0.0, 150.0, 110.0, 1.0)
     g = BoundedCamera(CameraModel(K; lens = Lens(DoubleSphere(0.25, 0.4))), Size2(320, 240))
@@ -73,21 +76,38 @@ end
     @test v.center == SVector(150.0, 110.0) && field_radius(v) ≈ hypot(170.0, 130.0)   # the principal point; the farthest corner
     @test all(==(1.0), control_points(v))                                     # flat
     # a function the field holds exactly is recovered exactly, on either kind of field
-    quad(𝐩) = 1 - 0.3 * ((𝐩[1] - 150) / 214)^2
-    rr = least_squares(quad, RadialVignetting(6, g; degree = 2))
-    @test VgtkCore.successful_retcode(rr) && rr.n == 33 && isnan(rr.rms) && rr.alg == VignettingLeastSquares()
+    c = SVector(150.0, 110.0)
+    quad(𝐩) = 1 - 0.3 * (norm(𝐩 - c) / 214)^2                                 # radial, quadratic in the distance
+    rr = least_squares(quad, RadialVignetting(6, g; degree = 2), g)
+    @test VgtkCore.successful_retcode(rr) && rr.n == 33^2 && isnan(rr.rms) && rr.alg == VignettingLeastSquares()
     @test estimator_kind(VignettingLeastSquares()) === ClosedFormKind()
     r = rr.u
-    @test maximum(abs(r(SVector(150.0 + d, 110.0)) - quad(SVector(150.0 + d, 110.0))) for d in 0.0:5.0:210.0) < 1e-10
-    @test r(SVector(150.0, 110.0 + 100.0)) ≈ quad(SVector(250.0, 110.0))   # radial: the same at the same distance
+    @test maximum(abs(r(𝐩) - quad(𝐩)) for 𝐩 in (SVector(x, y) for x in 0.0:10.0:320.0, y in 0.0:10.0:240.0)) < 1e-8
     t = TensorProductVignetting((4, 4), Rect(0, 0, 320, 240); degree = 2)
     plane(𝐩) = 0.9 + 1.0e-4 * 𝐩[1] - 2.0e-4 * 𝐩[2]
-    rt = least_squares(plane, t).u
-    @test least_squares(plane, t; samples = 9).n == 81
+    rt = least_squares(plane, t, g).u
+    @test least_squares(plane, t, g; samples = 9).n == 81
     @test rt(SVector(37.0, 201.0)) ≈ plane(SVector(37.0, 201.0))
-    @test all(≈(1.0), control_points(least_squares(_ -> 1.0, t).u))
-    @test_throws ArgumentError least_squares(plane, LogVignetting(t))
-    @test_throws ArgumentError least_squares(plane, t; samples = 2)   # 4 samples cannot determine 16 control points
+    @test all(≈(1.0), control_points(least_squares(_ -> 1.0, t, g).u))
+    # the samples are the imaged region's: none off the sensor (a radial field reaches the farthest corner's radius, past
+    # the sensor along +x) and none outside the lens coverage
+    for camera in (g, BoundedCamera(CameraModel(K; lens = Lens(DoubleSphere(0.25, 0.4))), Size2(320, 240);
+                                    lens_coverage = VgtkCore.Circle(VgtkCore.Point2(150.0, 110.0), 120.0)))
+        seen = SVector{2, Float64}[]
+        record(𝐩) = (push!(seen, 𝐩); quad(𝐩))
+        res = least_squares(record, RadialVignetting(6, camera; degree = 2), camera)
+        @test res.n == length(seen) && !isempty(seen)
+        @test all(𝐩 -> 𝐩 ∈ imaged_region(camera) && 0 <= 𝐩[1] <= 320 && 0 <= 𝐩[2] <= 240, seen)
+    end
+    let camera = BoundedCamera(CameraModel(K; lens = Lens(DoubleSphere(0.25, 0.4))), Size2(320, 240);
+                               lens_coverage = VgtkCore.Circle(VgtkCore.Point2(150.0, 110.0), 120.0))
+        @test least_squares(quad, RadialVignetting(6, camera; degree = 2), camera).n < 33^2   # the circle's samples only
+    end
+    # refused: a radial field on the projective chart (by name), a log field, too few samples
+    err = try least_squares(quad, RadialVignetting(8, g; chart = ProjectiveChart()), g); nothing catch e; e end
+    @test err isa ArgumentError && occursin("ProjectiveChart", err.msg)
+    @test_throws ArgumentError least_squares(plane, LogVignetting(t), g)
+    @test_throws ArgumentError least_squares(plane, t, g; samples = 2)   # 4 samples cannot determine 16 control points
 end
 
 @testitem "physical forms: a camera's lengths" begin

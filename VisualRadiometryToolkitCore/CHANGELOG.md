@@ -52,10 +52,14 @@ radial chart a type. Float64 values move only by the Λ rewrite's rounding.
   images (VisualGeometryToolkitCore's `farthest_radius` of the camera's `imaged_region`).
 - `diffuse_weight(material)`. `Material` and `with_vignetting` are exported.
 - `VignettingLeastSquares(; samples = 33)`, exported: the closed form (VisualGeometryToolkitCore's `ClosedFormKind`) that
-  fits a field's control points to a function of the sensor position, `solve(EstimationProblem(typeof(field), (f,
-  field)), VignettingLeastSquares(; samples))`, its `u` the fitted field and `n` the samples (`samples ≥ 2`, an
-  `ArgumentError` otherwise). It replaces the internal least squares of the same numerics that tests reached by its
-  private name.
+  fits a field's control points to a function of the sensor position over the part of the sensor a camera images,
+  `solve(EstimationProblem(typeof(field), (f, field, camera)), VignettingLeastSquares(; samples))`, its `u` the fitted
+  field and `n` the samples (`samples ≥ 2`, an `ArgumentError` otherwise). `f` is sampled at the centres of `samples`
+  pixels per axis of the camera's sensor that lie in its `imaged_region` (VisualGeometryToolkitCore's `pixel_centers`):
+  no sample off the sensor or outside the lens model's valid domain (the internal least squares it replaces sampled a
+  radial field along +x out to the farthest corner's radius, off the sensor, and a tensor-product field on its knot
+  box). A radial field on `ProjectiveChart()` is refused by name (an `ArgumentError`) until sampling in `ρ` is designed;
+  a field of a `TensorProductVignetting` or a `RadialVignetting` on `LinearChart()` is fitted, any other refused.
 - `physical_albedo(target, 𝐛)`: the albedo of the target as printed at the
   physical page chart 𝐛, `printed_albedo` at the design point that 𝐛 shows
   under the in-plane print error (`design_chart`). It is what a renderer reads

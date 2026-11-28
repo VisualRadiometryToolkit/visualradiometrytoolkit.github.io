@@ -692,21 +692,26 @@ convert_eltype(::Type{T}, v::NoVignetting) where {T <: Real} = v
     VignettingLeastSquares(; samples = 33)
 
 A closed form (VisualGeometryToolkitCore's `ClosedFormKind`): the field of `field`'s kind, knots, centre and
-degree whose control points fit a function `f(𝐩)` of the sensor position (COLMAP pixels) by least squares,
+degree whose control points fit a function `f(𝐩)` of the sensor position (COLMAP pixels) by least squares, over the part
+of the sensor `camera` (a VisualGeometryToolkitCore `BoundedCamera`) images,
 
-    solve(EstimationProblem(typeof(field), (f, field)), VignettingLeastSquares(; samples))
+    solve(EstimationProblem(typeof(field), (f, field, camera)), VignettingLeastSquares(; samples))
 
-`f` is sampled on `samples` points per axis of the field's domain (a [`TensorProductVignetting`](@ref)'s knot box; a
-[`RadialVignetting`](@ref)'s radius out to its field radius along +x), and the control points are one linear solve on
-the field's own basis ([`VisualRadiometryToolkitCore.coefficient_jacobian`](@ref)) with fixed, equal weights. The
-result's `u` is the fitted field, `n` the samples, `rms` NaN (a closed form). A domain whose samples do not determine
-every control point, a [`LogVignetting`](@ref) (not linear in its control points: fit its spline), a field with no
-sampled domain and fewer than 2 `samples` are each an `ArgumentError`.
+`f` is sampled at the centres of `samples` pixels per axis of the camera's sensor, evenly spaced, that lie in its
+`imaged_region` (the sensor ∩ its lens coverage ∩ its model's valid domain: VisualGeometryToolkitCore's
+`pixel_centers`), so no sample is off the sensor or where the lens formula fails; the control points are one linear
+solve on the field's own basis ([`VisualRadiometryToolkitCore.coefficient_jacobian`](@ref)) with fixed, equal weights.
+The field is a [`TensorProductVignetting`](@ref) or a [`RadialVignetting`](@ref) on `LinearChart()`. The result's `u` is
+the fitted field, `n` the samples, `rms` NaN (a closed form). Each of these is an `ArgumentError`: samples that do not
+determine every control point; a radial field on `ProjectiveChart()` (its `ρ = d / (radius + d)` reaches only `½` at the
+field radius, so its outer control points are not sampled by the imaged region; sampling in `ρ` is not designed); a
+[`LogVignetting`](@ref) (not linear in its control points: fit its spline); any other field; fewer than 2 `samples`.
 
 ```julia
+camera = BoundedCamera(model, Size2(320, 240))
 t = TensorProductVignetting((4, 4), Rect(0, 0, 320, 240); degree = 2)
 plane(𝐩) = 0.9 + 1.0e-4 * 𝐩[1] - 2.0e-4 * 𝐩[2]
-v = solve(EstimationProblem(typeof(t), (plane, t)), VignettingLeastSquares()).u   # v(𝐩) ≈ plane(𝐩)
+v = solve(EstimationProblem(typeof(t), (plane, t, camera)), VignettingLeastSquares()).u   # v(𝐩) ≈ plane(𝐩)
 ```
 """
 struct VignettingLeastSquares <: VgtkCore.AbstractEstimationAlgorithm
@@ -717,25 +722,31 @@ VignettingLeastSquares(; samples::Integer = 33) =
     throw(ArgumentError("VignettingLeastSquares: `samples` must be at least 2 per axis, got $samples"))
 VgtkCore.estimator_kind(::VignettingLeastSquares) = VgtkCore.ClosedFormKind()
 
-function VgtkCore.__solve(prob::VgtkCore.EstimationProblem{V, <:Tuple{Any, V}, VgtkCore.NullParameters},
+function VgtkCore.__solve(prob::VgtkCore.EstimationProblem{V, <:Tuple{Any, V, VgtkCore.BoundedCamera}, VgtkCore.NullParameters},
                           alg::VignettingLeastSquares) where {V <: AbstractVignetting}
-    (f, field) = prob.f
-    us = _fit_samples(field, alg.samples)
+    (f, field, camera) = prob.f
+    _check_least_squares_field(field)
+    us = _fit_samples(camera, alg.samples)
     A = Matrix{Float64}(undef, length(us), length(control_points(field)))   # the design matrix, one sample per row
     for (i, 𝐩) in enumerate(us)
         A[i, :] .= coefficient_jacobian(field, 𝐩)
     end
     b = Float64[f(𝐩) for 𝐩 in us]
     LinearAlgebra.rank(A) == size(A, 2) || throw(ArgumentError(
-        "VignettingLeastSquares: the $(length(us)) samples of the field's domain determine $(LinearAlgebra.rank(A)) of its $(size(A, 2)) control points"))
+        "VignettingLeastSquares: the $(length(us)) samples of the camera's imaged region determine $(LinearAlgebra.rank(A)) of the field's $(size(A, 2)) control points"))
     return VgtkCore.closed_form_result(with_control_points(field, reshape(A \ b, size(control_points(field)))), length(us))
 end
-function _fit_samples(v::TensorProductVignetting, n::Int)
-    (kx, ky) = knot_vectors(v)
-    xs = range(Float64(first(kx)), Float64(last(kx)); length = n); ys = range(Float64(first(ky)), Float64(last(ky)); length = n)
-    return vec([SVector(x, y) for x in xs, y in ys])
+# The samples: the centres of n evenly spaced pixels per axis of the sensor that lie in the camera's imaged region
+function _fit_samples(camera::VgtkCore.BoundedCamera, n::Int)
+    w, h = VgtkCore.extent(camera)
+    axis(m) = unique(round.(Int, range(1, m; length = n)))
+    return VgtkCore.pixel_centers(VgtkCore.imaged_region(camera), axis(w), axis(h))
 end
-_fit_samples(v::RadialVignetting, n::Int) =
-    [center(v) + SVector(d, 0.0) for d in range(0.0, Float64(field_radius(v)); length = n)]
-_fit_samples(v::LogVignetting, n::Int) = throw(ArgumentError("VignettingLeastSquares: a LogVignetting is not linear in its control points; fit its spline"))
-_fit_samples(v::AbstractVignetting, n::Int) = throw(ArgumentError("VignettingLeastSquares: no sampled domain for a $(nameof(typeof(v)))"))
+# The fields the closed form fits: linear in their control points over a sampled sensor position
+_check_least_squares_field(::TensorProductVignetting) = nothing
+_check_least_squares_field(::RadialVignetting{<:Any, <:Any, <:Any, <:Any, LinearChart}) = nothing
+_check_least_squares_field(::RadialVignetting{<:Any, <:Any, <:Any, <:Any, ProjectiveChart}) = throw(ArgumentError(
+    "VignettingLeastSquares: a RadialVignetting on ProjectiveChart() is refused: its ρ = d / (radius + d) reaches only ½ at the field radius, " *
+    "so the imaged region does not sample its outer control points (sampling in ρ is not designed); fit it on LinearChart()"))
+_check_least_squares_field(::LogVignetting) = throw(ArgumentError("VignettingLeastSquares: a LogVignetting is not linear in its control points; fit its spline"))
+_check_least_squares_field(v::AbstractVignetting) = throw(ArgumentError("VignettingLeastSquares: no least-squares fit of a $(nameof(typeof(v)))"))

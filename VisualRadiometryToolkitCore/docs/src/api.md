@@ -75,8 +75,8 @@ squares in the control points,
 [`VisualRadiometryToolkitCore.active_coefficients`](@ref) that row's nonzeros,
 and [`VisualRadiometryToolkitCore.pole_regular_basis`](@ref) the radial profiles
 smooth at their centre. A field of a given kind, knots and centre fitted to a
-function of the sensor position is the closed form [`VignettingLeastSquares`](@ref),
-`solve(EstimationProblem(typeof(field), (f, field)), VignettingLeastSquares())`;
+function of the sensor position over a camera's imaged region is the closed form [`VignettingLeastSquares`](@ref),
+`solve(EstimationProblem(typeof(field), (f, field, camera)), VignettingLeastSquares())`;
 the estimators that fit a field to images are their owners': a radiometric
 calibration's, a panorama's self-calibration.
 
