@@ -82,7 +82,7 @@ end
     @test VgtkCore.successful_retcode(rr) && rr.n == 33^2 && isnan(rr.rms) && rr.alg == VignettingLeastSquares()
     @test estimator_kind(VignettingLeastSquares()) === ClosedFormKind()
     r = rr.u
-    @test maximum(abs(r(𝐩) - quad(𝐩)) for 𝐩 in (SVector(x, y) for x in 0.0:10.0:320.0, y in 0.0:10.0:240.0)) < 1e-8
+    @test maximum(abs(r(𝐩) - quad(𝐩)) for 𝐩 in (SVector(x, y) for x in 0.0:10.0:320.0, y in 0.0:10.0:240.0)) < 1e-8   # measured 2.6e-9 (a 2-D least squares; the 1-D radial fit's old check was 1e-10)
     t = TensorProductVignetting((4, 4), Rect(0, 0, 320, 240); degree = 2)
     plane(𝐩) = 0.9 + 1.0e-4 * 𝐩[1] - 2.0e-4 * 𝐩[2]
     rt = least_squares(plane, t, g).u
